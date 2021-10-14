@@ -1,0 +1,68 @@
+#!/usr/bin/python
+"""Change RHUI password"""
+
+import argparse
+import os
+import socket
+import sys
+
+from stitches.expect import Expect
+from rhui4_tests_lib.conmgr import ConMgr, DOMAIN, USER_KEY, USER_NAME, SUDO_USER_NAME
+from rhui4_tests_lib.rhuimanager import RHUIManager
+
+R4A_CLOUDFORMATION = socket.gethostname().endswith(DOMAIN)
+# the following help is based on what RHUIManager.initial_run() does if no password is supplied
+OLD_PASSWORD_HELP = "saved or initial (both likely only readable by root)"
+
+PRS = argparse.ArgumentParser(description="Change the RHUI password on one or more RHUA nodes.",
+                              formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+# the default values of the following two options depend on whether this script is running
+# on a RHUI deployed by rhui4-automation or not
+PRS.add_argument("--ssh-user",
+                 help="SSH user name",
+                 default=USER_NAME if R4A_CLOUDFORMATION else SUDO_USER_NAME)
+PRS.add_argument("--ssh-key",
+                 help="SSH private key",
+                 default=USER_KEY if R4A_CLOUDFORMATION else os.path.expanduser("~/.ssh/id_rsa"))
+PRS.add_argument("--old",
+                 help="old RHUI password",
+                 default=OLD_PASSWORD_HELP)
+PRS.add_argument("--new",
+                 help="new RHUI password")
+PRS.add_argument("--hosts",
+                 help="comma-separated list of RHUA hostnames",
+                 default=ConMgr.get_rhua_hostname() if R4A_CLOUDFORMATION else None)
+ARGS = PRS.parse_args()
+
+if not ARGS.hosts:
+    print("No hosts specified.")
+    PRS.print_help()
+    sys.exit(1)
+if not ARGS.new:
+    print("No new password specified.")
+    PRS.print_help()
+    sys.exit(1)
+
+SKIPPED = []
+
+for hostname in ARGS.hosts.split(","):
+    print(f"Changing the password on {hostname}.")
+    RHUA = ConMgr.connect(hostname, ARGS.ssh_user, ARGS.ssh_key)
+    if ARGS.ssh_user != "root":
+        Expect.enter(RHUA, "sudo su -")
+    try:
+        if ARGS.old == OLD_PASSWORD_HELP:
+            RHUIManager.initial_run(RHUA)
+        else:
+            RHUIManager.initial_run(RHUA, password=ARGS.old)
+    except RuntimeError as err:
+        print(err)
+        print("Skipping this host.")
+        SKIPPED.append(hostname)
+        continue
+    RHUIManager.change_user_password(RHUA, password=ARGS.new)
+    print("Done.")
+
+if SKIPPED:
+    print(f"Error: {len(SKIPPED)} skipped host(s): " + ",".join(SKIPPED))
+    sys.exit(1)

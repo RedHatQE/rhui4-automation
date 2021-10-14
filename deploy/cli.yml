@@ -1,0 +1,8 @@
+---
+# file: cli.yml
+# client playbook
+- hosts: CLI
+  handlers:
+  - include: roles/common/handlers/main.yml
+  roles:
+  - cli

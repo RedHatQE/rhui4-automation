@@ -1,0 +1,67 @@
+$TTL    86400 ; 24 hours could have been written as 24h or 1d
+; $TTL used for all RRs without explicit TTL value
+$ORIGIN example.com.
+@  1D  IN  SOA ns1.example.com. hostmaster.example.com. (
+                              {{ ansible_date_time.epoch }}; serial
+                              3H ; refresh
+                              15 ; retry
+                              1w ; expire
+                              3h ; minimum
+
+                             )
+
+       IN NS      ns1
+; this dns address
+ns1    IN A       {{ ansible_eth0.ipv4.address }}
+{% if 'TEST' in groups %}
+{% if groups['TEST']|length > 0 %}
+test IN A {{ hostvars[groups['TEST'][0]]['ansible_eth0']['ipv4']['address'] }}
+{% endif %}
+{% endif %}
+
+{% if 'NFS' in groups %}
+{% if groups['NFS']|length > 0 %}
+nfs  IN A {{ hostvars[groups['NFS'][0]]['ansible_eth0']['ipv4']['address'] }}
+{% endif %}
+{% endif %}
+
+{% if 'RHUA' in groups %}
+{% if groups['RHUA']|length > 0 %}
+rhua  IN A {{ hostvars[groups['RHUA'][0]]['ansible_eth0']['ipv4']['address'] }}
+{% endif %}
+{% endif %}
+
+{% if 'PROXY' in groups %}
+{% if groups['PROXY']|length > 0 %}
+proxy  IN A {{ hostvars[groups['PROXY'][0]]['ansible_eth0']['ipv4']['address'] }}
+{% endif %}
+{% endif %}
+
+{% if 'CDS' in groups %}
+{% for cds in groups['CDS'] %} 
+cds0{{ loop.index }}  IN A      {{ hostvars[cds]['ansible_eth0']['ipv4']['address'] }}
+{% endfor %}
+{% endif %}
+
+{% if 'HAPROXY' in groups %}
+{% for haproxy in groups['HAPROXY'] %}
+hap0{{ loop.index }} IN A        {{ hostvars[haproxy]['ansible_eth0']['ipv4']['address'] }}
+{% endfor %}
+{% endif %}
+
+{% if 'CLI' in groups %}
+{% for cli in groups['CLI'] %}
+cli0{{ loop.index }} IN A       {{ hostvars[cli]['ansible_eth0']['ipv4']['address'] }}
+{% endfor %}
+{% endif %}
+
+{# in case there are load balancers, use those as the cds round-robin addresses #}
+{% if 'HAPROXY' in groups and groups['HAPROXY']|length and 'CDS' in groups and groups['CDS']|length %}
+cds    {% for haproxy in groups['HAPROXY'] %}
+       10 IN A {{ hostvars[haproxy]['ansible_eth0']['ipv4']['address'] }}
+       {% endfor %}
+{% elif 'CDS' in groups and groups['CDS']|length %}
+cds    {% for cds in groups['CDS'] %}
+       10 IN A  {{ hostvars[cds]['ansible_eth0']['ipv4']['address'] }}
+       {% endfor %}
+{% endif %}

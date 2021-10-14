@@ -1,0 +1,155 @@
+# file: roles/tests/tasks/main.yml
+# deploy & run tests
+
+- name: set hostname
+  hostname: name="test.example.com"
+  when: "'TEST' in groups"
+  tags: tests
+
+- name: checking git install
+  package: name=git state=present
+  tags: tests
+
+- name: clone this project on the test machine
+  git:
+    repo: https://github.com/RedHatQE/rhui4-automation.git
+    dest: /root/rhui4-automation
+  tags: tests
+
+- name: install the patch utility
+  package: name=patch state=present
+  when: patch is defined
+  tags: tests
+
+- name: apply a patch (if supplied)
+  patch:
+    src:  "{{ patch }}"
+    basedir: /root/rhui4-automation
+    strip: 1
+  when: patch is defined
+  tags: tests
+
+- name: install bash-completion to simplify test execution
+  package: name=bash-completion state=present
+  tags: tests
+
+- name: install pip
+  package: name=python3-pip state=present
+  tags: tests
+
+- name: install tests
+  shell: pip3 install --prefix /usr .
+  args:
+    chdir: /root/rhui4-automation/tests
+  tags: tests
+
+- name: install certifi
+  command: pip3 install --prefix /usr certifi
+  tags: tests
+
+- name: generate ssh keys
+  command: ssh-keygen -m pem -N "" -f /root/.ssh/id_rsa_test creates=/root/.ssh/id_rsa_test
+  notify: restorecon root ssh
+  register: generated_ssh_test_keys
+  tags: tests
+
+- name: slurp the test pub key
+  slurp: src=/root/.ssh/id_rsa_test.pub
+  register: slurp_id_rsa_test
+  when: generated_ssh_test_keys is success
+  tags: tests
+
+- name: set the pub_key as a global fact
+  set_fact:
+    id_rsa_test_pub: "{{ slurp_id_rsa_test.content|b64decode|trim + ' ' + 'test.example.com' }}"
+  when: slurp_id_rsa_test is success
+  tags: tests
+
+- name: set authorized keys on all roles except TEST itself to allow root connection with the key
+  authorized_key:
+    key: "{{ hostvars[groups['TEST'][0]]['id_rsa_test_pub'] }}"
+    user: root
+    state: present
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['CDS']|default([]) + groups['HAPROXY']|default([]) + groups['RHUA']|default([]) + groups['DNS']|default([]) + groups['NFS']|default([]) + groups['CLI']|default([]) }}"
+  when: slurp_id_rsa_test is success
+  tags: tests
+  
+- name: upload files containing auxiliary files that might be needed for some tests (e.g. entitlement certificate, RPMs for custom repos) 
+  copy:
+    src: "{{ extra_files }}"
+    dest: /tmp/extra_rhui_files/
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['RHUA']|default([]) }}"
+  register: upload_extra_files
+  when: extra_files is defined
+  tags: tests
+  
+- name: unzip zip files, if there are some to be found among the uploaded files
+  shell: 'find . -type f -iname "*\.zip" -exec unzip -o {} \;'
+  args:
+    chdir: /tmp/extra_rhui_files
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['RHUA']|default([]) }}"
+  register: unzip_files
+  when: (extra_files is defined) and (upload_extra_files is success)
+  tags: tests
+
+- name: unpack tarballs with test repos
+  shell: 'for f in *.tar; do tar xf $f; done'
+  args:
+    chdir: /tmp/extra_rhui_files
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['RHUA']|default([]) }}"
+  when: (extra_files is defined) and (unzip_files is success)
+  tags: tests
+
+- name: install packages needed by tests on RHUI nodes
+  package:
+    name:
+      - wget
+      - sos
+    state: present
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['RHUA']|default([]) + groups['CDS']|default([]) }}"
+  tags: tests
+
+- name: upload Red Hat credentials
+  copy:
+    src: "{{ credentials }}"
+    dest: /tmp/extra_rhui_files/credentials.conf
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['RHUA']|default([]) }}"
+  when: credentials is defined
+  tags: tests
+
+- name: prevent systemd-tmpfiles from purging the directory with the uploaded files
+  lineinfile:
+    path: /usr/lib/tmpfiles.d/extra_rhui_files.conf
+    line: x /tmp/extra_rhui_files
+    create: yes
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['RHUA']|default([]) }}"
+  when: (extra_files is defined) and (unzip_files is success)
+  tags: tests
+
+# this is to allow the nodes to install packages from a tunneled repo if using --tags run_tests
+# ie. if no previous task is run, which would initiate the connections to the nodes otherwise
+- name: make sure connections to RHUI nodes are established before running tests on RHEL 7 Beta
+  command: "true"
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['RHUA']|default([]) + groups['CDS']|default([]) + groups['HAPROXY']|default([]) }}"
+  when: tests is defined and rhel7_beta_baseurl is defined and "'localhost:' in rhel7_beta_baseurl"
+  tags: run_tests
+
+- name: run tests
+  command: "rhuitests {{ tests }} quiet"
+  register: testreport
+  when: tests is defined
+  tags: run_tests
+
+- name: print test report locations
+  debug:
+    var: testreport.stdout_lines
+  when: tests is defined
+  tags: run_tests

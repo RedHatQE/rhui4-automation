@@ -1,0 +1,38 @@
+#!/usr/bin/python
+'''Remove certificates and unregister CDS and HAProxy nodes. '''
+
+from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.rhuimanager import RHUIManager
+from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
+from rhui4_tests_lib.rhuimanager_repo import RHUIManagerRepo
+
+RHUA = ConMgr.connect()
+CDS_HOSTNAMES = ConMgr.get_cds_hostnames()
+HA_HOSTNAME = ConMgr.get_cds_lb_hostname()
+
+print("Removing entitlement certificates.")
+RHUIManager.remove_rh_certs(RHUA)
+
+print("Logging in to RHUI.")
+RHUIManager.initial_run(RHUA)
+
+print("Unregistering CDS nodes.")
+if RHUIManagerInstance.list(RHUA, "cds"):
+    RHUIManagerInstance.delete_all(RHUA, "cds")
+    print("Done.")
+else:
+    print("There were none.")
+
+print("Unregistering the HAProxy node.")
+if RHUIManagerInstance.list(RHUA, "loadbalancers"):
+    RHUIManagerInstance.delete_all(RHUA, "loadbalancers")
+    print("Done.")
+else:
+    print("There was none.")
+
+print("Deleting leftover repositories (if there are any).")
+if RHUIManagerRepo.list(RHUA):
+    RHUIManagerRepo.delete_all_repos(RHUA)
+    print("Done.")
+else:
+    print("There were none.")

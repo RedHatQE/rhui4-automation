@@ -1,0 +1,55 @@
+#!/usr/bin/python
+'''Log in to RHUI, upload a certificate, and add a CDS and a HAProxy node. '''
+
+import argparse
+
+from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.rhuimanager import RHUIManager
+from rhui4_tests_lib.rhuimanager_entitlement import RHUIManagerEntitlements
+from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance, InstanceAlreadyExistsError
+
+PRS = argparse.ArgumentParser(description="Execute common setup tasks.",
+                              formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+PRS.add_argument("--cert",
+                 help="upload an entitlement certificate; " +
+                 "use 'no' to skip this, or a non-default cert name to override the default cert",
+                 default="default")
+PRS.add_argument("--one-cds-only",
+                 help="add only one CDS node",
+                 action="store_true")
+ARGS = PRS.parse_args()
+
+RHUA = ConMgr.connect()
+CDS_HOSTNAMES = ConMgr.get_cds_hostnames()
+HA_HOSTNAME = ConMgr.get_cds_lb_hostname()
+
+print("Logging in to RHUI.")
+RHUIManager.initial_run(RHUA)
+
+if ARGS.cert != "no":
+    print("Uploading an entitlement certificate.")
+    if ARGS.cert == "default":
+        RHUIManagerEntitlements.upload_rh_certificate(RHUA)
+    else:
+        RHUIManagerEntitlements.upload_rh_certificate(RHUA,
+                                                      "/tmp/extra_rhui_files/" +
+                                                      f"rhcert_{ARGS.cert}.pem")
+
+if ARGS.one_cds_only:
+    CDS_HOSTNAMES = [CDS_HOSTNAMES[0]]
+print(f"Adding CDS nodes ({CDS_HOSTNAMES}).")
+for cds in CDS_HOSTNAMES:
+    try:
+        RHUIManagerInstance.add_instance(RHUA, "cds", cds)
+        print(cds + " added.")
+    except InstanceAlreadyExistsError:
+        print(cds + " already added, never mind.")
+
+print(f"Adding the HAProxy load balancer ({HA_HOSTNAME}).")
+try:
+    RHUIManagerInstance.add_instance(RHUA, "loadbalancers")
+    print(HA_HOSTNAME + " added.")
+except InstanceAlreadyExistsError:
+    print(HA_HOSTNAME + " already added, never mind.")
+
+print("To make client tests skip these steps, run: export RHUISKIPSETUP=1")

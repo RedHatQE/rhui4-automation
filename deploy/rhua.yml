@@ -1,0 +1,9 @@
+---
+# file: rhua.yml
+# rhua playbook
+- hosts: RHUA
+  handlers:
+    - include: roles/common/handlers/main.yml
+
+  roles:
+    - rhua

@@ -1,0 +1,43 @@
+---
+# file: roles/dns/tasks/main.yml
+# deploy & configure named on a host
+
+- name: set hostname
+  hostname: name="ns0{{ item.0 + 1 }}.example.com"
+  with_indexed_items: "{{ groups['DNS'] }}"
+  when: "'DNS' in groups and item.1 == inventory_hostname"
+  tags: dns
+
+
+- name: get original nameserver
+  shell: "grep nameserver /etc/resolv.conf.rhui4 | head -1 | cut -d' ' -f2"
+  register: original_nameserver
+  tags: dns
+
+- name: workaround chicken--egg issue with dns required to install dns
+  lineinfile: dest="/etc/resolv.conf" regexp="^nameserver" line="nameserver {{original_nameserver.stdout|trim}}"
+  tags: dns
+
+
+- name: install named
+  package: "pkg={{ item }} state=installed"
+  with_items: [bind, bind-utils]
+  tags: dns
+
+- name: upload named config file
+  template: src=named.conf.j2 dest=/etc/named.conf
+  notify: restart named
+  tags: dns
+
+- name: generate db.example.com file
+  template: src=db.example.com.j2 dest=/var/named/db.example.com
+  notify: restart named
+  tags: dns
+
+- name: ensure named is running and enabled
+  service: name=named state=started enabled=yes
+  tags: dns
+
+- name: workaround over
+  service: name=NetworkManager state=restarted
+  tags: dns

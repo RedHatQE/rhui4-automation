@@ -1,0 +1,38 @@
+---
+# file: roles/rhua/tasks/main.yml
+# tasks related to rhua setup
+- name: set hostname
+  hostname: name=rhua.example.com
+  tags: rhua
+
+- include: ssh.yml
+
+- name: install rhui-installer
+  package: name=rhui-installer state=present
+  register: install_rhui_installer
+  tags: rhua
+
+- name: call rhui installer if nfs
+  command: rhui-installer --rhua-hostname=rhua.example.com --remote-fs-server=nfs.example.com:/export --cds-lb-hostname cds.example.com
+  when: install_rhui_installer is changed and 'NFS' in groups and groups['NFS']|length > 0
+  tags: rhua
+
+- name: check if the installed RHUI version is the latest one
+  command: rpmquery --qf '%{VERSION}' rhui-tools
+  register: rpmq
+  failed_when: rpmq.stdout != latest_rhui_version
+  tags: rhua,versioncheck
+
+- name: get the initial rhui-manager password
+  command: awk '/^password/ { print $3 }' /etc/rhui/rhui-subscription-sync.conf
+  register: password
+  tags: rhua
+
+- name: check if rhui-manager can run
+  command: rhui-manager --username admin --password {{ password.stdout }} status
+  register: rhuimanagercmd
+  tags: rhua
+
+- name: print the output from rhui-manager
+  debug:
+    var: rhuimanagercmd.stdout

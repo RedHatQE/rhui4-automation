@@ -1,0 +1,9 @@
+---
+# file: roles/common/tasks/vim.yml
+# install vim, which may not be installed by default but is so much better than vi
+
+- name: install vim
+  package:
+    name: vim
+    state: present
+  tags: vim

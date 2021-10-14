@@ -1,0 +1,8 @@
+---
+# file: filesystem.yml
+# filesystem playbook
+- hosts: NFS
+  handlers:
+    - include: roles/common/handlers/main.yml
+  roles:
+    - nfs

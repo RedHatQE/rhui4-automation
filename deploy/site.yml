@@ -1,0 +1,18 @@
+---
+# file: site.yml
+# top-level deployment playbook
+- hosts: RHUA
+  roles:
+    - rhui_nodes
+
+- hosts: all
+  roles:
+    - common
+
+- import_playbook: dns.yml
+- import_playbook: filesystem.yml
+- import_playbook: rhua.yml
+- import_playbook: haproxy.yml
+- import_playbook: cds.yml
+- import_playbook: cli.yml
+- import_playbook: tests.yml

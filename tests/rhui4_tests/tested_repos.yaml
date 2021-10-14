@@ -1,0 +1,109 @@
+yum_repos:
+    6:
+        x86_64:
+            name: "Red Hat Enterprise Linux for SAP (RHEL 6 Server) (RPMs) from RHUI"
+            version: "6Server"
+            kind: "Yum"
+            path: "content/dist/rhel/rhui/server/6/6Server/x86_64/sap/os"
+            test_package: "vm-dump-metrics"
+    7:
+        x86_64:
+            name: "Red Hat Enterprise Linux for SAP (RHEL 7 Server) (RPMs) from RHUI"
+            version: "7Server-x86_64"
+            kind: "Yum"
+            path: "content/dist/rhel/rhui/server/7/7Server/x86_64/sap/os"
+            test_package: "vm-dump-metrics"
+        aarch64:
+            name: "Red Hat Developer Tools (for RHEL 7 Server for ARM 64) RPMs from RHUI"
+            version: "7Server-aarch64"
+            kind: "Yum"
+            path: "content/dist/rhel-alt/rhui/server/7/7Server/armv8-a/aarch64/devtools/1/os"
+            test_package: "rust-toolset-7-rust-doc"
+    8:
+        x86_64:
+            name: "Red Hat Enterprise Linux 8 for x86_64 - High Availability (RPMs) from RHUI"
+            version: "8"
+            kind: "Yum"
+            path: "content/dist/rhel8/rhui/8/x86_64/highavailability/os"
+            test_package: "clufter-common"
+        aarch64:
+            name: "Red Hat Enterprise Linux 8 for ARM 64 - Supplementary (RPMs) from RHUI"
+            version: "8"
+            kind: "Yum"
+            path: "content/dist/rhel8/rhui/8/aarch64/supplementary/os"
+            test_package: "zhongyi-song-fonts"
+CLI_repo1:
+    name: "Red Hat Enterprise Linux Atomic Host (Debug RPMs) from RHUI"
+    id: "rhel-atomic-host-rhui-debug-rpms-x86_64"
+    label: "rhel-atomic-host-rhui-debug-rpms"
+    path: "content/dist/rhel/rhui/atomic/7/7Server/x86_64/debug"
+CLI_repo2:
+    name: "Red Hat Enterprise Linux Atomic Host (RPMs) from RHUI"
+    id: "rhel-atomic-host-rhui-rpms-x86_64"
+    label: "rhel-atomic-host-rhui-rpms"
+    path: "content/dist/rhel/rhui/atomic/7/7Server/x86_64/os"
+CLI_product:
+    name: "Red Hat Enterprise Linux Atomic Host (RPMs) from RHUI"
+    id: "rhel-atomic-host-rhui-rpms-x86_64"
+subscriptions:
+    RHUI: "Red Hat Update Infrastructure and RHEL Add-Ons for Providers"
+    Atomic: "Red Hat Enterprise Linux Atomic Host for Certified Cloud and Service Providers (via Red Hat Update Infrastructure)"
+SCA:
+    name: "Content Access"
+    id: "SCA"
+EUS_repos:
+    6:
+        id: "rhel-sap-hana-for-rhel-6-server-eus-rhui-rpms-6.7"
+        label: "rhel-sap-hana-for-rhel-6-server-eus-rhui-rpms"
+        name: "RHEL for SAP HANA (for RHEL 6 Server) Extended Update Support (RPMs) from RHUI (6.7)"
+        path: "content/eus/rhel/rhui/server/6/6.7/x86_64/sap-hana/os"
+        test_package: "compat-sap-c++"
+    7:
+        id: "rhel-sap-hana-for-rhel-7-server-eus-rhui-rpms-7.4-x86_64"
+        label: "rhel-sap-hana-for-rhel-7-server-eus-rhui-rpms"
+        name: "RHEL for SAP HANA (for RHEL 7 Server) Extended Update Support (RPMs) from RHUI (7.4-x86_64)"
+        path: "content/eus/rhel/rhui/server/7/7.4/x86_64/sap-hana/os"
+        test_package: "compat-sap-c++-7"
+    8:
+        id: "rhel-8-for-x86_64-sap-solutions-e4s-rhui-rpms-8.2"
+        label: "rhel-8-for-x86_64-sap-solutions-e4s-rhui-rpms"
+        name: "Red Hat Enterprise Linux 8 for x86_64 - SAP Solutions - Update Services for SAP Solutions from RHUI (RPMs) (8.2)"
+        path: "content/e4s/rhel8/rhui/8.2/x86_64/sap-solutions/os"
+        test_package: "compat-sap-c++-9"
+updateinfo:
+    0:
+        all:
+            repo_id: "hts-6"
+    6:
+        x86_64:
+            repo_name: "Red Hat Hardware Certification Test Suite 6"
+            repo_id: "hts-6"
+            test_package: "hwcert-client-info"
+            old_version: "1.6.5.2-20140611.el6"
+            errata: "RHEA-2014:1805"
+    7:
+        x86_64:
+            repo_name: "Red Hat Storage Console Agent 2.0"
+            repo_id: "rhscon-agent-2"
+            test_package: "rhscon-core-selinux"
+            old_version: "0.0.41-1.el7scon"
+            errata: "RHSA-2016:2082"
+    8:
+        x86_64:
+            repo_name: "Simple Errata (from Pulp Demo Repos)"
+            repo_id: "pulp-test_simple_errata"
+            gpg_key: "nokey"
+            test_package: "test-package"
+            old_version: "0.1-1.el6"
+            errata: "RHEA-2010:0001"
+        aarch64:
+            repo_name: "Errata Install (from Pulp Demo Repos)"
+            repo_id: "pulp-test_errata_install"
+            gpg_key: "nokey"
+            test_package: "grinder_test_package"
+            old_version: "2.0-1.fc14"
+            errata: "RHEA-2013:9999"
+remote_content:
+    rpm: "http://mirror.centos.org/centos/7/fasttrack/x86_64/Packages/firewalld-filesystem-0.6.3-2.el7_7.1.0.1.noarch.rpm"
+    ftp: "ftp://ftp.redhat.com/redhat/linux/enterprise/2.1AS/en/os/i386/SRPMS/xsnow-1.40-14.src.rpm"
+    html_with_links: "https://repos.fedorapeople.org/pulp/pulp/demo_repos/repo_resync_b/"
