@@ -71,7 +71,7 @@ class RHUIManagerCLIInstance():
             if node_type == "cds":
                 hostnames = ConMgr.get_cds_hostnames()
             elif node_type == "haproxy":
-                hostnames = ConMgr.get_haproxy_hostnames()
+                hostnames = ConMgr.get_cds_lb_hostname()
         cmd = f"rhui-manager {node_type} delete --hostnames {','.join(hostnames)}"
         if force:
             cmd += " --force"

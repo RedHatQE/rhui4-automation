@@ -75,6 +75,8 @@ class ConMgr():
         key_file_exists = connection.recv_exit_status("test -f ~/.ssh/known_hosts") == 0
         if key_file_exists:
             if not hostnames:
-                hostnames = ConMgr.get_cds_hostnames() + ConMgr.get_haproxy_hostnames()
+                hostnames = ConMgr.get_cds_hostnames() + \
+                            ConMgr.get_haproxy_hostnames() + \
+                            [ConMgr.get_cds_lb_hostname()]
             for host in hostnames:
                 Expect.expect_retval(connection, f"ssh-keygen -R {host}")
