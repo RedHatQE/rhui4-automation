@@ -109,9 +109,10 @@
     name:
       - wget
       - sos
+      - nc
     state: present
   delegate_to: "{{ item }}"
-  with_items: "{{ groups['RHUA']|default([]) + groups['CDS']|default([]) }}"
+  with_items: "{{ groups['RHUA']|default([]) + groups['CDS']|default([]) + groups['HAPROXY']|default([]) }}"
   tags: tests
 
 - name: upload Red Hat credentials
