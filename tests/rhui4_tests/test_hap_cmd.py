@@ -36,31 +36,51 @@ def test_02_list_hap():
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
     nose.tools.eq_(hap_list, [])
 
-def test_03_add_hap():
+def test_03_add_safe_unknown_key():
     '''
-    add an HAProxy Load-balancer
+    try adding the Load-balancer when its SSH key is unknown, without using --unsafe; should fail
+    '''
+    # for RHBZ#1409460
+    # make sure its key is unknown
+    ConMgr.remove_ssh_keys(RHUA)
+    # try adding the Load-balancer
+    status = RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME)
+    nose.tools.ok_(not status, msg=f"unexpected addition status: {status}")
+    hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
+    nose.tools.eq_(hap_list, [])
+
+def test_04_add_safe_known_key():
+    '''
+    add and delete the Load-balancer when its SSH key is known, without using --unsafe; should work
+    '''
+    # for RHBZ#1409460
+    # accept the host's SSH key
+    ConMgr.add_ssh_keys(RHUA, [HA_HOSTNAME])
+    # actually add and delete the host
+    status = RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME)
+    nose.tools.ok_(status, msg=f"unexpected addition status: {status}")
+    hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
+    nose.tools.eq_(hap_list, [HA_HOSTNAME])
+    status = RHUIManagerCLIInstance.delete(RHUA, "haproxy", [HA_HOSTNAME], force=True)
+    nose.tools.ok_(status, msg=f"unexpected deletion status: {status}")
+    # clean up the SSH key
+    ConMgr.remove_ssh_keys(RHUA)
+
+def test_05_add_hap():
+    '''
+    add an HAProxy Load-balancer when its SSH key is unknown, with using --unsafe
     '''
     status = RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME, unsafe=True)
     nose.tools.ok_(status, msg=f"unexpected installation status: {status}")
-
-def test_04_list_hap():
-    '''
-    check if the HAProxy Load-balancer has been added
-    '''
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
     nose.tools.eq_(hap_list, [HA_HOSTNAME])
 
-def test_05_reinstall_hap():
+def test_06_reinstall_hap():
     '''
     add the HAProxy Load-balancer again by reinstalling it
     '''
     status = RHUIManagerCLIInstance.reinstall(RHUA, "haproxy", HA_HOSTNAME)
     nose.tools.ok_(status, msg=f"unexpected reinstallation status: {status}")
-
-def test_06_list_hap():
-    '''
-    check if the HAProxy Load-balancer is still tracked, and only once
-    '''
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
     nose.tools.eq_(hap_list, [HA_HOSTNAME])
 
@@ -157,7 +177,7 @@ def test_17_add_hap_changed_case():
     add and delete an HAProxy Load-balancer with uppercase characters, should work
     '''
     # for RHBZ#1572623
-    hap_up = HA_HOSTNAME.replace("hap", "HAP")
+    hap_up = HA_HOSTNAME.replace("cds", "CDS")
     status = RHUIManagerCLIInstance.add(RHUA, "haproxy", hap_up, unsafe=True)
     nose.tools.ok_(status, msg=f"unexpected addition status: {status}")
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
@@ -165,41 +185,12 @@ def test_17_add_hap_changed_case():
     status = RHUIManagerCLIInstance.delete(RHUA, "haproxy", [hap_up], force=True)
     nose.tools.ok_(status, msg=f"unexpected deletion status: {status}")
 
-def test_18_add_safe_unknown_key():
-    '''
-    try adding the Load-balancer when its SSH key is unknown, without using --unsafe; should fail
-    '''
-    # for RHBZ#1409460
-    # make sure its key is unknown
-    ConMgr.remove_ssh_keys(RHUA, [HA_HOSTNAME])
-    # try adding the Load-balancer
-    status = RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME)
-    nose.tools.ok_(not status, msg=f"unexpected addition status: {status}")
-    hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
-    nose.tools.eq_(hap_list, [])
-
-def test_19_add_safe_known_key():
-    '''
-    add and delete the Load-balancer when its SSH key is known, without using --unsafe; should work
-    '''
-    # for RHBZ#1409460
-    # accept the host's SSH key
-    ConMgr.add_ssh_keys(RHUA, [HA_HOSTNAME])
-    # actually add and delete the host
-    status = RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME)
-    nose.tools.ok_(status, msg=f"unexpected addition status: {status}")
-    hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
-    nose.tools.eq_(hap_list, [HA_HOSTNAME])
-    status = RHUIManagerCLIInstance.delete(RHUA, "haproxy", [HA_HOSTNAME], force=True)
-    nose.tools.ok_(status, msg=f"unexpected deletion status: {status}")
-    # clean up the SSH key
-    ConMgr.remove_ssh_keys(RHUA, [HA_HOSTNAME])
-
-def test_20_delete_unreachable():
+def test_18_delete_unreachable():
     '''
     add a Load-balancer, make it unreachable, and see if it can still be deleted from the RHUA
     '''
     # for RHBZ#1639996
+    ConMgr.remove_ssh_keys(RHUA)
     status = RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME, unsafe=True)
     nose.tools.ok_(status, msg=f"unexpected installation status: {status}")
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
@@ -222,9 +213,9 @@ def test_20_delete_unreachable():
     RHUIManagerCLIInstance.delete(RHUA, "haproxy", [HA_HOSTNAME], force=True)
 
     # clean up the SSH key
-    ConMgr.remove_ssh_keys(RHUA, [HA_HOSTNAME])
+    ConMgr.remove_ssh_keys(RHUA)
 
-def test_21_check_cleanup():
+def test_19_check_cleanup():
     '''
     check if the haproxy service was stopped
     '''

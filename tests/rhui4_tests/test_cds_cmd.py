@@ -37,22 +37,51 @@ def test_02_list_cds():
     cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
     nose.tools.eq_(cds_list, [])
 
-def test_03_add_cds():
+def test_03_add_safe_unknown_key():
     '''
-    add all known CDSs
+    try adding a CDS whose SSH key is unknown, without using --unsafe; should fail
+    '''
+    # for RHBZ#1409460
+    # choose a random CDS hostname from the list
+    cds = random.choice(CDS_HOSTNAMES)
+    # make sure its key is unknown
+    ConMgr.remove_ssh_keys(RHUA)
+    # try adding the CDS
+    status = RHUIManagerCLIInstance.add(RHUA, "cds", cds)
+    nose.tools.ok_(not status, msg=f"unexpected {cds} addition status: {status}")
+    cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
+    nose.tools.eq_(cds_list, [])
+
+def test_04_add_safe_known_key():
+    '''
+    add and delete a CDS whose SSH key is known, without using --unsafe; should work
+    '''
+    # for RHBZ#1409460
+    # choose a random CDS hostname from the list
+    cds = random.choice(CDS_HOSTNAMES)
+    # accept the host's SSH key
+    ConMgr.add_ssh_keys(RHUA, [cds])
+    # actually add and delete the host
+    status = RHUIManagerCLIInstance.add(RHUA, "cds", cds)
+    nose.tools.ok_(status, msg=f"unexpected {cds} addition status: {status}")
+    cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
+    nose.tools.eq_(cds_list, [cds])
+    status = RHUIManagerCLIInstance.delete(RHUA, "cds", [cds], force=True)
+    nose.tools.ok_(status, msg=f"unexpected {cds} deletion status: {status}")
+    # clean up the SSH key
+    ConMgr.remove_ssh_keys(RHUA)
+
+def test_05_add_cds():
+    '''
+    add all CDSs, with unknown SSH keys, with --unsafe
     '''
     for cds in CDS_HOSTNAMES:
         status = RHUIManagerCLIInstance.add(RHUA, "cds", cds, unsafe=True)
         nose.tools.ok_(status, msg=f"unexpected {cds} installation status: {status}")
-
-def test_04_list_cds():
-    '''
-    check if the CDSs have been added
-    '''
     cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
     nose.tools.eq_(cds_list, CDS_HOSTNAMES)
 
-def test_05_reinstall_cds():
+def test_06_reinstall_cds():
     '''
     add one of the CDSs again by reinstalling it
     '''
@@ -60,11 +89,6 @@ def test_05_reinstall_cds():
     cds = random.choice(CDS_HOSTNAMES)
     status = RHUIManagerCLIInstance.reinstall(RHUA, "cds", cds)
     nose.tools.ok_(status, msg=f"unexpected {cds} reinstallation status: {status}")
-
-def test_06_list_cds():
-    '''
-    check if the CDSs are still tracked, and nothing extra has appeared
-    '''
     cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
     # the reinstalled CDS is now the last one in the list; the list may not be the same, sort it!
     cds_list.sort()
@@ -184,41 +208,7 @@ def test_17_add_cds_changed_case():
     status = RHUIManagerCLIInstance.delete(RHUA, "cds", [cds_up], force=True)
     nose.tools.ok_(status, msg=f"unexpected {cds_up} deletion status: {status}")
 
-def test_18_add_safe_unknown_key():
-    '''
-    try adding a CDS whose SSH key is unknown, without using --unsafe; should fail
-    '''
-    # for RHBZ#1409460
-    # choose a random CDS hostname from the list
-    cds = random.choice(CDS_HOSTNAMES)
-    # make sure its key is unknown
-    ConMgr.remove_ssh_keys(RHUA, [cds])
-    # try adding the CDS
-    status = RHUIManagerCLIInstance.add(RHUA, "cds", cds)
-    nose.tools.ok_(not status, msg=f"unexpected {cds} addition status: {status}")
-    cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
-    nose.tools.eq_(cds_list, [])
-
-def test_19_add_safe_known_key():
-    '''
-    add and delete a CDS whose SSH key is known, without using --unsafe; should work
-    '''
-    # for RHBZ#1409460
-    # choose a random CDS hostname from the list
-    cds = random.choice(CDS_HOSTNAMES)
-    # accept the host's SSH key
-    ConMgr.add_ssh_keys(RHUA, [cds])
-    # actually add and delete the host
-    status = RHUIManagerCLIInstance.add(RHUA, "cds", cds)
-    nose.tools.ok_(status, msg=f"unexpected {cds} addition status: {status}")
-    cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
-    nose.tools.eq_(cds_list, [cds])
-    status = RHUIManagerCLIInstance.delete(RHUA, "cds", [cds], force=True)
-    nose.tools.ok_(status, msg=f"unexpected {cds} deletion status: {status}")
-    # clean up the SSH key
-    ConMgr.remove_ssh_keys(RHUA, [cds])
-
-def test_20_delete_unreachable():
+def test_18_delete_unreachable():
     '''
     add a CDS, make it unreachable, and see if it can still be deleted from the RHUA
     '''
@@ -246,7 +236,7 @@ def test_20_delete_unreachable():
     RHUIManagerCLIInstance.add(RHUA, "cds", cds, unsafe=True)
     RHUIManagerCLIInstance.delete(RHUA, "cds", [cds], force=True)
 
-def test_21_check_cleanup():
+def test_19_check_cleanup():
     '''
     check if nginx was stopped and the remote file system unmounted on all CDSs
     '''
@@ -271,5 +261,5 @@ def teardown():
     announce the end of the test run
     '''
     # also clean up SSH keys left by rhui
-    ConMgr.remove_ssh_keys(RHUA, CDS_HOSTNAMES)
+    ConMgr.remove_ssh_keys(RHUA)
     print(f"*** Finished running {basename(__file__)}. ***")

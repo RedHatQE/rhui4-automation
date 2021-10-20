@@ -71,12 +71,11 @@ class ConMgr():
 
     @staticmethod
     def remove_ssh_keys(connection, hostnames=""):
-        """remove SSH keys that belong to the given (or all CDS & HAProxy) hosts"""
+        """remove SSH keys that belong to the given (or all) hosts"""
         key_file_exists = connection.recv_exit_status("test -f ~/.ssh/known_hosts") == 0
         if key_file_exists:
             if not hostnames:
-                hostnames = ConMgr.get_cds_hostnames() + \
-                            ConMgr.get_haproxy_hostnames() + \
-                            [ConMgr.get_cds_lb_hostname()]
+                Expect.expect_retval(connection, "rm -f ~/.ssh/known_hosts")
+                return
             for host in hostnames:
                 Expect.expect_retval(connection, f"ssh-keygen -R {host}")

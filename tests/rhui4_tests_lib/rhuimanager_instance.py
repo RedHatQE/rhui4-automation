@@ -87,7 +87,7 @@ class RHUIManagerInstance():
         time.sleep(7)
         state = Expect.expect_list(connection, [
             (re.compile(".*Cannot find file, please enter a valid path.*", re.DOTALL), 1),
-            (re.compile(".*Checking that instance ports are reachable.*", re.DOTALL), 2)
+            (re.compile(".*Checking SSH authentication on instance.*", re.DOTALL), 2)
         ])
         if state == 1:
             # don't know how to continue with invalid path: raise an exception
@@ -97,7 +97,7 @@ class RHUIManagerInstance():
         # all OK
         # if the SSH key is unknown, rhui-manager now asks you to confirm it; say yes
         if not known_host:
-            Expect.enter(connection, "y")
+            Expect.enter(connection, "yes")
         # installation and configuration through Ansible happens here, let it take its time
         RHUIManager.quit(connection, "The .*was successfully configured.", 180)
 
