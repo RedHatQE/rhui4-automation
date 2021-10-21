@@ -237,3 +237,11 @@ class Util():
         info_pair_list = [line.split(":", 1) for line in lines]
         info_dict = {i[0].replace(" ", "").lower(): i[1].lstrip() for i in info_pair_list}
         return info_dict
+
+    @staticmethod
+    def is_logged_in(connection):
+        '''
+        returns true if login credentials exist, or false otherwise
+        '''
+        cmd = "test -f /root/.rhui/http-localhost:24817/cookies.txt"
+        return connection.recv_exit_status(cmd) == 0

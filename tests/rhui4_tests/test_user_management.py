@@ -1,12 +1,16 @@
 '''User management tests'''
 
 from os.path import basename
+import time
 
 import logging
+import nose
 from stitches.expect import Expect
 
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
+from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
+from rhui4_tests_lib.util import Util
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -54,6 +58,24 @@ def test_05_login_with_wrong_pass():
     Expect.enter(RHUA, "wrong_pass")
     Expect.expect(RHUA,
                   ".*Invalid login, please check the authentication credentials and try again.")
+
+def test_06_login_logout_tui():
+    '''
+        log in and then log out in the TUI
+    '''
+    RHUIManager.initial_run(RHUA)
+    RHUIManager.logout(RHUA)
+    time.sleep(2)
+    nose.tools.ok_(not Util.is_logged_in(RHUA))
+
+def test_07_login_logout_cli():
+    '''
+        log in and then log out on the command line
+    '''
+    RHUIManager.initial_run(RHUA)
+    RHUIManagerCLI.logout(RHUA)
+    time.sleep(2)
+    nose.tools.ok_(not Util.is_logged_in(RHUA))
 
 def teardown():
     '''

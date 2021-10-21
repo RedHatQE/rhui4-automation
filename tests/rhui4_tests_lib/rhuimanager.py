@@ -106,13 +106,12 @@ class RHUIManager():
         Expect.enter(connection, "q")
 
     @staticmethod
-    def logout(connection, prefix=""):
+    def logout(connection):
         '''
-        Logout from rhui-manager
-
-        Use @param prefix to specify something to expect before exiting
+        Log out from rhui-manager
+        To be run when logged in, and when in the shell (not in rhui-manager).
         '''
-        Expect.expect(connection, prefix + r".*rhui \(.*\) =>")
+        Expect.enter(connection, "rhui-manager")
         Expect.enter(connection, "logout")
 
     @staticmethod

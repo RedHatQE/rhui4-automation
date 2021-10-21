@@ -360,3 +360,10 @@ class RHUIManagerCLI():
                          cmd,
                          f"Location: {directory}/{rpmdata[0]}-{rpmdata[1]}/build/RPMS/noarch/" +
                          f"{rpmdata[0]}-{rpmdata[1]}-1.noarch.rpm")
+
+    @staticmethod
+    def logout(connection):
+        '''
+        log out from rhui-manager
+        '''
+        Expect.enter(connection, "rhui-manager --logout")
