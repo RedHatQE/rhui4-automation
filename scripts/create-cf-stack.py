@@ -348,7 +348,7 @@ for i in (5, 6, 7, 8):
                 cli_arch = "x86_64"
             try:
                 # RHEL 5 and 6 can't run on m5
-                instance_type = instance_types[cli_arch] if i >= 7 else 'm3.large'
+                instance_type = instance_types[cli_arch] if i >= 7 else 'm3.large' if args.novpc else 'i3.large'
             except KeyError:
                 logging.error("Unknown architecture: %s" % cli_arch)
                 sys.exit(1)
