@@ -185,7 +185,7 @@ if args.cli9 == -1:
 
 if args.rhua:
     logging.info("The --rhua parameter is deprecated. " +
-                 "RHEL 7 is used on all nodes except for clients that you set up differently.")
+                 "RHEL 8 is used on all nodes except for clients that you set up differently.")
 if args.iso:
     logging.info("The --iso parameter is deprecated. Use --name instead. " +
                  "Using '%s' as the name to keep compatibility & for your convenience." % args.iso)
