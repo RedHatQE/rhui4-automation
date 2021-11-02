@@ -192,24 +192,23 @@ if args.iso:
     args.name = args.iso
 rhui_os = "RHEL8"
 
-json_dict['Description'] = 'RHUI with %s CDSes' % args.cds
-json_dict['Description'] += " %s HAProxy" % args.haproxy
+json_dict['Description'] = "Client-only stack" if args.cli_only else "RHUI with %s CDS and %s HAProxy nodes" % (args.cds, args.haproxy)
 if args.cli5 > 0:
-    json_dict['Description'] += " %s RHEL5 clients" % args.cli5
+    json_dict['Description'] += ", %s RHEL5 client" % args.cli5 + ("s" if args.cli5 > 1 else "")
 if args.cli6 > 0:
-    json_dict['Description'] += " %s RHEL6 clients" % args.cli6
+    json_dict['Description'] += ", %s RHEL6 client" % args.cli6 + ("s" if args.cli6 > 1 else "")
 if args.cli7 > 0:
-    json_dict['Description'] += " %s RHEL7 clients" % args.cli7
+    json_dict['Description'] += ", %s RHEL7 client" % args.cli7 + ("s" if args.cli7 > 1 else "")
 if args.cli8 > 0:
-    json_dict['Description'] += " %s RHEL8 clients" % args.cli8
+    json_dict['Description'] += ", %s RHEL8 client" % args.cli8 + ("s" if args.cli8 > 1 else "")
 if args.cli9 > 0:
-    json_dict['Description'] += " %s RHEL9 clients" % args.cli9
+    json_dict['Description'] += ", %s RHEL9 client" % args.cli9 + ("s" if args.cli9 > 1 else "")
 if args.test:
-    json_dict['Description'] += " TEST machine"
+    json_dict['Description'] += ", TEST machine"
 if args.dns:
-    json_dict['Description'] += " DNS"
+    json_dict['Description'] += ", DNS"
 if args.nfs:
-    json_dict['Description'] += " NFS"
+    json_dict['Description'] += ", NFS"
 
 
 fs_type_f = fs_type
