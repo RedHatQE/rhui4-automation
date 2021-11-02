@@ -27,7 +27,9 @@ if not args.rhel:
     argparser.print_help()
     sys.exit(1)
 
-if args.rhel.startswith("RHEL-8"):
+if args.rhel.startswith("RHEL-9"):
+    MAPPING = "RHEL9mapping.json"
+elif args.rhel.startswith("RHEL-8"):
     MAPPING = "RHEL8mapping.json"
 elif args.rhel.startswith("RHEL-7"):
     MAPPING = "RHEL7mapping.json"
