@@ -15,6 +15,7 @@ from stitches.expect import Expect
 import yaml
 
 from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.pulp_api import PulpAPI
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_client import RHUIManagerClient
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
@@ -185,7 +186,7 @@ class TestClient():
                                          "| sort -u")
         orig_errata = stdout.read().decode().splitlines()
 
-        _, stdout, _ = CLI.exec_command("zgrep -o 'errata_pattern' " +
+        _, stdout, _ = CLI.exec_command(f"zgrep -o '{errata_pattern}' " +
                                         f"{cache}/*updateinfo.xml.gz " +
                                         "| sort -u")
         processed_errata = stdout.read().decode().splitlines()
@@ -210,6 +211,8 @@ class TestClient():
         Util.remove_rpm(CLI, [self.test["test_package"], self.test["repo_id"]])
         RHUIManagerRepo.delete_all_repos(RHUA)
         Expect.expect_retval(RHUA, f"rm -rf /tmp/{self.test['repo_id']}*")
+        # delete the errata from Pulp
+        PulpAPI.delete_orphans(RHUA)
         if not getenv("RHUISKIPSETUP"):
             RHUIManagerInstance.delete_all(RHUA, "loadbalancers")
             RHUIManagerInstance.delete_all(RHUA, "cds")
