@@ -14,6 +14,7 @@ from rhui4_tests_lib.util import Util
 
 logging.basicConfig(level=logging.DEBUG)
 
+CREDS_BACKUP = "/root/rhui-subscription-sync.conf"
 RHUA = ConMgr.connect()
 
 def setup():
@@ -32,6 +33,8 @@ def test_02_change_password():
     '''
         change the password (will log the user out automatically)
     '''
+    # back up the credentials file first
+    Expect.expect_retval(RHUA, "cp -a /etc/rhui/rhui-subscription-sync.conf " + CREDS_BACKUP)
     RHUIManager.change_user_password(RHUA, password="new_rhui_pass")
 
 def test_03_login_with_new_pass():
@@ -44,7 +47,10 @@ def test_04_reset_password():
     '''
         change the password back to the default one
     '''
-    RHUIManager.change_user_password(RHUA)
+    default_password = Util.get_saved_password(RHUA, CREDS_BACKUP)
+    RHUIManager.change_user_password(RHUA, default_password)
+    # remove the backup
+    Expect.expect_retval(RHUA, "rm -f " + CREDS_BACKUP)
 
 def test_05_login_with_wrong_pass():
     '''

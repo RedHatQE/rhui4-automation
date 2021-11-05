@@ -214,7 +214,7 @@ class RHUIManager():
         Expect.enter(connection, password)
         Expect.expect(connection, "Password successfully updated")
         # this action is supposed to log the admin out and thus delete the Pulp cookies
-        Expect.expect_retval(connection, "test -d /root/.rhui/http-localhost:24817/cookies.txt", 1)
+        Expect.expect_retval(connection, "test -f /root/.rhui/http-localhost:24817/cookies.txt", 1)
 
     @staticmethod
     def remove_rh_certs(connection):

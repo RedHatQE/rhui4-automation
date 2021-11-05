@@ -99,13 +99,12 @@ class Util():
         Expect.expect_retval(target_connection, "rm -f " + target_file_name)
 
     @staticmethod
-    def get_saved_password(connection):
+    def get_saved_password(connection, creds_file="/etc/rhui/rhui-subscription-sync.conf"):
         '''
         Read rhui-manager password from the rhui-subscription-sync configuration file
         '''
-        sub_sync_file = "/etc/rhui/rhui-subscription-sync.conf"
         creds_cfg = ConfigParser()
-        _, stdout, _ = connection.exec_command("cat " + sub_sync_file)
+        _, stdout, _ = connection.exec_command("cat " + creds_file)
         creds_cfg.read_file(stdout)
         return creds_cfg.get("auth", "password") if creds_cfg.has_section("auth") else None
 
