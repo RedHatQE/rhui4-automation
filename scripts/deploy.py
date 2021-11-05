@@ -58,6 +58,8 @@ PRS.add_argument("--tags",
 PRS.add_argument("--skip-tags",
                  help="skip tasks tagged this way",
                  metavar="tags")
+PRS.add_argument("--extra-vars",
+                 help="supply these variables to Ansible")
 PRS.add_argument("--dry-run",
                  help="only construct and print the ansible-playbook command, do not run it",
                  action="store_true")
@@ -133,6 +135,9 @@ if ARGS.patch:
     else:
         print(f"--patch was specified but {ARGS.patch} does not exist, exiting.")
         sys.exit(1)
+
+if ARGS.extra_vars:
+    EVARS += " " + ARGS.extra_vars
 
 # join the command and the extra variables
 CMD += EVARS.lstrip() + "'"
