@@ -16,7 +16,7 @@ import yaml
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_entitlement import RHUIManagerEntitlements
-from rhui4_tests_lib.rhuimanager_repo import RHUIManagerRepo
+from rhui4_tests_lib.rhuimanager_repo import AlreadyExistsError, RHUIManagerRepo
 from rhui4_tests_lib.util import Util
 
 logging.basicConfig(level=logging.DEBUG)
@@ -93,14 +93,13 @@ class TestRepo():
         '''check if the repolist contains the 3 custom repos'''
         nose.tools.eq_(RHUIManagerRepo.list(RHUA), sorted(CUSTOM_REPOS))
 
-# bug
-#    @staticmethod
-#    def test_04_repo_id_uniqueness():
-#        '''verify that rhui-manager refuses to create a custom repo whose name already exists'''
-#        nose.tools.assert_raises(AlreadyExistsError,
-#                                 RHUIManagerRepo.add_custom_repo,
-#                                 RHUA,
-#                                 CUSTOM_REPOS[0])
+    @staticmethod
+    def test_04_repo_id_uniqueness():
+        '''verify that rhui-manager refuses to create a custom repo whose name already exists'''
+        nose.tools.assert_raises(AlreadyExistsError,
+                                 RHUIManagerRepo.add_custom_repo,
+                                 RHUA,
+                                 CUSTOM_REPOS[0])
 
     def test_05_upload_local_rpms(self):
         '''upload rpms from a local directory to a custom repo'''
