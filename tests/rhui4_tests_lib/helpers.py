@@ -5,6 +5,7 @@ from os.path import join
 from configparser import ConfigParser
 
 from stitches.expect import Expect
+import nose
 
 class Helpers():
     """actions that may be repeated in specific test cases and do not belong in general utils"""
@@ -141,3 +142,44 @@ class Helpers():
     def is_registered(connection):
         """return True if the remote host is registered with RHSM, or False otherwise"""
         return connection.recv_exit_status("subscription-manager identity") == 0
+
+    @staticmethod
+    def restart_rhui_services(connection, node_type="rhua"):
+        """restart RHUI services on the remote host (according to the specified type)"""
+        services = {
+                    "rhua":    [
+                                "nginx",
+                                "pulpcore-api",
+                                "pulpcore-content",
+                                "pulpcore-resource-manager",
+                                "pulpcore-worker@*"
+                               ],
+                    "cds":     [
+                                "nginx",
+                                "gunicorn-auth",
+                                "gunicorn-content_manager",
+                                "gunicorn-mirror"
+                               ],
+                    "haproxy": [
+                                "haproxy"
+                               ]
+                   }
+        if node_type not in services.keys():
+            raise ValueError(f"{node_type} is not a know node type") from None
+        get_pids_cmd = "systemctl -p MainPID show %s | awk -F = '/PID/ { print $2 }'"
+        # fetch the current PIDs
+        _, stdout, _ = connection.exec_command(get_pids_cmd % " ".join(services[node_type]))
+        oldpids = list(map(int, stdout.read().decode().splitlines()))
+        # actually run the restart script, should exit with 0
+        Expect.expect_retval(connection, "rhui-services-restart")
+        # fetch PIDs again
+        _, stdout, _ = connection.exec_command(get_pids_cmd % " ".join(services[node_type]))
+        newpids = list(map(int, stdout.read().decode().splitlines()))
+        # 0 in the output means the service is down (or doesn't exist)
+        nose.tools.ok_(0 not in oldpids, msg="an inactive (or unknown) service was detected")
+        # the number of PIDs should remain the same
+        nose.tools.eq_(len(oldpids), len(newpids))
+        # none of the new PIDs should be among the old PIDs; that would mean the service
+        # wasn't restarted
+        for pid in newpids:
+            nose.tools.ok_(pid not in oldpids, msg=f"{pid} remained running")
