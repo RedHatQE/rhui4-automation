@@ -32,6 +32,19 @@ yum_repos:
             kind: "Yum"
             path: "content/dist/rhel8/rhui/8/aarch64/supplementary/os"
             test_package: "zhongyi-song-fonts"
+    9:
+        x86_64:
+            name: "Red Hat Enterprise Linux 9 for x86_64 - BaseOS Beta from RHUI (RPMs)"
+            version: ""
+            kind: "Yum"
+            path: "content/beta/rhel9/rhui/9/x86_64/baseos/os"
+            test_package: "tree"
+        aarch64:
+            name: "Red Hat Enterprise Linux 9 for ARM 64 - BaseOS Beta (RPMs) from RHUI"
+            version: ""
+            kind: "Yum"
+            path: "content/beta/rhel9/rhui/9/aarch64/baseos/os"
+            test_package: "tree"
 CLI_repo1:
     name: "Red Hat Enterprise Linux Atomic Host (Debug RPMs) from RHUI"
     id: "rhel-atomic-host-rhui-debug-rpms-x86_64"

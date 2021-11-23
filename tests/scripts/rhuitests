@@ -88,7 +88,7 @@ if [[ $1 == client ]]; then
 fi
 
 output=/tmp/$(basename $0)_$1_output_$(date +%F-%T).txt
-identity=~/.ssh/id_rsa_test
+identity=~/.ssh/id_ecdsa_test
 export PYTHONUNBUFFERED=1
 
 if [[ $1 == all ]]; then

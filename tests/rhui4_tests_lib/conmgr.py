@@ -14,7 +14,7 @@ SHORT_HOSTNAMES = {"RHUA": "rhua",
 DOMAIN = "example.com"
 
 USER_NAME = "root"
-USER_KEY = "/root/.ssh/id_rsa_test"
+USER_KEY = "/root/.ssh/id_ecdsa_test"
 SUDO_USER_NAME = "ec2-user"
 SUDO_USER_KEY = "/root/.ssh/id_rsa_rhua"
 
