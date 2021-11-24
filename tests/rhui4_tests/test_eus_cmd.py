@@ -25,10 +25,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 RHUA = ConMgr.connect()
 # To make this script communicate with a client machine different from cli01.example.com, run:
-# export RHUIManagerCLIInstance=hostname
+# export RHUICLI=hostname
 # in your shell before running this script, replacing "hostname" with the actual client host name.
 # This allows for multiple client machines in one stack.
-CLI = ConMgr.connect(getenv("RHUIManagerCLIInstance", ConMgr.get_cli_hostnames()[0]))
+CLI = ConMgr.connect(getenv("RHUICLI", ConMgr.get_cli_hostnames()[0]))
 
 CONF_RPM_NAME = "eus-rhui"
 
@@ -49,9 +49,9 @@ class TestEUSCLI():
                 self.repo_path = doc["EUS_repos"][self.cli_version]["path"]
                 self.test_package = doc["EUS_repos"][self.cli_version]["test_package"]
             except KeyError as version:
-                raise nose.SkipTest("No test repo defined for RHEL " + version)
+                raise nose.SkipTest(f"No test repo defined for RHEL {version}")
             if arch not in self.repo_path:
-                raise nose.SkipTest("No test repo defined for " + arch)
+                raise nose.SkipTest(f"No test repo defined for {arch}")
 
     @staticmethod
     def setup_class():
