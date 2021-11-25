@@ -23,13 +23,14 @@ username=YOUR_RH_USERNAME
 password=YOUR_RH_PASSWORD
 ````
 
-The deployment script can also read templates for RHEL 7 or 8 Beta URLs
+The deployment script can also read templates for RHEL 7, 8, or 9 Beta URLs
 from `~/.rhui4-automation.cfg`; the expected format is as follows:
 
 ```
 [beta]
 rhel7_template=http://host/path/%s/path/
 rhel8_template=http://host/path/%s/path/
+rhel9_template=http://host/path/%s/path/
 ```
 
 Managed roles

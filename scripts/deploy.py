@@ -52,6 +52,9 @@ PRS.add_argument("--rhel7b",
 PRS.add_argument("--rhel8b",
                  help="RHEL 8 Beta baseurl or compose",
                  metavar="URL/compose")
+PRS.add_argument("--rhel9b",
+                 help="RHEL 9 Beta baseurl or compose",
+                 metavar="URL/compose")
 PRS.add_argument("--tags",
                  help="run only tasks tagged this way",
                  metavar="tags")
@@ -125,6 +128,16 @@ if ARGS.rhel8b:
                   "It must contain '%s' in one place.")
             sys.exit(1)
     EVARS += " rhel8_beta_baseurl=" + ARGS.rhel8b
+
+if ARGS.rhel9b:
+    if ":/" not in ARGS.rhel9b and R4A_CFG.has_option("beta", "rhel9_template"):
+        try:
+            ARGS.rhel9b = R4A_CFG.get("beta", "rhel9_template") % ARGS.rhel9b
+        except TypeError:
+            print(f"The RHEL 9 Beta URL template is written incorrectly in {CFG_FILE}. " +
+                  "It must contain '%s' in one place.")
+            sys.exit(1)
+    EVARS += " rhel9_beta_baseurl=" + ARGS.rhel9b
 
 if ARGS.tests:
     EVARS += " tests=" + ARGS.tests
