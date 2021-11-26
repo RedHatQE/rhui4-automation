@@ -116,6 +116,21 @@ updateinfo:
             test_package: "grinder_test_package"
             old_version: "2.0-1.fc14"
             errata: "RHEA-2013:9999"
+    9:
+        x86_64:
+            repo_name: "Zoo (from Pulp Demo Repos)"
+            repo_id: "pulp-test_zoo"
+            gpg_key: "nokey"
+            test_package: "bear"
+            old_version: "4.0-1"
+            errata: "RHEA-2012:0001"
+        aarch64:
+            repo_name: "Zoo (from Pulp Demo Repos)"
+            repo_id: "pulp-test_zoo"
+            gpg_key: "nokey"
+            test_package: "bear"
+            old_version: "4.0-1"
+            errata: "RHEA-2012:0001"
 remote_content:
     rpm: "http://mirror.centos.org/centos/7/fasttrack/x86_64/Packages/firewalld-filesystem-0.6.3-2.el7_7.1.0.1.noarch.rpm"
     ftp: "ftp://ftp.redhat.com/redhat/linux/enterprise/2.1AS/en/os/i386/SRPMS/xsnow-1.40-14.src.rpm"
