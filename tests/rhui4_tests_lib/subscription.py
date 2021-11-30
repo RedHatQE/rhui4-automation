@@ -44,7 +44,7 @@ class RHSMRHUI():
     @staticmethod
     def enable_rhui_repo(connection, base_rhel=True):
         """enable the RHUI 4 repo and by default also the base RHEL repo, disable everything else"""
-        cmd = "subscription-manager repos --disable=* --enable=rhui-4-beta-for-rhel-8-x86_64-rpms"
+        cmd = "subscription-manager repos --disable=* --enable=rhui-4-for-rhel-8-x86_64-rpms"
         if base_rhel:
             cmd += " --enable=rhel-8-for-x86_64-appstream-rhui-rpms"
             cmd += " --enable=rhel-8-for-x86_64-baseos-rhui-rpms"

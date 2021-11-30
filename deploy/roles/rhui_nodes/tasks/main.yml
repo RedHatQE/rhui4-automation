@@ -53,9 +53,14 @@
   when: rhui_iso is undefined and credentials is defined
   tags: rhui_nodes
 
+- name: make sure RHSM repo management is enabled
+  command: subscription-manager config --rhsm.manage_repos=1
+  when: rhui_iso is undefined and credentials is defined
+  tags: rhui_nodes
+
 - name: enable the RHSM repos required to install RHUI 4
   rhsm_repository:
-    name: rhel-8-for-x86_64-appstream-rhui-rpms,rhel-8-for-x86_64-baseos-rhui-rpms,rhui-4-beta-for-rhel-8-x86_64-rpms
+    name: rhel-8-for-x86_64-appstream-rhui-rpms,rhel-8-for-x86_64-baseos-rhui-rpms,rhui-4-for-rhel-8-x86_64-rpms
     purge: yes
   register: setup_package_repos_result
   when: rhui_iso is undefined and credentials is defined
