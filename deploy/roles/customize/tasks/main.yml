@@ -1,0 +1,24 @@
+# file: roles/customize/tasks/main.yml
+# make some final customizations before finishing the deployment
+
+- name: restrict access to https://RHUA/pulp/content/
+  block:
+  - name: allow only RHUA and CDS nodes to access content
+    lineinfile:
+      path: /etc/nginx/nginx.conf
+      insertafter: location /pulp/content/
+      line: "            allow {{ hostvars[item]['ansible_default_ipv4']['address'] }};"
+    with_items: "{{ groups['RHUA'] + groups['CDS'] }}"
+
+  - name: deny any other clients
+    lineinfile:
+      path: /etc/nginx/nginx.conf
+      insertafter: allow
+      line: "            deny all;"
+
+  - name: reload NginX configuration
+    systemd:
+      name: nginx.service
+      state: reloaded
+  when: inventory_hostname in groups['RHUA']
+  tags: customize

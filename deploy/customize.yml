@@ -1,0 +1,6 @@
+---
+# file: customize.yml
+# customization playbook
+- hosts: all
+  roles:
+    - customize
