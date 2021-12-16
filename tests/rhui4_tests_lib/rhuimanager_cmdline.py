@@ -292,7 +292,8 @@ class RHUIManagerCLI():
         Expect.ping_pong(connection,
                          f"rhui-manager client cert --repo_label {','.join(repo_labels)} " +
                          f"--name {name} --days {str(days)} --dir {directory}",
-                         "Entitlement certificate created at " + join(directory, name))
+                         "Entitlement certificate created at " + join(directory, name),
+                         timeout=60)
 
     @staticmethod
     def client_rpm(connection, certdata, rpmdata, directory, unprotected_repos=None, proxy=""):

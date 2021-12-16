@@ -24,7 +24,7 @@ class RHUIManagerClient():
         Expect.expect(connection, "Number of days the certificate should be valid.*:")
         Expect.enter(connection, validity_days)
         RHUIManager.proceed_without_check(connection)
-        RHUIManager.quit(connection)
+        RHUIManager.quit(connection, timeout=60)
 
     @staticmethod
     def create_conf_rpm(connection, dirname, certpath, certkey, rpmname, rpmversion="",
