@@ -23,6 +23,9 @@
     "ap-southeast-2": {
         "AMI": "ami-0ad5c7d0eee639fe1"
     },
+    "ap-southeast-3": {
+        "AMI": "ami-008412e9af25f0895"
+    },
     "ca-central-1": {
         "AMI": "ami-03fbe498294f3a558"
     },
