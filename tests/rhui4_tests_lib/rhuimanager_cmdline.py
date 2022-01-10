@@ -96,14 +96,13 @@ class RHUIManagerCLI():
                          "Successfully added")
 
     @staticmethod
-    def repo_add_by_repo(connection, repo_ids):
+    def repo_add_by_repo(connection, repo_ids, expect_trouble=False):
         '''
-        add a repo specified by its ID
+        add a list of repos specified by their IDs
         '''
-        Expect.ping_pong(connection,
-                         "rhui-manager repo add_by_repo --repo_ids " + ",".join(repo_ids),
-                         "Successfully added",
-                         timeout=300)
+        Expect.expect_retval(connection,
+                             "rhui-manager repo add_by_repo --repo_ids " + ",".join(repo_ids),
+                             0 if not expect_trouble else 1)
 
     @staticmethod
     def repo_list(connection, ids_only=False, redhat_only=False, delimiter=""):
