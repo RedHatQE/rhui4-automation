@@ -15,5 +15,5 @@
 - import_playbook: haproxy.yml
 - import_playbook: cds.yml
 - import_playbook: cli.yml
-- import_playbook: tests.yml
 - import_playbook: customize.yml
+- import_playbook: tests.yml
