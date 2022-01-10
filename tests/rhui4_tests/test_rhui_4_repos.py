@@ -27,10 +27,10 @@ def _check_rpms():
           "--certificate /tmp/extra_rhui_files/rhcert.pem " + \
           "--ca-certificate /etc/rhsm/ca/redhat-uep.pem " + \
           "https://cdn.redhat.com/" + \
-          "content/beta/layered/rhel8/x86_64/rhui/4/os/"
+          "content/dist/layered/rhel8/x86_64/rhui/4/os/"
 
     rpm_link_pattern = r'href="[^"]+\.rpm'
-    min_count = 91
+    min_count = 78
     # first fetch repodata
     _, stdout, _ = RHUA.exec_command(cmd + "repodata/repomd.xml")
     repomd_xml = stdout.read().decode()
