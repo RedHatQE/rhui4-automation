@@ -23,13 +23,8 @@
   failed_when: rpmq.stdout != latest_rhui_version
   tags: rhua,versioncheck
 
-- name: get the initial rhui-manager password
-  command: awk '/^password/ { print $3 }' /etc/rhui/rhui-subscription-sync.conf
-  register: password
-  tags: rhua
-
 - name: check if rhui-manager can run
-  command: rhui-manager --username admin --password {{ password.stdout }} status
+  command: rhui-manager --noninteractive status
   register: rhuimanagercmd
   tags: rhua
 

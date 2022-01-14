@@ -65,16 +65,7 @@ def test_05_login_with_wrong_pass():
     Expect.expect(RHUA,
                   ".*Invalid login, please check the authentication credentials and try again.")
 
-def test_06_login_logout_tui():
-    '''
-        log in and then log out in the TUI
-    '''
-    RHUIManager.initial_run(RHUA)
-    RHUIManager.logout(RHUA)
-    time.sleep(2)
-    nose.tools.ok_(not Util.is_logged_in(RHUA))
-
-def test_07_login_logout_cli():
+def test_06_login_logout_cli():
     '''
         log in and then log out on the command line
     '''
@@ -83,6 +74,24 @@ def test_07_login_logout_cli():
     time.sleep(2)
     nose.tools.ok_(not Util.is_logged_in(RHUA))
 
+def test_07_login_logout_tui():
+    '''
+        log in and then log out in the TUI
+    '''
+    RHUIManager.initial_run(RHUA)
+    RHUIManager.logout(RHUA)
+    time.sleep(2)
+    nose.tools.ok_(not Util.is_logged_in(RHUA))
+
+def test_08_auto_load_password():
+    '''
+        check if rhui-manager automatically loads credentials in non-interactive mode
+    '''
+    nose.tools.ok_(not Util.is_logged_in(RHUA))
+    Expect.ping_pong(RHUA,
+                     "rhui-manager --noninteractive cert info",
+                     "Red Hat Entitlements",
+                     timeout=5)
 def teardown():
     '''
        announce the end of the test run
