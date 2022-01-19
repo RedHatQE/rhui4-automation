@@ -1,0 +1,14 @@
+# file: roles/common/fips.yml
+
+- name: enable FIPS
+  block:
+  - name: enable FIPS
+    command: fips-mode-setup --enable
+
+  - name: reboot after enabling FIPS
+    reboot:
+  when:
+    - fips is defined
+    - fips|bool
+    - inventory_hostname in groups['RHUA'] + groups['CDS'] + groups['HAPROXY'] + groups['CLI']|default([])
+  tags: fips

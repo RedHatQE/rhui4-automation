@@ -1,10 +1,13 @@
 ---
 # file roles/common/tasks/main.yml
+# upgrade (if requested)
+# enable FIPS (ditto)
 # set up & configure ntp on all the hosts
 # set up custom DNS if requested
 # disable (or remove) cloud-init
 # install vim
 - include: upgrade.yml
+- include: fips.yml
 - include: ntp.yml
 - include: hosts.yml
 - include: dns_override.yml

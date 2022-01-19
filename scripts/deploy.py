@@ -32,6 +32,9 @@ PRS.add_argument("--rhsm",
 PRS.add_argument("--upgrade",
                  help="upgrade all packages before running the deployment",
                  action="store_true")
+PRS.add_argument("--fips",
+                 help="enable FIPS before running the deployment",
+                 action="store_true")
 PRS.add_argument("--extra-files",
                  help="ZIP file with extra files",
                  default=join(RHUI_DIR, "extra_files.zip"),
@@ -94,6 +97,9 @@ EVARS = "rhui_iso=" + ARGS.iso if not ARGS.rhsm else ""
 
 if ARGS.upgrade:
     EVARS += " upgrade_all_pkg=True"
+
+if ARGS.fips:
+    EVARS += " fips=True"
 
 if exists(expanduser(ARGS.extra_files)):
     EVARS += " extra_files=" + ARGS.extra_files
