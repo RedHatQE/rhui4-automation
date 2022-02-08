@@ -20,7 +20,7 @@
 - name: check if the installed RHUI version is the latest one
   command: rpmquery --qf '%{VERSION}' rhui-tools
   register: rpmq
-  failed_when: rpmq.stdout != latest_rhui_version
+  failed_when: rpmq.stdout | splitext | first != latest_rhui_version
   tags: rhua,versioncheck
 
 - name: check if rhui-manager can run
