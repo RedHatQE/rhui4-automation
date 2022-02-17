@@ -2,6 +2,7 @@
 
 import logging
 from os.path import basename, getsize, join
+import random
 import re
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -380,7 +381,35 @@ class TestCLI():
         repolist_actual = RHUIManagerCLI.repo_list(RHUA, True).splitlines()
         nose.tools.eq_(repolist_expected, repolist_actual)
 
-    def test_43_upload_semi_bad_cert(self):
+    def test_43_repo_export(self):
+        '''test the repo export feature'''
+        repo = self.yum_repo_ids[1]
+        # export the repo
+        RHUIManagerCLI.repo_export(RHUA, repo)
+        # wait a bit
+        time.sleep(4)
+        # get a random package file name from the repo
+        package_list = RHUIManagerCLI.packages_list(RHUA, repo)
+        test_package = random.choice(package_list)
+        # construct the full path to the symlink
+        # remember the subpath so it can be deleted in the end (to clean up)
+        path = "/var/lib/rhui/remote_share/symlinks/pulp/content/"
+        path += self.yum_repo_paths[1]
+        repo_path = path
+        path += "/Packages/"
+        path += test_package[0].lower()
+        path += "/"
+        path += test_package
+        # does the symlink exist?
+        Expect.expect_retval(RHUA, "test -h " + path)
+        # was the log file updated accordingly?
+        Expect.ping_pong(RHUA,
+                         "tail /root/.rhui/rhui.log",
+                         f"Repo: {repo} .* exported to filesystem")
+        # clean up the repo symlink path
+        Expect.expect_retval(RHUA, "rm -rf " + repo_path)
+
+    def test_44_upload_semi_bad_cert(self):
         '''check that a partially invalid certificate can still be accepted'''
         # for RHBZ#1588931 & RHBZ#1584527
         # delete currently used certificates and repos first
@@ -399,7 +428,7 @@ class TestCLI():
         RHUIManager.remove_rh_certs(RHUA)
 
     @staticmethod
-    def test_44_upload_empty_cert():
+    def test_45_upload_empty_cert():
         '''check that an empty certificate is rejected (no traceback)'''
         # for RHBZ#1497028
         cert = join(DATADIR, CERTS["empty"])
@@ -410,8 +439,7 @@ class TestCLI():
         except RuntimeError as err:
             nose.tools.ok_("does not contain any entitlements" in str(err),
                            msg=f"unexpected error: {err}")
-
-    def test_45_multi_repo_product(self):
+    def test_46_multi_repo_product(self):
         '''check that all repos in a multi-repo product get added'''
         # for RHBZ#1651638
         RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["Atomic"]))

@@ -228,6 +228,13 @@ class RHUIManagerCLI():
                              timeout=120)
 
     @staticmethod
+    def repo_export(connection, repo_id):
+        '''
+        export a repository to the filesystem
+        '''
+        Expect.expect_retval(connection, f"rhui-manager repo export --repo_id {repo_id}")
+
+    @staticmethod
     def packages_list(connection, repo_id):
         '''
         return a list of packages present in the repo
