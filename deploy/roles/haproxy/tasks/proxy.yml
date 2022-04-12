@@ -1,0 +1,23 @@
+# file: roles/haproxy/tasks/proxy.yml
+
+- name: enable CDN proxy
+  block:
+  - name: install squid
+    package:
+      name: squid
+      state: installed
+
+  - name: configure squid
+    copy:
+      src: squid.conf
+      dest: /etc/squid
+  - name: start squid
+    service:
+      name: squid
+      state: started
+      enabled: yes
+  when:
+    - proxy is defined
+    - proxy|bool
+    - inventory_hostname in groups['HAPROXY']|default([])
+  tags: proxy

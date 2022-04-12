@@ -13,7 +13,7 @@
   tags: rhua
 
 - name: call rhui installer if nfs
-  command: rhui-installer --rhua-hostname=rhua.example.com --remote-fs-server=nfs.example.com:/export --cds-lb-hostname cds.example.com
+  command: rhui-installer --rhua-hostname=rhua.example.com --remote-fs-server=nfs.example.com:/export --cds-lb-hostname cds.example.com {{ " --proxy-hostname hap01.example.com --proxy-port 3128 --proxy-protocol http" if proxy | default(False) | bool else "" }}
   when: install_rhui_installer is changed and 'NFS' in groups and groups['NFS']|length > 0
   tags: rhua
 

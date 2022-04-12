@@ -6,6 +6,18 @@
 # - rhui_iso: path to the RHUI ISO to install from; if you don't supply this, be sure to supply the credentials file instead
 # - rhui_iso_gpgsigs: enable/disable RHUI ISO repo gpg signature checking (default: False; see the setup_package_repos script on the ISO
 
+- name: make sure the RHUI client RPM is up to date (with the Ansible repo)
+  package:
+    name: rh-amazon-rhui-client
+    state: latest
+  when: rhui_iso is defined
+  tags: rhui_nodes
+
+- name: unregister from RHSM (the ghost subscription that would interfere with the entitlement cert)
+  redhat_subscription:
+    state: absent
+  tags: rhui_nodes
+
 - name: upload the RHUI iso
   copy:
     src: "{{ rhui_iso }}"
@@ -60,7 +72,7 @@
 
 - name: enable the RHSM repos required to install RHUI 4
   rhsm_repository:
-    name: rhel-8-for-x86_64-appstream-rhui-rpms,rhel-8-for-x86_64-baseos-rhui-rpms,rhui-4-for-rhel-8-x86_64-rpms
+    name: ansible-2-for-rhel-8-x86_64-rhui-rpms,rhel-8-for-x86_64-appstream-rhui-rpms,rhel-8-for-x86_64-baseos-rhui-rpms,rhui-4-for-rhel-8-x86_64-rpms
     purge: yes
   register: setup_package_repos_result
   when: rhui_iso is undefined and credentials is defined

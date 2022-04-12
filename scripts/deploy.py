@@ -35,6 +35,9 @@ PRS.add_argument("--upgrade",
 PRS.add_argument("--fips",
                  help="enable FIPS before running the deployment",
                  action="store_true")
+PRS.add_argument("--proxy",
+                 help="configure RHUI to connect to the CDN via a proxy",
+                 action="store_true")
 PRS.add_argument("--extra-files",
                  help="ZIP file with extra files",
                  default=join(RHUI_DIR, "extra_files.zip"),
@@ -100,6 +103,9 @@ if ARGS.upgrade:
 
 if ARGS.fips:
     EVARS += " fips=True"
+
+if ARGS.proxy:
+    EVARS += " proxy=True"
 
 if exists(expanduser(ARGS.extra_files)):
     EVARS += " extra_files=" + ARGS.extra_files

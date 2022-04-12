@@ -42,9 +42,11 @@ class RHSMRHUI():
         Expect.expect_retval(connection, "subscription-manager attach " + pool_opts, timeout=60)
 
     @staticmethod
-    def enable_rhui_repo(connection, base_rhel=True):
+    def enable_rhui_repo(connection, base_rhel=True, ansible=True):
         """enable the RHUI 4 repo and by default also the base RHEL repo, disable everything else"""
         cmd = "subscription-manager repos --disable=* --enable=rhui-4-for-rhel-8-x86_64-rpms"
+        if ansible:
+            cmd += " --enable=ansible-2-for-rhel-8-x86_64-rhui-rpms"
         if base_rhel:
             cmd += " --enable=rhel-8-for-x86_64-appstream-rhui-rpms"
             cmd += " --enable=rhel-8-for-x86_64-baseos-rhui-rpms"

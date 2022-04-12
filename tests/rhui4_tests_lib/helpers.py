@@ -1,6 +1,6 @@
 """Helper Functions for RHUI Test Cases"""
 
-from os.path import join
+from os.path import basename, join
 
 from configparser import ConfigParser
 
@@ -183,3 +183,28 @@ class Helpers():
         # wasn't restarted
         for pid in newpids:
             nose.tools.ok_(pid not in oldpids, msg=f"{pid} remained running")
+
+    @staticmethod
+    def add_legacy_ca(connection, local_ca_file):
+        """configure a CDS to accept a legacy CA"""
+        # this method takes the path to the local CA file and configures that CA on a CDS
+        ca_dir = "/etc/pki/rhui/legacy"
+        ca_file = join(ca_dir, basename(local_ca_file))
+        Expect.expect_retval(connection, f"mkdir -p {ca_dir}")
+        connection.sftp.put(local_ca_file, ca_file)
+        Expect.expect_retval(connection,
+                             "sed -i 's/^log_level.*$/log_level: DEBUG/' /etc/rhui/rhui-tools.conf")
+        Expect.expect_retval(connection, "rhui-services-restart")
+
+    @staticmethod
+    def del_legacy_ca(connection, ca_file_name):
+        """unconfigure a legacy CA"""
+        # this method takes just the base file name (something.crt) in the legacy CA dir on a CDS
+        # and unconfigures that CA
+        ca_dir = "/etc/pki/rhui/legacy"
+        ca_file = join(ca_dir, ca_file_name)
+        Expect.expect_retval(connection, f"rm {ca_file}")
+        Expect.expect_retval(connection, f"rmdir {ca_dir} || :")
+        Expect.expect_retval(connection,
+                             "sed -i 's/^log_level.*$/log_level: INFO/' /etc/rhui/rhui-tools.conf")
+        Expect.expect_retval(connection, "rhui-services-restart")
