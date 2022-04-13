@@ -102,7 +102,8 @@ class RHUIManagerCLI():
         '''
         Expect.expect_retval(connection,
                              "rhui-manager repo add_by_repo --repo_ids " + ",".join(repo_ids),
-                             0 if not expect_trouble else 1)
+                             0 if not expect_trouble else 1,
+                             timeout=600)
 
     @staticmethod
     def repo_list(connection, ids_only=False, redhat_only=False, delimiter=""):

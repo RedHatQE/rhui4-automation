@@ -18,6 +18,13 @@
     state: absent
   tags: rhui_nodes
 
+- name: disable rhsmcertd
+  service:
+    name: rhsmcertd
+    state: stopped
+    enabled: no
+  tags: rhui_nodes
+
 - name: upload the RHUI iso
   copy:
     src: "{{ rhui_iso }}"

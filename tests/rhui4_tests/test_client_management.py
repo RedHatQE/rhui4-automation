@@ -285,7 +285,7 @@ class TestClient():
         Util.fetch(RHUA, remote_ca_file, local_ca_file)
         Helpers.add_legacy_ca(CDS, local_ca_file)
         # re-fetch repodata on the client to trigger the OID validator on the CDS
-        Expect.expect_retval(CLI, "yum clean all ; yum repolist enabled")
+        Expect.expect_retval(CLI, "yum clean all ; yum -v repolist enabled")
         Expect.expect_retval(CDS,
                              f"egrep 'Found file /etc/pki/rhui/legacy/{LEGACY_CA_FILE}' " +
                              "/var/log/nginx/gunicorn-auth.log")
