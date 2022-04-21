@@ -50,11 +50,13 @@ CLI_repo1:
     id: "rhel-atomic-host-rhui-debug-rpms-x86_64"
     label: "rhel-atomic-host-rhui-debug-rpms"
     path: "content/dist/rhel/rhui/atomic/7/7Server/x86_64/debug"
+    test_package: ""
 CLI_repo2:
     name: "Red Hat Enterprise Linux Atomic Host (RPMs) from RHUI"
     id: "rhel-atomic-host-rhui-rpms-x86_64"
     label: "rhel-atomic-host-rhui-rpms"
     path: "content/dist/rhel/rhui/atomic/7/7Server/x86_64/os"
+    test_package: "atomic-devmode"
 CLI_product:
     name: "Red Hat Enterprise Linux Atomic Host (RPMs) from RHUI"
     id: "rhel-atomic-host-rhui-rpms-x86_64"

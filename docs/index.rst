@@ -22,6 +22,7 @@ Welcome to the RHUI 4 Test Plan!
    hap
    hap_cmd
    repo_management
+   retain_package_versions
    rhui_4_repos
    security
    sosreport
