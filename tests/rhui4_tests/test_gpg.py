@@ -119,6 +119,9 @@ def test_09_install_conf_rpm():
     Util.install_pkg_from_rhua(RHUA,
                                CLI,
                                f"/tmp/{REPO}-2.0/build/RPMS/noarch/{REPO}-2.0-1.noarch.rpm")
+    # to be able to import the GPG key on RHEL > 8, the LEGACY crypto policy must be set
+    if Util.get_rhel_version(CLI)["major"] > 8:
+        Expect.expect_retval(CLI, "update-crypto-policies --set LEGACY")
 
 def test_10_install_signed_pkg():
     '''
@@ -151,12 +154,7 @@ def test_14_install_2nd_signed_pkg():
     '''
        try installing the package signed with the key unknown to the client, should not work
     '''
-    # dnf in RHEL 8.0 produces a different message
-    rhel = Util.get_rhel_version(CLI)
-    if rhel["major"] == 8 and rhel["minor"] == 0:
-        output = f"Public key for {SIGNED_PACKAGE_SIG2}.* is not installed"
-    else:
-        output = f"The GPG keys.*{REPO}.*are not correct for this package"
+    output = f"The GPG keys.*{REPO}.*are not correct for this package"
     Expect.ping_pong(CLI,
                      "yum -y install " + SIGNED_PACKAGE_SIG2,
                      output)
@@ -172,6 +170,8 @@ def test_99_cleanup():
         cache = f"/var/cache/yum/x86_64/{rhel}Server/rhui-custom-{REPO}/"
     else:
         cache = f"/var/cache/dnf/rhui-custom-{REPO}*/"
+    if rhel > 8:
+        Expect.expect_retval(CLI, "update-crypto-policies --set DEFAULT")
     Expect.expect_retval(CLI, "rm -rf " + cache)
     RHUIManagerRepo.delete_all_repos(RHUA)
     Expect.expect_retval(RHUA, f"rm -rf /tmp/{REPO}*")
