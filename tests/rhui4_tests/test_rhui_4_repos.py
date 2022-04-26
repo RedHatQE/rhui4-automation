@@ -5,8 +5,8 @@ import re
 
 import logging
 import nose
-#from stitches.expect import Expect
-#import requests
+from stitches.expect import Expect
+import requests
 
 from rhui4_tests_lib.conmgr import ConMgr
 
@@ -14,9 +14,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 RHUA = ConMgr.connect()
 
-#DOC = "https://access.redhat.com/documentation/en-us/red_hat_update_infrastructure/3.1/html/" + \
-#      "release_notes/rn_updates"
-#VERSION_STRING = r"Updates for Red\sHat Update\sInfrastructure [0-9.]+"
+DOC = "https://access.redhat.com/documentation/en-us/red_hat_update_infrastructure/4"
+VERSION_STRING = r"4\.[0-9]+ Release Notes"
 
 def _check_rpms():
     '''
@@ -54,15 +53,16 @@ def _check_rpms():
     rhui_tools_rpms = [rpm for rpm in rpms if rpm.startswith("rhui-tools")]
     nose.tools.ok_(rhui_tools_rpms, msg="rhui-tools*: no such link")
     # check if the latest version in the repo is the latest documented one
-    #rhui_tools_rpms.sort()
-    #latest_rhui_rpm_in_repo = rhui_tools_rpms[-1]
-    #latest_documented_title = re.findall(VERSION_STRING, requests.get(DOC).text)[-1]
-    #nose.tools.eq_(latest_rhui_rpm_in_repo.rsplit('-', 2)[1], latest_documented_title.split()[-1])
-    ## can the latest version actually be fetched?
-    #Expect.expect_retval(RHUA,
-    #                     cmd.replace("-q -O -", "-O /dev/null") +
-    #                     "Packages/r/" +
-    #                     latest_rhui_rpm_in_repo)
+    rhui_tools_rpms.sort()
+    latest_rhui_rpm_in_repo = rhui_tools_rpms[-1]
+    latest_documented_title = re.findall(VERSION_STRING, requests.get(DOC).text)[0]
+    nose.tools.eq_(latest_rhui_rpm_in_repo.rsplit('-', 2)[1].split('.')[1],
+                   latest_documented_title.split()[0].split('.')[1])
+    # can the latest version actually be fetched?
+    Expect.expect_retval(RHUA,
+                         cmd.replace("-q -O -", "-O /dev/null") +
+                         "Packages/r/" +
+                         latest_rhui_rpm_in_repo)
 
 def _check_listing(major, min_eus, max_eus):
     '''
