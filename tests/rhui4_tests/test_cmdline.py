@@ -8,10 +8,7 @@ from shutil import rmtree
 from tempfile import mkdtemp
 import time
 
-try:
-    from configparser import ConfigParser # Python 3+
-except ImportError:
-    from ConfigParser import ConfigParser # Python 2
+from configparser import ConfigParser
 import nose
 from stitches.expect import Expect
 import yaml
