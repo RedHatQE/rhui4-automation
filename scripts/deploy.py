@@ -29,6 +29,9 @@ PRS.add_argument("--iso",
 PRS.add_argument("--rhsm",
                  help="use RHSM instead of a RHUI ISO",
                  action="store_true")
+PRS.add_argument("--client-rpm",
+                 help="RHUI client RPM (another source of RHUI packages)",
+                 metavar="file")
 PRS.add_argument("--upgrade",
                  help="upgrade all packages before running the deployment",
                  action="store_true")
@@ -87,16 +90,28 @@ if ARGS.rhsm:
     if not exists(expanduser(ARGS.credentials)):
         print(f"--rhsm was used but {ARGS.credentials} does not exist, exiting.")
         sys.exit(1)
-else:
-    if not exists(expanduser(ARGS.iso)):
-        print(f"--rhsm was not used and {ARGS.iso} is not a RHUI ISO file, exiting.")
+elif ARGS.client_rpm:
+    if not exists(expanduser(ARGS.client_rpm)):
+        print(f"{ARGS.client_rpm} is not a file, exiting.")
         sys.exit(1)
+elif ARGS.iso:
+    if not exists(expanduser(ARGS.iso)):
+        print(f"{ARGS.iso} is not a file, exiting.")
+        sys.exit(1)
+else:
+    print("No way to install RHUI packages was specified.")
+    sys.exit(1)
 
 # start building the command
 CMD = f"ansible-playbook -i {ARGS.inventory} deploy/site.yml --extra-vars '"
 
 # start building the extra variables
-EVARS = "rhui_iso=" + ARGS.iso if not ARGS.rhsm else ""
+if ARGS.client_rpm:
+    EVARS = f"client_rpm={ARGS.client_rpm}"
+elif ARGS.rhsm:
+    EVARS = ""
+elif ARGS.iso:
+    EVARS = f"rhui_iso={ARGS.iso}"
 
 if ARGS.upgrade:
     EVARS += " upgrade_all_pkg=True"
