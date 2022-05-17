@@ -52,6 +52,9 @@ PRS.add_argument("--credentials",
 PRS.add_argument("--tests",
                  help="RHUI test to run",
                  metavar="test name or category")
+PRS.add_argument("--prep",
+                 help="prepare RHUI for other testing (upload the cert, add nodes, cache repos)",
+                 action="store_true")
 PRS.add_argument("--patch",
                  help="patch to apply to rhui4-automation",
                  metavar="file")
@@ -168,6 +171,9 @@ if ARGS.rhel9b:
 
 if ARGS.tests:
     EVARS += " tests=" + ARGS.tests
+
+if ARGS.prep:
+    EVARS += " prep=True"
 
 if ARGS.patch:
     if exists(expanduser(ARGS.patch)):

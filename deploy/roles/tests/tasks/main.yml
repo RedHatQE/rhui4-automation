@@ -152,6 +152,18 @@
   when: tests is defined and rhel7_beta_baseurl is defined and "'localhost:' in rhel7_beta_baseurl"
   tags: run_tests
 
+- name: prepare the RHUI installation for tests
+  command: rhuitestsetup
+  when: prep | default(False) | bool
+  tags: tests
+
+- name: cache repos
+  command: rhui-manager repo unused
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['RHUA']|default([]) }}"
+  when: prep | default(False) | bool
+  tags: tests
+
 - name: run tests
   command: "rhuitests {{ tests }} quiet"
   register: testreport
