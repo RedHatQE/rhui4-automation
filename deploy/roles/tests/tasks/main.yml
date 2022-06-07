@@ -155,14 +155,14 @@
 - name: prepare the RHUI installation for tests
   command: rhuitestsetup
   when: prep | default(False) | bool
-  tags: tests
+  tags: tests,prep
 
 - name: cache repos
   command: rhui-manager repo unused
   delegate_to: "{{ item }}"
   with_items: "{{ groups['RHUA']|default([]) }}"
   when: prep | default(False) | bool
-  tags: tests
+  tags: tests,prep
 
 - name: run tests
   command: "rhuitests {{ tests }} quiet"
