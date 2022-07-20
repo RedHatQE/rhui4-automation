@@ -112,7 +112,7 @@ class TestRhuiManagerStatus():
     @staticmethod
     def test_10_check_output_with___code():
         """check if the output is only the return code when --code is used"""
-        _, stdout, _ = RHUA.exec_command("rhui-manager status --code")
+        _, stdout, _ = RHUA.exec_command(CMD)
         output = stdout.read().decode().splitlines()
         nose.tools.eq_(len(output), 1)
         nose.tools.eq_(output[0], str(REPO_SYNC_ERROR + CA_CERT_WARN + SERVICE_ERROR))
