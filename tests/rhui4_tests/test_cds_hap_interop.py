@@ -40,6 +40,14 @@ def test_02_add_first_cds():
     RHUIManagerInstance.add_instance(RHUA, "cds", CDS_HOSTNAMES[0])
     # also check the restart script there
     Helpers.restart_rhui_services(CDS, "cds")
+    # check if the latest available module stream is installed
+    _, stdout, _ = CDS.exec_command("rpm -q --qf '%{VERSION}' nginx")
+    major_minor_installed = stdout.read().decode().rsplit(".", 1)[0]
+    _, stdout, _ = CDS.exec_command("dnf -q module list nginx")
+    raw_module_list_output = stdout.read().decode().splitlines()
+    lines_with_stream_info = [line for line in raw_module_list_output if line.startswith("nginx")]
+    streams = [line.split()[1] for line in lines_with_stream_info]
+    nose.tools.eq_(major_minor_installed, streams[-1])
 
 def test_03_check_haproxy_cfg():
     """check if the first CDS was added to the HAProxy configuration file"""
@@ -130,6 +138,8 @@ def test_99_cleanup():
     ConMgr.remove_ssh_keys(RHUA)
     # also check the restart script on the RHUA
     Helpers.restart_rhui_services(RHUA)
+    # check if deprecated services are gone
+    Expect.expect_retval(RHUA, "test -f /lib/systemd/system/pulpcore-resource-manager.service", 1)
     # and finally check if the restart script is gone from the other nodes
     Expect.expect_retval(CDS, "which rhui-services-restart", 1)
     Expect.expect_retval(HAPROXY, "which rhui-services-restart", 1)

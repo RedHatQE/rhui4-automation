@@ -17,6 +17,17 @@
   ignore_errors: True
   tags: cli
 
+- name: install podman (RHEL 7+)
+  package:
+    name: podman
+    state: present
+    enablerepo: "*extras*"
+  when: >
+    "'CLI' in groups" and
+    ansible_os_family == "RedHat" and
+    ansible_distribution_major_version|int >= 7
+  tags: cli
+
 - name: create the platform-python symlink if RHEL6
   file:
     src: /usr/bin/python

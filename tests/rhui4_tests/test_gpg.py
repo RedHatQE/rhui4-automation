@@ -89,7 +89,7 @@ def test_06_display_detailed_info():
     '''
     info = RHUIManagerRepo.check_detailed_information(RHUA, REPO)
     nose.tools.eq_(info["name"], REPO)
-    nose.tools.eq_(info["type"], "Custom")
+    nose.tools.eq_(info["type"], "Custom / Yum")
     nose.tools.eq_(info["gpgcheck"], "Yes")
     nose.tools.eq_(info["customgpgkeys"], KEY_FILENAME)
 

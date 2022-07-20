@@ -2,6 +2,8 @@
 '''Log in to RHUI, upload a certificate, and add a CDS and a HAProxy node. '''
 
 import argparse
+import json
+import sys
 
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
@@ -16,6 +18,12 @@ PRS.add_argument("--cert",
                  default="default")
 PRS.add_argument("--one-cds-only",
                  help="add only one CDS node",
+                 action="store_true")
+PRS.add_argument("--custom-ssl",
+                 help="deploy CDS(es) with a custom SSL cert and key",
+                 action="store_true")
+PRS.add_argument("--ssl-like-cds-one",
+                 help="expect one already added CDS and add the rest with the same SSL crt and key",
                  action="store_true")
 ARGS = PRS.parse_args()
 
@@ -37,10 +45,31 @@ if ARGS.cert != "no":
 
 if ARGS.one_cds_only:
     CDS_HOSTNAMES = [CDS_HOSTNAMES[0]]
+
+if ARGS.ssl_like_cds_one:
+    if len(CDS_HOSTNAMES) < 2:
+        print("Error: You do not have multiple CDS nodes.")
+        sys.exit(1)
+
+    _, stdout, _ = RHUA.exec_command("cat /etc/rhui/cds.json")
+    cds1_data = json.load(stdout)
+    if len(cds1_data) != 1:
+        print("Error: You must have (exactly) one already added CDS.")
+        sys.exit(1)
+
+    SSL_CRT = cds1_data[0]["user_supplied_ssl_crt"]
+    SSL_KEY = cds1_data[0]["user_supplied_ssl_key"]
+    CDS_HOSTNAMES = CDS_HOSTNAMES[1:]
+elif ARGS.custom_ssl:
+    SSL_CRT = "/tmp/extra_rhui_files/custom_certs/ssl.crt"
+    SSL_KEY = SSL_CRT.replace("crt", "key")
+else:
+    SSL_CRT = SSL_KEY = ""
+
 print(f"Adding CDS nodes ({CDS_HOSTNAMES}).")
 for cds in CDS_HOSTNAMES:
     try:
-        RHUIManagerInstance.add_instance(RHUA, "cds", cds)
+        RHUIManagerInstance.add_instance(RHUA, "cds", cds, ssl_crt=SSL_CRT, ssl_key=SSL_KEY)
         print(cds + " added.")
     except InstanceAlreadyExistsError:
         print(cds + " already added, never mind.")

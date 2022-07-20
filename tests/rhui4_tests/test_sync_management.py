@@ -68,6 +68,11 @@ class TestSync():
         RHUIManagerSync.wait_till_repo_synced(RHUA, [Util.format_repo(self.yum_repo_name,
                                                                       self.yum_repo_version)])
 
+    def test_05_export_repo(self):
+        '''export the repo'''
+        RHUIManagerSync.export_repos(RHUA, [Util.format_repo(self.yum_repo_name,
+                                                             self.yum_repo_version)])
+
     def test_99_cleanup(self):
         '''remove the RH repo and cert'''
         RHUIManagerRepo.delete_repo(RHUA,

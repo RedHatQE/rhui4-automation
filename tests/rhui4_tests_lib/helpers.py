@@ -7,6 +7,8 @@ from configparser import ConfigParser
 from stitches.expect import Expect
 import nose
 
+RHUI_CFG = "/etc/rhui/rhui-tools.conf"
+
 class Helpers():
     """actions that may be repeated in specific test cases and do not belong in general utils"""
     @staticmethod
@@ -71,17 +73,15 @@ class Helpers():
     def get_registry_url(site, connection=""):
         """get the URL for the given container registry or for the saved one (use "default" then)"""
         if site == "default":
-            cfg_file = "/etc/rhui/rhui-tools.conf"
             rhuicfg = ConfigParser()
-            _, stdout, _ = connection.exec_command(f"cat {cfg_file}")
+            _, stdout, _ = connection.exec_command(f"cat {RHUI_CFG}")
             rhuicfg.read_file(stdout)
-            if not rhuicfg.has_option("docker", "docker_url"):
+            if not rhuicfg.has_option("container", "registry_url"):
                 return None
-            return rhuicfg.get("docker", "docker_url")
+            return rhuicfg.get("container", "registry_url")
         urls = {"rh": "https://registry.redhat.io",
                 "quay": "https://quay.io",
-                "gitlab": "https://registry.gitlab.com",
-                "docker": "https://registry-1.docker.io"}
+                "gitlab": "https://registry.gitlab.com"}
         if site in urls:
             return urls[site]
         return None
@@ -92,51 +92,63 @@ class Helpers():
         # if "site" isn't in credentials.conf, then "data" is supposed to be:
         # [username, password, url], or just [url] if no authentication is to be used for "site";
         # first get the RHUI config file
-        cfg_file = "/etc/rhui/rhui-tools.conf"
         rhuicfg = ConfigParser()
-        _, stdout, _ = connection.exec_command(f"cat {cfg_file}")
+        _, stdout, _ = connection.exec_command(f"cat {RHUI_CFG}")
         rhuicfg.read_file(stdout)
         # add the relevant config section if it's not there yet
-        if not rhuicfg.has_section("docker"):
-            rhuicfg.add_section("docker")
+        if not rhuicfg.has_section("container"):
+            rhuicfg.add_section("container")
         # then get the credentials
         try:
             credentials = Helpers.get_credentials(connection, site)
             url = Helpers.get_registry_url(site)
-            rhuicfg.set("docker", "docker_url", url)
-            rhuicfg.set("docker", "docker_auth", "True")
+            rhuicfg.set("container", "registry_url", url)
+            rhuicfg.set("container", "registry_auth", "True")
         except RuntimeError:
             # the site isn't defined in the credentials file -> use the data passed to this method
             if len(data) == 3:
-                rhuicfg.set("docker", "docker_url", data[2])
-                rhuicfg.set("docker", "docker_auth", "True")
+                rhuicfg.set("container", "registry_url", data[2])
+                rhuicfg.set("container", "registry_auth", "True")
                 credentials = data[:-1]
             elif len(data) == 1:
-                rhuicfg.set("docker", "docker_url", data[0])
-                rhuicfg.set("docker", "docker_auth", "False")
+                rhuicfg.set("container", "registry_url", data[0])
+                rhuicfg.set("container", "registry_auth", "False")
                 credentials = False
             else:
                 raise ValueError("the passed data is invalid") from None
         # if credentials are known, add them into the configuration
         if credentials:
-            rhuicfg.set("docker", "docker_username", credentials[0])
-            rhuicfg.set("docker", "docker_password", credentials[1])
+            rhuicfg.set("container", "registry_username", credentials[0])
+            rhuicfg.set("container", "registry_password", credentials[1])
         # otherwise, make sure the options don't exists in the configuration
         else:
-            rhuicfg.remove_option("docker", "docker_username")
-            rhuicfg.remove_option("docker", "docker_password")
+            rhuicfg.remove_option("container", "registry_username")
+            rhuicfg.remove_option("container", "registry_password")
         # back up the original config file (unless prevented)
         if backup:
-            Expect.expect_retval(connection, f"cp -f {cfg_file} {cfg_file}.bak")
+            Helpers.backup_rhui_tools_conf(connection)
         # save (rewrite) the configuration file with the newly added credentials
-        stdin, _, _ = connection.exec_command(f"cat > {cfg_file}")
+        stdin, _, _ = connection.exec_command(f"cat > {RHUI_CFG}")
         rhuicfg.write(stdin)
+
+    @staticmethod
+    def backup_rhui_tools_conf(connection):
+        """create a backup copy of the RHUI tools configuration file"""
+        Expect.expect_retval(connection, f"mv -f {RHUI_CFG} {RHUI_CFG}.bak")
+
+    @staticmethod
+    def edit_rhui_tools_conf(connection, opt, val, backup=True):
+        """set an option in the RHUI tools configuration file to the given value"""
+        cmd = "sed -i"
+        if backup:
+            cmd = f"{cmd}.bak"
+        cmd = f"{cmd} 's/^{opt}.*/{opt}: {val}/' {RHUI_CFG}"
+        Expect.expect_retval(connection, cmd)
 
     @staticmethod
     def restore_rhui_tools_conf(connection):
         """restore the backup copy of the RHUI tools configuration file"""
-        cfg_file = "/etc/rhui/rhui-tools.conf"
-        Expect.expect_retval(connection, f"mv -f {cfg_file}.bak {cfg_file}")
+        Expect.expect_retval(connection, f"mv -f {RHUI_CFG}.bak {RHUI_CFG}")
 
     @staticmethod
     def is_registered(connection):
@@ -151,7 +163,6 @@ class Helpers():
                                 "nginx",
                                 "pulpcore-api",
                                 "pulpcore-content",
-                                "pulpcore-resource-manager",
                                 "pulpcore-worker@*"
                                ],
                     "cds":     [
@@ -164,14 +175,14 @@ class Helpers():
                                 "haproxy"
                                ]
                    }
-        if node_type not in services.keys():
-            raise ValueError(f"{node_type} is not a know node type") from None
+        if node_type not in services:
+            raise ValueError(f"{node_type} is not a known node type") from None
         get_pids_cmd = "systemctl -p MainPID show %s | awk -F = '/PID/ { print $2 }'"
         # fetch the current PIDs
         _, stdout, _ = connection.exec_command(get_pids_cmd % " ".join(services[node_type]))
         oldpids = list(map(int, stdout.read().decode().splitlines()))
         # actually run the restart script, should exit with 0
-        Expect.expect_retval(connection, "rhui-services-restart")
+        Expect.expect_retval(connection, "rhui-services-restart", timeout=20)
         # fetch PIDs again
         _, stdout, _ = connection.exec_command(get_pids_cmd % " ".join(services[node_type]))
         newpids = list(map(int, stdout.read().decode().splitlines()))
@@ -192,8 +203,7 @@ class Helpers():
         ca_file = join(ca_dir, basename(local_ca_file))
         Expect.expect_retval(connection, f"mkdir -p {ca_dir}")
         connection.sftp.put(local_ca_file, ca_file)
-        Expect.expect_retval(connection,
-                             "sed -i 's/^log_level.*$/log_level: DEBUG/' /etc/rhui/rhui-tools.conf")
+        Helpers.edit_rhui_tools_conf(connection, "log_level", "DEBUG")
         Expect.expect_retval(connection, "rhui-services-restart")
 
     @staticmethod
@@ -205,6 +215,6 @@ class Helpers():
         ca_file = join(ca_dir, ca_file_name)
         Expect.expect_retval(connection, f"rm {ca_file}")
         Expect.expect_retval(connection, f"rmdir {ca_dir} || :")
-        Expect.expect_retval(connection,
-                             "sed -i 's/^log_level.*$/log_level: INFO/' /etc/rhui/rhui-tools.conf")
+        Helpers.restore_rhui_tools_conf(connection)
+        Expect.expect_retval(connection, "logrotate -f /etc/logrotate.d/nginx")
         Expect.expect_retval(connection, "rhui-services-restart")

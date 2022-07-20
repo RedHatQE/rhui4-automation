@@ -82,7 +82,7 @@
 
 - name: enable the RHSM repos required to install RHUI 4
   rhsm_repository:
-    name: ansible-2-for-rhel-8-x86_64-rhui-rpms,rhel-8-for-x86_64-appstream-rhui-rpms,rhel-8-for-x86_64-baseos-rhui-rpms,rhui-4-for-rhel-8-x86_64-rpms
+    name: rhel-8-for-x86_64-appstream-rhui-rpms,rhel-8-for-x86_64-baseos-rhui-rpms,rhui-4-for-rhel-8-x86_64-rpms
     purge: yes
   register: setup_package_repos_result
   when: rhui_iso is undefined and credentials is defined and client_rpm is undefined

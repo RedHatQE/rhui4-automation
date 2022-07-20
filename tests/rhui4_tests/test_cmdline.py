@@ -79,7 +79,6 @@ class TestCLI():
                                           repo_id=CUSTOM_REPOS[1],
                                           path=f"huh-{CUSTOM_REPOS[1]}",
                                           display_name=CR_NAMES[1],
-                                          legacy_md=True,
                                           protected=True,
                                           gpg_public_keys=join(DATADIR, KEYFILE))
         # the third repo will also be protected
@@ -184,7 +183,7 @@ class TestCLI():
 
     def test_15_start_syncing_repo(self):
         '''sync one of the repos'''
-        RHUIManagerCLI.repo_sync(RHUA, self.yum_repo_ids[1], self.yum_repo_names[1])
+        RHUIManagerCLI.repo_sync(RHUA, self.yum_repo_ids[1])
 
     def test_16_repo_info(self):
         '''verify that the repo name is part of the information about the specified repo ID'''
@@ -338,7 +337,7 @@ class TestCLI():
 
     def test_37_resync_repo(self):
         '''sync the repo again'''
-        RHUIManagerCLI.repo_sync(RHUA, self.yum_repo_ids[1], self.yum_repo_names[1])
+        RHUIManagerCLI.repo_sync(RHUA, self.yum_repo_ids[1])
 
     @staticmethod
     def test_38_resync_no_warning():

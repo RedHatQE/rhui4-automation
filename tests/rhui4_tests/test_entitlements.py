@@ -74,7 +74,7 @@ class TestEntitlement():
         '''
            add a custom repo to protect by a client entitlement certificate
         '''
-        RHUIManagerRepo.add_custom_repo(RHUA, "custom-enttest", "", "", "1", "y")
+        RHUIManagerRepo.add_custom_repo(RHUA, "custom-enttest", "", "", "y")
 
     @staticmethod
     def test_07_list_cust_entitlements():

@@ -3,6 +3,7 @@
 import logging
 import re
 
+import nose
 from stitches.expect import Expect, ExpectFailed
 
 from rhui4_tests_lib.util import Util
@@ -49,11 +50,11 @@ class RHUIManager():
         Select list of items (multiple choice)
         '''
         for value in value_list:
-            match = Expect.match(connection, re.compile(r".*-\s+([0-9]+)\s*:[^\n]*\s+" +
+            match = Expect.match(connection, re.compile(r".*-\s+([0-9]+)\s*:[^\n]*\s*" +
                                                         re.escape(value) +
                                                         r"\s*\n.*for more commands:.*", re.DOTALL))
             Expect.enter(connection, match[0])
-            match = Expect.match(connection, re.compile(r".*x\s+([0-9]+)\s*:[^\n]*\s+" +
+            match = Expect.match(connection, re.compile(r".*x\s+([0-9]+)\s*:[^\n]*\s*" +
                                                         re.escape(value) +
                                                         r"\s*\n.*for more commands:.*", re.DOTALL))
             Expect.enter(connection, "l")
@@ -229,6 +230,11 @@ class RHUIManager():
         '''
         check if the CA certificate expiration date is OK
         '''
-        Expect.ping_pong(connection,
-                         "rhui-manager status",
-                         "Entitlement CA certificate expiration date.*OK")
+        _, stdout, _ = connection.exec_command("rhui-manager status")
+        lines = stdout.read().decode().splitlines()
+        status = "undetected"
+        for line in lines:
+            if line.startswith("Entitlement CA certificate expiration date"):
+                status = Util.uncolorify(line).split()[-1]
+                break
+        nose.tools.eq_(status, "OK")

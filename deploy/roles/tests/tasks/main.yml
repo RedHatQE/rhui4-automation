@@ -104,7 +104,7 @@
   when: (extra_files is defined) and (upload_extra_files is success)
   tags: tests
 
-- name: unpack tarballs with test repos
+- name: unpack tarballs with test repos and custom certs
   shell: 'for f in *.tar; do tar xf $f; done'
   args:
     chdir: /tmp/extra_rhui_files

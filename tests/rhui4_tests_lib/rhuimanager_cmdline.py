@@ -13,10 +13,16 @@ def _get_repo_status(connection, repo_name):
     '''
     get the status of the given repository
     '''
-    Expect.enter(connection, "rhui-manager status")
-    status = Expect.match(connection, re.compile(f".*{re.escape(repo_name)}[^A-Z]*([A-Za-z]*).*",
-                                                 re.DOTALL))[0]
-    return status
+    _, stdout, _ = connection.exec_command("rhui-manager status")
+    lines = stdout.read().decode().splitlines()
+    status = None
+    for line in lines:
+        if line.startswith(repo_name):
+            status = Util.uncolorify(line).split()[-1]
+            break
+    if status:
+        return status
+    raise RuntimeError("Invalid repository name.")
 
 def _ent_list(stdout):
     '''
@@ -122,18 +128,19 @@ class RHUIManagerCLI():
         return response
 
     @staticmethod
-    def repo_sync(connection, repo_id, repo_name):
+    def repo_sync(connection, repo_id, expected_status="SUCCESS"):
         '''
         sync a repo
         '''
         Expect.ping_pong(connection,
                          "rhui-manager repo sync --repo_id " + repo_id,
                          "successfully scheduled for the next available timeslot")
+        repo_name = RHUIManagerCLI.repo_info(connection, repo_id)["name"]
         repo_status = _get_repo_status(connection, repo_name)
-        while repo_status in ["Never", "Running", "Unknown"]:
+        while repo_status in ["Never", "SCHEDULED", "RUNNING"]:
             time.sleep(10)
             repo_status = _get_repo_status(connection, repo_name)
-        nose.tools.assert_equal(repo_status, "Success")
+        nose.tools.assert_equal(repo_status, expected_status)
 
     @staticmethod
     def repo_info(connection, repo_id):
@@ -152,7 +159,6 @@ class RHUIManagerCLI():
                            path="",
                            display_name="",
                            entitlement="",
-                           legacy_md=False,
                            redhat_content=False,
                            protected=False,
                            gpg_public_keys=""):
@@ -167,8 +173,6 @@ class RHUIManagerCLI():
             cmd += f" --display_name '{display_name}'"
         if entitlement:
             cmd += f" --entitlement {entitlement}"
-        if legacy_md:
-            cmd += " --legacy_md"
         if redhat_content:
             cmd += " --redhat_content"
         if protected:

@@ -45,7 +45,6 @@ class TestEUSCLI():
             try:
                 self.repo_id = doc["EUS_repos"][self.cli_version]["id"]
                 self.repo_label = doc["EUS_repos"][self.cli_version]["label"]
-                self.repo_name = doc["EUS_repos"][self.cli_version]["name"]
                 self.repo_path = doc["EUS_repos"][self.cli_version]["path"]
                 self.test_package = doc["EUS_repos"][self.cli_version]["test_package"]
             except KeyError as version:
@@ -108,7 +107,7 @@ class TestEUSCLI():
         '''
         sync the repo
         '''
-        RHUIManagerCLI.repo_sync(RHUA, self.repo_id, self.repo_name)
+        RHUIManagerCLI.repo_sync(RHUA, self.repo_id)
 
     def test_08_create_cli_config_rpm(self):
         '''

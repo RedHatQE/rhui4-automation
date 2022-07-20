@@ -10,6 +10,7 @@ import yaml
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
+from rhui4_tests_lib.helpers import Helpers
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -22,7 +23,6 @@ class TestCLI():
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
             doc = yaml.load(configfile)
 
-        self.repo_name = doc["CLI_repo2"]["name"]
         self.repo_id = doc["CLI_repo2"]["id"]
         self.test_package = doc["CLI_repo2"]["test_package"]
 
@@ -44,9 +44,7 @@ class TestCLI():
     @staticmethod
     def test_03_set_config_1():
         '''set retain package versions to 1'''
-        Expect.expect_retval(RHUA,
-                             "sed -i 's/^retain_package_versions.*$/retain_package_versions: 1/' " +
-                             "/etc/rhui/rhui-tools.conf")
+        Helpers.edit_rhui_tools_conf(RHUA, "retain_package_versions", "1")
 
     def test_04_add_repo(self):
         '''add a Red Hat repo'''
@@ -54,7 +52,7 @@ class TestCLI():
 
     def test_05_sync_repo(self):
         '''sync the repo'''
-        RHUIManagerCLI.repo_sync(RHUA, self.repo_id, self.repo_name)
+        RHUIManagerCLI.repo_sync(RHUA, self.repo_id)
 
     def test_06_check_package(self):
         '''check a package in the repo, expect 1 instance'''
@@ -70,9 +68,7 @@ class TestCLI():
     @staticmethod
     def test_08_set_config_2():
         '''set retain package versions to 2'''
-        Expect.expect_retval(RHUA,
-                             "sed -i 's/^retain_package_versions.*$/retain_package_versions: 2/' " +
-                             "/etc/rhui/rhui-tools.conf")
+        Helpers.edit_rhui_tools_conf(RHUA, "retain_package_versions", "2", False)
 
     def test_09_add_repo(self):
         '''add a Red Hat repo'''
@@ -80,7 +76,7 @@ class TestCLI():
 
     def test_10_sync_repo(self):
         '''sync the repo'''
-        RHUIManagerCLI.repo_sync(RHUA, self.repo_id, self.repo_name)
+        RHUIManagerCLI.repo_sync(RHUA, self.repo_id)
 
     def test_11_check_package(self):
         '''check a package in the repo, expect 2 instances'''
@@ -93,9 +89,7 @@ class TestCLI():
         '''clean up'''
         RHUIManagerCLI.repo_delete(RHUA, self.repo_id)
         RHUIManager.remove_rh_certs(RHUA)
-        Expect.expect_retval(RHUA,
-                             "sed -i 's/^retain_package_versions.*$/retain_package_versions: 0/' " +
-                             "/etc/rhui/rhui-tools.conf")
+        Helpers.restore_rhui_tools_conf(RHUA)
 
     @staticmethod
     def teardown_class():

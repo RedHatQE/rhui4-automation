@@ -34,11 +34,16 @@ class RHUIManagerInstance():
     @staticmethod
     def add_instance(connection, screen,
                      hostname="", user_name=SUDO_USER_NAME, ssh_key_path=SUDO_USER_KEY,
+                     ssl_crt="", ssl_key="",
                      update=False):
         '''
         Register (add) a new CDS or HAProxy instance
         @param hostname instance, or the default value for the screen type as ConMgr knows it
-        @param update: Bool; update the cds or hap if it is already tracked or raise an exception
+        @param user_name SSH user name for the hostname
+        @param ssh_key_path SSH private key for the user at the host
+        @param ssl_crt (optional) absolute path to the SSL certificate to deploy (CDS only)
+        @param ssl_key (optional) absolute path to the SSL key to deploy (CDS only)
+        @param update Bool; update the cds or hap if it is already tracked or raise an exception
         '''
         if not hostname:
             if screen == "cds":
@@ -79,24 +84,35 @@ class RHUIManagerInstance():
             # the question about user name comes now
             Expect.expect(connection,
                           f"Username with SSH access to {hostname} and sudo privileges:")
-        # if the execution reaches here, uesername question was already asked
+        # if the execution reaches here, username question was already asked
         Expect.enter(connection, user_name)
         Expect.expect(connection,
                       f"Absolute path to an SSH private key to log into {hostname} as {user_name}:")
         Expect.enter(connection, ssh_key_path)
-        time.sleep(7)
         state = Expect.expect_list(connection, [
             (re.compile(".*Cannot find file, please enter a valid path.*", re.DOTALL), 1),
-            (re.compile(".*Checking SSH authentication on instance.*", re.DOTALL), 2)
+            (re.compile(".*Checking SSH authentication on instance.*", re.DOTALL), 2),
+            (re.compile(".*Optional absolute path to user supplied SSL key file:.*", re.DOTALL), 3)
         ])
         if state == 1:
             # don't know how to continue with invalid path: raise an exception
             Expect.enter(connection, CTRL_C)
             Expect.enter(connection, "q")
             raise InvalidSshKeyPath(ssh_key_path)
+        if state == 3:
+            # the SSL key is only asked for when adding a CDS
+            Expect.enter(connection, ssl_key)
+            # if the SSL key is specified, rhui-manager also asks for the SSL certificate
+            # warning: we don't validate the response,
+            # if the key file is invalid, we'll eventually fail
+            if ssl_key:
+                Expect.expect(connection, "Optional absolute path to user supplied SSL crt file:")
+                Expect.enter(connection, ssl_crt)
+                Expect.expect(connection, "Checking SSH authentication on instance")
         # all OK
         # if the SSH key is unknown, rhui-manager now asks you to confirm it; say yes
         if not known_host:
+            time.sleep(7)
             Expect.enter(connection, "yes")
         # installation and configuration through Ansible happens here, let it take its time
         RHUIManager.quit(connection, "The .*was successfully configured.", 180)

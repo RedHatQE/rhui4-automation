@@ -57,3 +57,30 @@ class RHUIManagerClient():
                       f"Location: {dirname}/{rpmname}-{rpmversion}/build/RPMS/noarch/" +
                       f"{rpmname}-{rpmversion}-{rpmrelease}.noarch.rpm")
         Expect.enter(connection, "q")
+
+    @staticmethod
+    def create_container_conf_rpm(connection, dirname, rpmname, rpmversion="", rpmrelease="",
+                                  days=""):
+        '''
+        create a container client configuration RPM
+        '''
+        RHUIManager.screen(connection, "client")
+        Expect.enter(connection, "d")
+        Expect.expect(connection, "Full path to local directory.*:")
+        Expect.enter(connection, dirname)
+        Expect.expect(connection, "Name of the RPM:")
+        Expect.enter(connection, rpmname)
+        Expect.expect(connection, "Version of the configuration RPM.*:")
+        Expect.enter(connection, rpmversion)
+        Expect.expect(connection, "Release of the configuration RPM.*:")
+        Expect.enter(connection, rpmrelease)
+        Expect.expect(connection, "Number of days.*:")
+        Expect.enter(connection, days)
+        if not rpmversion:
+            rpmversion = "2.0"
+        if not rpmrelease:
+            rpmrelease = "1"
+        Expect.expect(connection,
+                      f"Location: {dirname}/{rpmname}-{rpmversion}/build/RPMS/noarch/" +
+                      f"{rpmname}-{rpmversion}-{rpmrelease}.noarch.rpm")
+        Expect.enter(connection, "q")

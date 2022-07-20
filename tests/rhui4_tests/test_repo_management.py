@@ -5,7 +5,6 @@
 # export RHUITESTALLREPOS=1
 # in your shell before running this script.
 
-from os import getenv
 from os.path import basename, join
 
 import logging
@@ -14,6 +13,7 @@ from stitches.expect import Expect
 import yaml
 
 from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_entitlement import RHUIManagerEntitlements
 from rhui4_tests_lib.rhuimanager_repo import AlreadyExistsError, RHUIManagerRepo
@@ -47,6 +47,7 @@ class TestRepo():
             self.yum_repo_version = doc["yum_repos"][version][arch]["version"]
             self.yum_repo_kind = doc["yum_repos"][version][arch]["kind"]
             self.yum_repo_path = doc["yum_repos"][version][arch]["path"]
+            self.containers = {"rh": doc["container_primary"], "alt": doc["container_alt"]}
             self.remote_content = doc["remote_content"]
 
     @staticmethod
@@ -71,19 +72,16 @@ class TestRepo():
                                         CUSTOM_REPOS[0],
                                         "",
                                         CUSTOM_PATHS[0],
-                                        "1",
                                         "y")
         RHUIManagerRepo.add_custom_repo(RHUA,
                                         CUSTOM_REPOS[1],
                                         "",
                                         CUSTOM_PATHS[1],
-                                        "1",
                                         "n")
         RHUIManagerRepo.add_custom_repo(RHUA,
                                         CUSTOM_REPOS[2],
                                         "",
                                         CUSTOM_PATHS[2],
-                                        "1",
                                         "y",
                                         "",
                                         "n")
@@ -186,7 +184,7 @@ class TestRepo():
         info = RHUIManagerRepo.check_detailed_information(RHUA,
                                                           Util.format_repo(self.yum_repo_name,
                                                                            self.yum_repo_version))
-        nose.tools.eq_(info["type"], "Red Hat")
+        nose.tools.ok_("Yum" in info["type"])
 
     def test_11_delete_one_repo(self):
         '''remove the Red Hat repo'''
@@ -205,19 +203,43 @@ class TestRepo():
         RHUIManagerRepo.delete_all_repos(RHUA)
         nose.tools.ok_(not RHUIManagerRepo.list(RHUA))
 
+    def test_13_add_containers(self):
+        '''add containers'''
+        # use saved credentials; save them in the RHUI configuration first
+        # first a RH container
+        Helpers.set_registry_credentials(RHUA)
+        RHUIManagerRepo.add_container(RHUA,
+                                      self.containers["rh"]["name"],
+                                      self.containers["rh"]["id"],
+                                      self.containers["rh"]["displayname"])
+        # then a Quay container
+        Helpers.set_registry_credentials(RHUA, "quay", backup=False)
+        RHUIManagerRepo.add_container(RHUA, self.containers["alt"]["quay"]["name"])
+        # and finaly a Gitlab container
+        url = Helpers.get_registry_url("gitlab")
+        Helpers.set_registry_credentials(RHUA, "gitlab", [url], backup=False)
+        RHUIManagerRepo.add_container(RHUA, self.containers["alt"]["gitlab"]["name"])
+        # check all of that
+        repo_list = RHUIManagerRepo.list(RHUA)
+        nose.tools.ok_(len(repo_list) == 3,
+                       msg=f"The containers weren't added. Actual repolist: {repo_list}")
+
+    def test_14_display_container(self):
+        '''check detailed information on the RH container'''
+        info = RHUIManagerRepo.check_detailed_information(RHUA,
+                                                          self.containers["rh"]["displayname"])
+        nose.tools.ok_("Container" in info["type"])
+        nose.tools.eq_(info["id"], self.containers["rh"]["id"])
+
     @staticmethod
-    def test_13_add_all_rh_repos():
-        '''add all Red Hat repos, remove them (takes a lot of time!)'''
-        if not getenv("RHUITESTALLREPOS"):
-            raise nose.exc.SkipTest("Not explicitly requested.")
-        RHUIManagerRepo.add_rh_repo_all(RHUA)
-        # it's not feasible to get the repo list if so many repos are present; skip the check
-        #nose.tools.ok_(len(RHUIManagerRepo.list(RHUA)) > 100)
+    def test_15_delete_containers():
+        '''delete the containers'''
+        Helpers.restore_rhui_tools_conf(RHUA)
         RHUIManagerRepo.delete_all_repos(RHUA)
         nose.tools.ok_(not RHUIManagerRepo.list(RHUA))
 
     @staticmethod
-    def test_17_entitlement_cache():
+    def test_16_entitlement_cache():
         '''check if entitlements are cached and evaluated in the blink of an eye'''
         # for RHBZ#1873956
         # the cache was created by the actions of the previous tests
@@ -225,7 +247,7 @@ class TestRepo():
         Expect.expect_retval(RHUA, "timeout 2 rhui-manager repo unused")
 
     @staticmethod
-    def test_18_missing_cert_handling():
+    def test_17_missing_cert_handling():
         '''check if rhui-manager can handle the loss of the RH cert'''
         # for RHBZ#1325390
         RHUIManagerEntitlements.upload_rh_certificate(RHUA)
@@ -238,7 +260,7 @@ class TestRepo():
         Expect.enter(RHUA, "q")
 
     @staticmethod
-    def test_19_repo_select_0():
+    def test_18_repo_select_0():
         '''check if no repo is chosen if 0 is entered when adding a repo'''
         # for RHBZ#1305612
         # upload the small cert and try entering 0 when the list of repos is displayed

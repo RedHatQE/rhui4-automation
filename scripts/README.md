@@ -19,7 +19,6 @@ Inbound rules:
   80 TCP (HTTP)
   443 TCP (HTTPS)
   2049 TCP (NFS)
-  5000 TCP (containers)
 ```
 
 ### Requirements

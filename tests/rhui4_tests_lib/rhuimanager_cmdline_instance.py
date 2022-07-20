@@ -28,6 +28,7 @@ class RHUIManagerCLIInstance():
     @staticmethod
     def add(connection, node_type,
             hostname="", ssh_user=SUDO_USER_NAME, keyfile_path=SUDO_USER_KEY,
+            ssl_crt="", ssl_key="",
             force=False, unsafe=False):
         '''
         Add a CDS or HAProxy node.
@@ -36,6 +37,8 @@ class RHUIManagerCLIInstance():
         Note to the caller: Trust no one! Check for yourself if the node has really been added.
         '''
         _validate_node_type(node_type)
+        if node_type == "haproxy" and (ssl_crt or ssl_key):
+            raise ValueError("SSL cert and/or key is meaningless when adding an HAproxy node")
         if not hostname:
             if node_type == "cds":
                 hostname = ConMgr.get_cds_hostnames()[0]
@@ -43,6 +46,10 @@ class RHUIManagerCLIInstance():
                 hostname = ConMgr.get_cds_lb_hostname()
         cmd = f"rhui-manager {node_type} add " + \
               f"--hostname {hostname} --ssh_user {ssh_user} --keyfile_path {keyfile_path}"
+        if ssl_crt:
+            cmd += f" --user_supplied_ssl_crt {ssl_crt}"
+        if ssl_key:
+            cmd += f" --user_supplied_ssl_key {ssl_key}"
         if force:
             cmd += " --force"
         if unsafe:

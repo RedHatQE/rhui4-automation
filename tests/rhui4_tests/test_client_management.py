@@ -122,7 +122,6 @@ class TestClient():
                                         CUSTOM_REPO,
                                         "",
                                         CUSTOM_PATH,
-                                        "1",
                                         "y")
         RHUIManagerRepo.upload_content(RHUA,
                                        [CUSTOM_REPO],

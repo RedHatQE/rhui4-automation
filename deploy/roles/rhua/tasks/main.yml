@@ -23,6 +23,12 @@
   failed_when: rpmq.stdout | splitext | first != latest_rhui_version
   tags: rhua,versioncheck
 
+- name: check if the installation playbook has logged its output
+  command: cat /var/log/rhui/rhui-installer/install_logger.log.latest
+  register: installer_log
+  failed_when: "'PLAY RECAP' not in installer_log.stdout"
+  tags: rhua
+
 - name: check if rhui-manager can run
   command: rhui-manager --noninteractive status
   register: rhuimanagercmd

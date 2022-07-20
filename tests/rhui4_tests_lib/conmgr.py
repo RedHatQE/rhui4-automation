@@ -70,12 +70,16 @@ class ConMgr():
                              f"ssh-keyscan -t {keytype} {' '.join(hostnames)} >>~/.ssh/known_hosts")
 
     @staticmethod
-    def remove_ssh_keys(connection, hostnames=""):
+    def remove_ssh_keys(connection, hostnames="", keep_localhost=True):
         """remove SSH keys that belong to the given (or all) hosts"""
-        key_file_exists = connection.recv_exit_status("test -f ~/.ssh/known_hosts") == 0
+        hosts_file = "~/.ssh/known_hosts"
+        key_file_exists = connection.recv_exit_status(f"test -f {hosts_file}") == 0
         if key_file_exists:
             if not hostnames:
-                Expect.expect_retval(connection, "rm -f ~/.ssh/known_hosts")
+                if keep_localhost:
+                    Expect.expect_retval(connection, f"sed -i '/^localhost/!d' {hosts_file}")
+                else:
+                    Expect.expect_retval(connection, f"rm -f {hosts_file}")
                 return
             for host in hostnames:
                 Expect.expect_retval(connection, f"ssh-keygen -R {host}")

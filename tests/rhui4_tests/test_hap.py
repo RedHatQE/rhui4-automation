@@ -5,7 +5,7 @@ import re
 
 import logging
 import nose
-from stitches import Expect
+from stitches.expect import CTRL_C, Expect
 
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.helpers import Helpers
@@ -162,6 +162,30 @@ def test_13_delete_select_0():
     if hap_list:
         RHUIManagerInstance.delete_all(RHUA, "loadbalancers")
         raise AssertionError(f"The LB list is not empty after the deletion attempt: {hap_list}")
+
+def test_14_file_paths():
+    '''
+       check if absolute and valid paths are required
+    '''
+    Expect.enter(RHUA, "cd /etc")
+    RHUIManager.screen(RHUA, "loadbalancers")
+    Expect.enter(RHUA, "a")
+    Expect.expect(RHUA, "Hostname")
+    Expect.enter(RHUA, "foo")
+    Expect.expect(RHUA, "Username")
+    Expect.enter(RHUA, "bar")
+    Expect.expect(RHUA, "Absolute")
+    Expect.enter(RHUA, "baz")
+    Expect.expect(RHUA, "Cannot find file")
+    Expect.enter(RHUA, "motd")
+    state = Expect.expect_list(RHUA,
+                               [(re.compile(".*Relative path supplied.*", re.DOTALL), 1),
+                                (re.compile(".*Checking SSH authentication.*", re.DOTALL), 2)])
+    if state == 2:
+        Expect.enter(RHUA, "q")
+        raise AssertionError("The relative path was accepted")
+    Expect.enter(RHUA, CTRL_C)
+    Expect.enter(RHUA, "q")
 
 def teardown():
     '''

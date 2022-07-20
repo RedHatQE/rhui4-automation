@@ -6,8 +6,9 @@ import time
 
 from stitches.expect import CTRL_C, Expect
 
-from rhui4_tests_lib.util import Util
+from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
+from rhui4_tests_lib.util import Util
 
 
 class AlreadyExistsError(Exception):
@@ -24,7 +25,6 @@ class RHUIManagerRepo():
                         reponame,
                         displayname="",
                         path="",
-                        checksum_alg="1",
                         entitlement="y",
                         entitlement_path="",
                         redhat_gpg="y",
@@ -57,10 +57,6 @@ class RHUIManagerRepo():
             else:
                 path_real = reponame
             checklist.append("Path: " + path_real)
-            Expect.expect(connection, "Enter value.*:")
-            Expect.enter(connection, checksum_alg)
-            checksums = ['', 'sha256', 'sha1']
-            checklist.append("Checksum type: " + checksums[int(checksum_alg)])
             Expect.expect(connection,
                           "Should the repository require an entitlement certificate " +
                           r"to access\? \(y/n\)")
@@ -169,6 +165,54 @@ class RHUIManagerRepo():
         RHUIManager.quit(connection)
 
     @staticmethod
+    def add_container(connection, containername, containerid="", displayname="", credentials=""):
+        '''
+        add a new Red Hat container
+        '''
+        default_registry = Helpers.get_registry_url("default", connection)
+        # if the credentials parameter is supplied, it's supposed to be a list containing:
+        #   0 - registry hostname if not using the default one
+        #   1 - username (if required; the default registry requires the RH (CCSP) login)
+        #   2 - password (if required)
+        # do NOT supply them if they're in rhui-tools.conf and you want to use the default registry;
+        # this method will fail otherwise, because it will expect rhui-manager to ask for them
+        RHUIManager.screen(connection, "repo")
+        Expect.enter(connection, "ac")
+        Expect.expect(connection, "Specify URL of registry .*:")
+        if credentials and credentials[0]:
+            registry = credentials[0]
+            Expect.enter(connection, registry)
+        else:
+            registry = default_registry
+            Expect.enter(connection, "")
+        Expect.expect(connection, "Name of the container in the registry:")
+        Expect.enter(connection, containername)
+        Expect.expect(connection, "Unique ID for the container .*]", 60)
+        Expect.enter(connection, containerid)
+        Expect.expect(connection, "Display name for the container.*]:")
+        Expect.enter(connection, displayname)
+        # login & password provided, or a non-default registry specified
+        if credentials or registry != default_registry:
+            Expect.expect(connection, "Registry username:")
+            if len(credentials) > 2:
+                Expect.enter(connection, credentials[1])
+                Expect.expect(connection, "Registry password:")
+                Expect.enter(connection, credentials[2])
+            else:
+                Expect.enter(connection, "")
+        if not containerid:
+            containerid = Util.safe_pulp_repo_name(containername)
+        if not displayname:
+            displayname = Util.safe_pulp_repo_name(containername)
+        RHUIManager.proceed_with_check(connection,
+                                       "The following container will be added:",
+                                       ["Registry URL: " + registry,
+                                        "Container Id: " + containerid,
+                                        "Display Name: " + displayname,
+                                        "Upstream Container Name: " + containername])
+        RHUIManager.quit(connection)
+
+    @staticmethod
     def list(connection):
         '''
         list repositories
@@ -185,8 +229,7 @@ class RHUIManagerRepo():
             if line in ["",
                         "Custom Repositories",
                         "Red Hat Repositories",
-                        "OSTree",
-                        "Docker",
+                        "Container",
                         "Yum",
                         "No repositories are currently managed by the RHUI"]:
                 continue
