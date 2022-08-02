@@ -39,7 +39,6 @@ You need a ZIP file with the following files in the root of the archive:
 * `test_gpg_key` — This is the RHUI QE public GPG key (0x9F6E93A2).
 * `ANYTHING.tar` — These must be tarballs containing some packages and their `updateinfo.xml.gz` files. The contents will be used for updateinfo testing. Exact names are to be specified in `rhui4_tests/tested_repos.yaml`. One of them must also contain an uncompressed updateinfo file.
 * `legacy_ca.crt` — This must be a CA certificate taken from a different RHUI environment; ie. `/etc/pki/rhui/certs/entitlement-ca.crt` in the case of RHUI 3, or `/etc/pki/rhui/certs/ca.crt` if using a CA cert from RHUI 4. The file will be used in legacy CA testing.
-* `NAME/comps.xml` — These must be package group repodata files for both repository NAMEs defined under `comps` in `rhui4_tests/tested_repos.yaml`. In addition, one of the repositories needs a file named `mod-comps.xml` with an additional group as defined in the same YAML file.
 * `SCA/ID.pem, SCA/ID-key.pem` — These must be an entitlement certificate and its key for Simple Content Access. Note that `SCA` is an actual directory name, whereas `ID` is supposed to be the serial number of the certificate in question.
 * `custom_certs/FILES`: Several files that will be used to test custom CA certificate handling in rhui-installer and custom certificate handling in CDS registration. The following content is expected:
 
@@ -54,6 +53,8 @@ custom_certs/client_ssl_ca.key
 custom_certs/ssl.crt
 custom_certs/ssl.key
 ```
+
+* `comps/[REPO1,REPO2,...]/comps.xml`: Files that will be used to test comps XML handling. The REPO names are specified in `rhui4_tests/tested_repos.yaml`. The second one must also contain a file named `mod-comps.xml`, which is a copy of `comps.xml` with one more package group named `Misc 2`. The `no_comps` comps XML file must not contain any package group.
 
 The main and Atomic certificates must not be expired. Expiration is first checked for the "empty",
 "incompatible", and "partially invalid" certificates, and the tests that use them are skipped if

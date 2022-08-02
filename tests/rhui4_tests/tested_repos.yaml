@@ -152,6 +152,24 @@ updateinfo:
             test_package: "bear"
             old_version: "4.0-1"
             errata: "RHEA-2012:0001"
+comps:
+    SAP:
+        name: "RHEL for SAP"
+        test_group: "SAP"
+        test_package: "sapconf"
+        test_langpack: "firefox firefox-langpack-%s"
+    Supplementary:
+        name: "Red Hat Enterprise Linux Supplementary"
+        test_group: "Java Browser"
+        test_group_mod: "Misc 2"
+        test_package: "java-1.8.0-ibm-plugin"
+        test_langpack: ""
+    big_repo:
+        id: "BaseOS"
+    no_comps:
+        id: "Ansible"
+    comps_to_zip:
+        id: "CRB"
 remote_content:
     rpm: "http://mirror.centos.org/centos/7/fasttrack/x86_64/Packages/firewalld-filesystem-0.6.3-2.el7_7.1.0.1.noarch.rpm"
     ftp: "ftp://ftp.redhat.com/redhat/linux/enterprise/2.1AS/en/os/i386/SRPMS/xsnow-1.40-14.src.rpm"

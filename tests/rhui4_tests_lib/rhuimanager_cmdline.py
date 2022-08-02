@@ -229,8 +229,10 @@ class RHUIManagerCLI():
         '''
         Expect.expect_retval(connection,
                              "rhui-manager repo add_comps " +
-                             f"--repo_id {repo_id} --comps '{comps}'",
+                             f"--repo_id {repo_id} --comps {comps}",
                              timeout=120)
+        # better export the repo in case a previously added comps file for this repo is diferent
+        RHUIManagerCLI.repo_export(connection, repo_id)
 
     @staticmethod
     def repo_export(connection, repo_id):
