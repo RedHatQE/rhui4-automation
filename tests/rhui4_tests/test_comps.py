@@ -235,8 +235,8 @@ class TestCompsXML():
     def test_99_cleanup(self):
         """clean up"""
         # remove the configuration RPM from the client
-        Util.remove_rpm(CLI, [self.test_repos[1]])
         Expect.expect_retval(CLI, "yum clean all")
+        Util.remove_rpm(CLI, [self.test_repos[1]])
         # remove repos
         for repo in self.test_repos:
             RHUIManagerCLI.repo_delete(RHUA, repo)
