@@ -449,6 +449,29 @@ class TestCLI():
         RHUIManager.remove_rh_certs(RHUA)
 
     @staticmethod
+    def test_47_rhui_scripts():
+        '''test argument handling in rhui-* scripts'''
+        scripts = ["rhui-export-repos", "rhui-subscription-sync"]
+        logs = ["/var/log/rhui/rhui-export-repos.log", "/var/log/rhui-subscription-sync.log"]
+        bad_config = "/etc/motd"
+        bad_sync_config = "/etc/ansible/ansible.cfg"
+        for script, log in zip(scripts, logs):
+            Expect.expect_retval(RHUA, f"{script} --config {bad_config}", 1)
+            Expect.ping_pong(RHUA, f"tail -2 {log}", "(pulp_api_url|cert_dir) is not valid")
+            Expect.expect_retval(RHUA, f"{script} --sync-config {bad_sync_config}", 1)
+            Expect.ping_pong(RHUA, f"tail -2 {log}", "username is not valid")
+
+    @staticmethod
+    def test_48_rhui_manager_help():
+        '''test help handling in rhui-manager'''
+        for arg in ["-h", "--help"]:
+            Expect.ping_pong(RHUA, f"rhui-manager {arg}", "Usage:.*Options:.*Commands:")
+            # -h doesn't work with 1-level subcommands like --help, skip it
+            if arg != "-h":
+                Expect.ping_pong(RHUA, f"rhui-manager cert {arg}", "upload.*uploads.*info.*display")
+            Expect.ping_pong(RHUA, f"rhui-manager cert info {arg}", "info: display")
+
+    @staticmethod
     def test_99_cleanup():
         '''cleanup: remove temporary files'''
         Expect.ping_pong(RHUA,
