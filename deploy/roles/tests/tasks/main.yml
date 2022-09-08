@@ -37,17 +37,22 @@
   package: name=python3-pip state=present
   tags: tests
 
-- name: install the dependencies of required libraries
+- name: install the RPM dependencies of required libraries
   package:
     name:
       - make
       - gcc
       - python3-devel
+      - cargo
     state: present
   tags: tests
 
+- name: install the PyPI dependencies of required libraries
+  command: pip3 install setuptools_rust
+  tags: tests
+
 - name: install tests
-  shell: pip3 install --prefix /usr .
+  command: pip3 install --prefix /usr .
   args:
     chdir: /root/rhui4-automation/tests
   tags: tests
