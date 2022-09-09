@@ -265,16 +265,7 @@ class RHUIManagerCLI():
         upload packages from a remote URL to a custom repository
         '''
         cmd = f"rhui-manager packages remote --repo_id {repo_id} --url {url}"
-        _, stdout, _ = connection.exec_command(cmd)
-        output = stdout.read().decode().splitlines()
-        successfully_uploaded_packages = [basename(line.split()[0]) for line in output \
-                                          if line.endswith("successfully uploaded")]
-        if not successfully_uploaded_packages:
-            raise RuntimeError("\n".join(output) or f"no output from '{cmd}'")
-        successfully_uploaded_packages.sort()
-        expected_packages = [basename(url)] if url.endswith(".rpm") else Util.get_rpm_links(url)
-        expected_packages.sort()
-        nose.tools.eq_(successfully_uploaded_packages, expected_packages)
+        Expect.expect_retval(connection, cmd)
 
     @staticmethod
     def packages_upload(connection, repo_id, path):
@@ -282,21 +273,7 @@ class RHUIManagerCLI():
         upload a package or a directory with packages to the custom repo
         '''
         cmd = f"rhui-manager packages upload --repo_id {repo_id} --packages '{path}'"
-        _, stdout, _ = connection.exec_command(cmd)
-        output = stdout.read().decode().splitlines()
-        successfully_uploaded_packages = [line.split()[0] for line in output \
-                                          if line.endswith("successfully uploaded")]
-        if not successfully_uploaded_packages:
-            raise RuntimeError("\n".join(output) or f"no output from '{cmd}'")
-        successfully_uploaded_packages.sort()
-        path_type = Util.get_file_type(connection, path)
-        if path_type == "regular file":
-            expected_packages = [path]
-        elif path_type == "directory":
-            expected_packages = [join(path, rpm) for rpm in Util.get_rpms_in_dir(connection, path)]
-        else:
-            expected_packages = []
-        nose.tools.eq_(successfully_uploaded_packages, expected_packages)
+        Expect.expect_retval(connection, cmd)
 
     @staticmethod
     def client_labels(connection):
