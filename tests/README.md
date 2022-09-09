@@ -55,6 +55,16 @@ custom_certs/ssl.key
 ```
 
 * `comps/[REPO1,REPO2,...]/comps.xml`: Files that will be used to test comps XML handling. The REPO names are specified in `rhui4_tests/tested_repos.yaml`. The second one must also contain a file named `mod-comps.xml`, which is a copy of `comps.xml` with one more package group named `Misc 2`. The `no_comps` comps XML file must not contain any package group.
+* `repo_files/FILES`: Several files that will be used to test the ability to add repos specified in a file. Details are in `test_cmdline.py`, but in a nutshell the following content is expected:
+
+```
+repo_files/atomic_repos.yaml
+repo_files/bad_ids.yaml
+repo_files/bad_name.yaml
+repo_files/no_name.yaml
+repo_files/no_repo_ids.yaml
+repo_files/wrong_repo_id.yaml
+```
 
 The main and Atomic certificates must not be expired. Expiration is first checked for the "empty",
 "incompatible", and "partially invalid" certificates, and the tests that use them are skipped if

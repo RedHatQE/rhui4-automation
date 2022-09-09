@@ -112,6 +112,16 @@ class RHUIManagerCLI():
                              timeout=600)
 
     @staticmethod
+    def repo_add_by_file(connection, repo_file, expect_trouble=False):
+        '''
+        add a list of repos specified in an input file
+        '''
+        Expect.expect_retval(connection,
+                             "rhui-manager repo add_by_file --file " + repo_file,
+                             0 if not expect_trouble else 1,
+                             timeout=600)
+
+    @staticmethod
     def repo_list(connection, ids_only=False, redhat_only=False, delimiter=""):
         '''
         show repos; can show IDs only, RH repos only, and accepts a delimiter

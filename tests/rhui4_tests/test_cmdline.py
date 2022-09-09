@@ -38,6 +38,14 @@ CERTS = {"Atomic": "rhcert_atomic.pem",
          "empty": "rhcert_empty.pem"}
 TMPDIR = mkdtemp()
 YUM_REPO_FILE = join(TMPDIR, "rh-cloud.repo")
+IMPORT_REPO_FILES_DIR = join(DATADIR, "repo_files")
+IMPORT_REPO_FILES = {"good": join(IMPORT_REPO_FILES_DIR, "atomic_repos.yaml"),
+                     "wrongrepo": join(IMPORT_REPO_FILES_DIR, "wrong_repo_id.yaml"),
+                     "noname": join(IMPORT_REPO_FILES_DIR, "no_name.yaml"),
+                     "noids": join(IMPORT_REPO_FILES_DIR, "no_repo_ids.yaml"),
+                     "badname": join(IMPORT_REPO_FILES_DIR, "bad_name.yaml"),
+                     "badids": join(IMPORT_REPO_FILES_DIR, "bad_ids.yaml"),
+                     "notafile": join(IMPORT_REPO_FILES_DIR, "not_a_file.yaml")}
 
 class TestCLI():
     '''
@@ -449,7 +457,41 @@ class TestCLI():
         RHUIManager.remove_rh_certs(RHUA)
 
     @staticmethod
-    def test_47_rhui_scripts():
+    def test_47_add_by_file():
+        '''check that all repos defined in an input file get added'''
+        # get a list of repos that are expected to be added
+        _, stdout, _ = RHUA.exec_command("cat " + IMPORT_REPO_FILES["good"])
+        import_repo_data = yaml.safe_load(stdout)
+        expected_repo_ids = sorted(import_repo_data["repo_ids"])
+        # upload a cert and try adding the repos from the file
+        RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["Atomic"]))
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"])
+        actual_repo_ids = RHUIManagerCLI.repo_list(RHUA, True).splitlines()
+        # ok?
+        nose.tools.eq_(expected_repo_ids, actual_repo_ids)
+        # re-adding the repos should produce a bad exit code
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"], True)
+        # clean up
+        for repo in actual_repo_ids:
+            RHUIManagerCLI.repo_delete(RHUA, repo)
+        RHUIManager.remove_rh_certs(RHUA)
+        # also check an input file with an invalid repo ID
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["wrongrepo"], True)
+        # and with no name for the repo set
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noname"], True)
+        # and with no repos at all
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noids"], True)
+        # and with an incorrectly specified name for the repo set
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badname"], True)
+        # and with an incorrectly specified repo IDs
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badids"], True)
+        # also check a non-existing file
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["notafile"], True)
+        # and a file which isn't valid YAML
+        RHUIManagerCLI.repo_add_by_file(RHUA, "/etc/issue", True)
+
+    @staticmethod
+    def test_48_rhui_scripts():
         '''test argument handling in rhui-* scripts'''
         scripts = ["rhui-export-repos", "rhui-subscription-sync"]
         logs = ["/var/log/rhui/rhui-export-repos.log", "/var/log/rhui-subscription-sync.log"]
@@ -462,7 +504,7 @@ class TestCLI():
             Expect.ping_pong(RHUA, f"tail -2 {log}", "username is not valid")
 
     @staticmethod
-    def test_48_rhui_manager_help():
+    def test_49_rhui_manager_help():
         '''test help handling in rhui-manager'''
         for arg in ["-h", "--help"]:
             Expect.ping_pong(RHUA, f"rhui-manager {arg}", "Usage:.*Options:.*Commands:")
