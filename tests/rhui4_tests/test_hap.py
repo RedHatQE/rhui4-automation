@@ -11,6 +11,7 @@ from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance, NoSuchInstance
+from rhui4_tests_lib.util import Util
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -186,6 +187,27 @@ def test_14_file_paths():
         raise AssertionError("The relative path was accepted")
     Expect.enter(RHUA, CTRL_C)
     Expect.enter(RHUA, "q")
+
+def test_15_custom_haproxy_config():
+    '''
+       check the ability to install HAProxy with a custom configuration file
+    '''
+    default_template = "/usr/share/rhui-tools/templates/haproxy.cfg"
+    find = "  maxconn  4000"
+    replace_with = "  maxconn  3600"
+    cfg = Util.mktemp_remote(RHUA)
+    Expect.expect_retval(RHUA, f"sed 's/{find}/{replace_with}/' {default_template} > {cfg}")
+    RHUIManagerInstance.add_instance(RHUA, "loadbalancers", HA_HOSTNAME, haproxy_config_file=cfg)
+    # check if the node was added
+    hap_list = RHUIManagerInstance.list(RHUA, "loadbalancers")
+    nose.tools.assert_not_equal(hap_list, [])
+    # check if the configuration file was actually used
+    _, stdout, _ = HAPROXY.exec_command("cat /etc/haproxy/haproxy.cfg")
+    fetched_cfg = stdout.read().decode().splitlines()
+    nose.tools.ok_(replace_with in fetched_cfg)
+    # delete the node
+    RHUIManagerInstance.delete(RHUA, "loadbalancers", [HA_HOSTNAME])
+    Expect.expect_retval(RHUA, f"rm -f {cfg}")
 
 def teardown():
     '''

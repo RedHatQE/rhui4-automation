@@ -29,6 +29,7 @@ class RHUIManagerCLIInstance():
     def add(connection, node_type,
             hostname="", ssh_user=SUDO_USER_NAME, keyfile_path=SUDO_USER_KEY,
             ssl_crt="", ssl_key="",
+            haproxy_config_file="",
             force=False, unsafe=False):
         '''
         Add a CDS or HAProxy node.
@@ -50,6 +51,8 @@ class RHUIManagerCLIInstance():
             cmd += f" --user_supplied_ssl_crt {ssl_crt}"
         if ssl_key:
             cmd += f" --user_supplied_ssl_key {ssl_key}"
+        if haproxy_config_file:
+            cmd += f" --config {haproxy_config_file}"
         if force:
             cmd += " --force"
         if unsafe:

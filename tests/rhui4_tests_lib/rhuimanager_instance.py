@@ -35,6 +35,7 @@ class RHUIManagerInstance():
     def add_instance(connection, screen,
                      hostname="", user_name=SUDO_USER_NAME, ssh_key_path=SUDO_USER_KEY,
                      ssl_crt="", ssl_key="",
+                     haproxy_config_file="",
                      update=False):
         '''
         Register (add) a new CDS or HAProxy instance
@@ -92,7 +93,8 @@ class RHUIManagerInstance():
         state = Expect.expect_list(connection, [
             (re.compile(".*Cannot find file, please enter a valid path.*", re.DOTALL), 1),
             (re.compile(".*Checking SSH authentication on instance.*", re.DOTALL), 2),
-            (re.compile(".*Optional absolute path to user supplied SSL key file:.*", re.DOTALL), 3)
+            (re.compile(".*Optional absolute path to user supplied SSL key file:.*", re.DOTALL), 3),
+            (re.compile(".*Optional absolute path to user supplied HAProxy config file:.*", re.DOTALL), 4)
         ])
         if state == 1:
             # don't know how to continue with invalid path: raise an exception
@@ -109,6 +111,9 @@ class RHUIManagerInstance():
                 Expect.expect(connection, "Optional absolute path to user supplied SSL crt file:")
                 Expect.enter(connection, ssl_crt)
                 Expect.expect(connection, "Checking SSH authentication on instance")
+        elif state == 4:
+            # the HAProxy config file is only asked for when adding an HAProxy
+            Expect.enter(connection, haproxy_config_file)
         # all OK
         # if the SSH key is unknown, rhui-manager now asks you to confirm it; say yes
         if not known_host:
