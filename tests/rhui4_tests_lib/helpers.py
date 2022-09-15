@@ -3,6 +3,7 @@
 from os.path import basename, join
 
 from configparser import ConfigParser
+import yaml
 
 from stitches.expect import Expect
 import nose
@@ -218,3 +219,11 @@ class Helpers():
         Helpers.restore_rhui_tools_conf(connection)
         Expect.expect_retval(connection, "logrotate -f /etc/logrotate.d/nginx")
         Expect.expect_retval(connection, "rhui-services-restart")
+
+    @staticmethod
+    def get_repos_from_yaml(connection, yaml_file):
+        """load the specified YAML file with repo_ids and return them as a list"""
+        _, stdout, _ = connection.exec_command(f"cat {yaml_file}")
+        import_repo_data = yaml.safe_load(stdout)
+        repo_ids = import_repo_data["repo_ids"]
+        return repo_ids

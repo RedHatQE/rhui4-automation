@@ -18,6 +18,7 @@ from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI, \
                                                 CustomRepoAlreadyExists, \
                                                 CustomRepoGpgKeyNotFound
+from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.util import Util
 
 logging.basicConfig(level=logging.DEBUG)
@@ -176,9 +177,9 @@ class TestCLI():
         '''add a Red Hat repo by its ID'''
         RHUIManagerCLI.repo_add_by_repo(RHUA, [self.yum_repo_ids[1]])
         # also try an invalid repo ID, expect a non-zero exit code
-        RHUIManagerCLI.repo_add_by_repo(RHUA, ["foo"], True)
+        RHUIManagerCLI.repo_add_by_repo(RHUA, ["foo"], False, True)
         # try the already added repo, also expect a non-zero exit code
-        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.yum_repo_ids[1]], True)
+        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.yum_repo_ids[1]], False, True)
 
     def test_13_add_rh_repo_by_product(self):
         '''add a Red Hat repo by its product name'''
@@ -460,35 +461,37 @@ class TestCLI():
     def test_47_add_by_file():
         '''check that all repos defined in an input file get added'''
         # get a list of repos that are expected to be added
-        _, stdout, _ = RHUA.exec_command("cat " + IMPORT_REPO_FILES["good"])
-        import_repo_data = yaml.safe_load(stdout)
-        expected_repo_ids = sorted(import_repo_data["repo_ids"])
-        # upload a cert and try adding the repos from the file
+        expected_repo_ids = sorted(Helpers.get_repos_from_yaml(RHUA, IMPORT_REPO_FILES["good"]))
+        # upload a cert and try adding the repos from the file, sync them all the same time
         RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["Atomic"]))
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"])
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"], True)
+        # check the sync status
+        for repo in expected_repo_ids:
+            info = RHUIManagerCLI.repo_info(RHUA, repo)
+            nose.tools.ok_(info["lastsync"] != "Never")
         actual_repo_ids = RHUIManagerCLI.repo_list(RHUA, True).splitlines()
         # ok?
         nose.tools.eq_(expected_repo_ids, actual_repo_ids)
         # re-adding the repos should produce a bad exit code
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"], True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"], False, True)
         # clean up
         for repo in actual_repo_ids:
             RHUIManagerCLI.repo_delete(RHUA, repo)
         RHUIManager.remove_rh_certs(RHUA)
         # also check an input file with an invalid repo ID
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["wrongrepo"], True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["wrongrepo"], False, True)
         # and with no name for the repo set
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noname"], True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noname"], False, True)
         # and with no repos at all
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noids"], True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noids"], False, True)
         # and with an incorrectly specified name for the repo set
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badname"], True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badname"], False, True)
         # and with an incorrectly specified repo IDs
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badids"], True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badids"], False, True)
         # also check a non-existing file
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["notafile"], True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["notafile"], False, True)
         # and a file which isn't valid YAML
-        RHUIManagerCLI.repo_add_by_file(RHUA, "/etc/issue", True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, "/etc/issue", False, True)
 
     @staticmethod
     def test_48_rhui_scripts():

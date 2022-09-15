@@ -4,7 +4,6 @@ import logging
 from os.path import basename
 
 import nose
-from stitches.expect import Expect
 import yaml
 
 from rhui4_tests_lib.conmgr import ConMgr
@@ -48,44 +47,36 @@ class TestCLI():
 
     def test_04_add_repo(self):
         '''add a Red Hat repo'''
-        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.repo_id])
+        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.repo_id], True)
 
-    def test_05_sync_repo(self):
-        '''sync the repo'''
-        RHUIManagerCLI.repo_sync(RHUA, self.repo_id)
-
-    def test_06_check_package(self):
+    def test_05_check_package(self):
         '''check a package in the repo, expect 1 instance'''
         package_list = RHUIManagerCLI.packages_list(RHUA, self.repo_id)
         test_package_list = [package.rsplit("-", 2)[0] for package in package_list \
                              if package.startswith(self.test_package)]
         nose.tools.eq_(test_package_list, [self.test_package])
 
-    def test_07_delete_repo(self):
+    def test_06_delete_repo(self):
         '''delete the repo'''
         RHUIManagerCLI.repo_delete(RHUA, self.repo_id)
 
     @staticmethod
-    def test_08_set_config_2():
+    def test_07_set_config_2():
         '''set retain package versions to 2'''
         Helpers.edit_rhui_tools_conf(RHUA, "retain_package_versions", "2", False)
 
-    def test_09_add_repo(self):
+    def test_08_add_repo(self):
         '''add a Red Hat repo'''
-        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.repo_id])
+        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.repo_id], True)
 
-    def test_10_sync_repo(self):
-        '''sync the repo'''
-        RHUIManagerCLI.repo_sync(RHUA, self.repo_id)
-
-    def test_11_check_package(self):
+    def test_09_check_package(self):
         '''check a package in the repo, expect 2 instances'''
         package_list = RHUIManagerCLI.packages_list(RHUA, self.repo_id)
         test_package_list = [package.rsplit("-", 2)[0] for package in package_list \
                              if package.startswith(self.test_package)]
         nose.tools.eq_(len(test_package_list), 2)
 
-    def test_12_cleanup(self):
+    def test_10_cleanup(self):
         '''clean up'''
         RHUIManagerCLI.repo_delete(RHUA, self.repo_id)
         RHUIManager.remove_rh_certs(RHUA)
