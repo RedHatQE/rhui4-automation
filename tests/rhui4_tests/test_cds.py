@@ -3,6 +3,7 @@
 from os.path import basename
 import random
 import re
+import time
 
 import logging
 import nose
@@ -182,6 +183,41 @@ def test_13_delete_select_0():
     if cds_list:
         RHUIManagerInstance.delete_all(RHUA, "cds")
         raise AssertionError("The CDS list is not empty after the deletion attempt: {cds_list}")
+
+def test_14_autoheal():
+    '''
+    terminate gunicorn processes and expect them to be respawn automatically
+    '''
+    # add the first CDS
+    cds = CDS_HOSTNAMES[0]
+    RHUIManagerInstance.add_instance(RHUA, "cds", cds)
+
+    # get the PIDs of gunicorn processes
+    _, stdout, _ = CDS[0].exec_command("pidof -x gunicorn")
+    old_pids = sorted(list(map(int, stdout.read().decode().split())))
+
+    # make sure there actually are some PIDs
+    nose.tools.assert_true(old_pids)
+
+    # kill them all
+    Expect.expect_retval(CDS[0], "killall gunicorn")
+
+    # check if there are no gunicorn processed now
+    _, stdout, _ = CDS[0].exec_command("pidof -x gunicorn")
+    nose.tools.assert_false(stdout.read().decode())
+
+    # wait a bit and get new PIDs
+    time.sleep(7)
+    _, stdout, _ = CDS[0].exec_command("pidof -x gunicorn")
+    new_pids = sorted(list(map(int, stdout.read().decode().split())))
+
+    # delete the CDS to clean up
+    RHUIManagerInstance.delete(RHUA, "cds", [cds])
+
+    # check if they were all started again
+    nose.tools.assert_equal(len(old_pids), len(new_pids))
+    for i, _ in enumerate(old_pids):
+        nose.tools.assert_not_equal(old_pids[i], new_pids[i])
 
 def teardown():
     '''
