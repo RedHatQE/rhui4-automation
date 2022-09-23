@@ -31,6 +31,7 @@ Welcome to the RHUI 4 Test Plan!
    sosreport
    status
    subscription
+   switch_storage
    sync_management
    updateinfo
    user_management
