@@ -34,7 +34,7 @@ def _check_rhui_mountpoint(connection, fs_server):
                        msg=f"unexpected matches in {mount_info_file}: {matches}")
         # and it must be using the expected FS server
         nose.tools.ok_(fs_server in matches[0],
-                       msg=f"unexpected FS server in {mount_info_file}: {fs_server}")
+                       msg=f"{fs_server} not found in {mount_info_file}, found: {matches[0]}")
 
 def setup():
     """announce the beginning of the test run"""
