@@ -186,7 +186,7 @@ def test_13_delete_select_0():
 
 def test_14_autoheal():
     '''
-    terminate gunicorn processes and expect them to be respawn automatically
+    terminate gunicorn processes and expect them to be respawned automatically
     '''
     # add the first CDS
     cds = CDS_HOSTNAMES[0]
