@@ -22,6 +22,7 @@ class Util():
         res = res.replace("[91m", "")
         res = res.replace("[92m", "")
         res = res.replace("[93m", "")
+        res = res.replace("[95m", "")
         res = res.replace("[96m", "")
         res = res.replace("[97m", "")
         res = res.replace("[0m", "")
