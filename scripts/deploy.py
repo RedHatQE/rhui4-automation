@@ -38,6 +38,9 @@ PRS.add_argument("--upgrade",
 PRS.add_argument("--fips",
                  help="enable FIPS before running the deployment",
                  action="store_true")
+PRS.add_argument("--ansible-engine",
+                 help="install Ansible Engine first (or else Ansible Core will be installed)",
+                 action="store_true")
 PRS.add_argument("--proxy",
                  help="configure RHUI to connect to the CDN via a proxy",
                  action="store_true")
@@ -121,6 +124,9 @@ if ARGS.upgrade:
 
 if ARGS.fips:
     EVARS += " fips=True"
+
+if ARGS.ansible_engine:
+    EVARS += " ansible_engine=True"
 
 if ARGS.proxy:
     EVARS += " proxy=True"

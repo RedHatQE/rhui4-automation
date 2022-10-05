@@ -7,6 +7,11 @@
 
 - include: ssh.yml
 
+- name: install Ansible Engine
+  package: name=ansible state=present
+  when: ansible_engine | default(False) | bool
+  tags: rhua
+
 - name: install rhui-installer
   package: name=rhui-installer state=present
   register: install_rhui_installer
