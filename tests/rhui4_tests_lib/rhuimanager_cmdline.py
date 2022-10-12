@@ -1,12 +1,14 @@
 """ RHUIManagerCLI functions """
 
-from os.path import basename, join
+from os.path import join
 import re
 import time
 
 import nose
 
 from stitches.expect import Expect
+
+from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.util import Util
 
 def _get_repo_status(connection, repo_name):
@@ -23,6 +25,17 @@ def _get_repo_status(connection, repo_name):
     if status:
         return status
     raise RuntimeError("Invalid repository name.")
+
+def _wait_till_repo_synced(connection, repo_id, expected_status="SUCCESS"):
+    '''
+    wait until the specified repo is synchronized
+    '''
+    repo_name = RHUIManagerCLI.repo_info(connection, repo_id)["name"]
+    repo_status = _get_repo_status(connection, repo_name)
+    while repo_status in ["Never", "SCHEDULED", "RUNNING"]:
+        time.sleep(10)
+        repo_status = _get_repo_status(connection, repo_name)
+    nose.tools.assert_equal(repo_status, expected_status)
 
 def _ent_list(stdout):
     '''
@@ -102,14 +115,37 @@ class RHUIManagerCLI():
                          "Successfully added")
 
     @staticmethod
-    def repo_add_by_repo(connection, repo_ids, expect_trouble=False):
+    def repo_add_by_repo(connection, repo_ids, sync_now=False, expect_trouble=False):
         '''
         add a list of repos specified by their IDs
         '''
+        cmd = "rhui-manager repo add_by_repo --repo_ids " + ",".join(repo_ids)
+        if sync_now:
+            cmd += " --sync_now"
         Expect.expect_retval(connection,
-                             "rhui-manager repo add_by_repo --repo_ids " + ",".join(repo_ids),
+                             cmd,
                              0 if not expect_trouble else 1,
                              timeout=600)
+        if sync_now:
+            for repo_id in repo_ids:
+                _wait_till_repo_synced(connection, repo_id)
+
+    @staticmethod
+    def repo_add_by_file(connection, repo_file, sync_now=False, expect_trouble=False):
+        '''
+        add a list of repos specified in an input file
+        '''
+        cmd = "rhui-manager repo add_by_file --file " + repo_file
+        if sync_now:
+            cmd += " --sync_now"
+        Expect.expect_retval(connection,
+                             cmd,
+                             0 if not expect_trouble else 1,
+                             timeout=600)
+        if sync_now:
+            repo_ids = Helpers.get_repos_from_yaml(connection, repo_file)
+            for repo_id in repo_ids:
+                _wait_till_repo_synced(connection, repo_id)
 
     @staticmethod
     def repo_list(connection, ids_only=False, redhat_only=False, delimiter=""):
@@ -135,12 +171,7 @@ class RHUIManagerCLI():
         Expect.ping_pong(connection,
                          "rhui-manager repo sync --repo_id " + repo_id,
                          "successfully scheduled for the next available timeslot")
-        repo_name = RHUIManagerCLI.repo_info(connection, repo_id)["name"]
-        repo_status = _get_repo_status(connection, repo_name)
-        while repo_status in ["Never", "SCHEDULED", "RUNNING"]:
-            time.sleep(10)
-            repo_status = _get_repo_status(connection, repo_name)
-        nose.tools.assert_equal(repo_status, expected_status)
+        _wait_till_repo_synced(connection, repo_id, expected_status=expected_status)
 
     @staticmethod
     def repo_info(connection, repo_id):
@@ -229,8 +260,10 @@ class RHUIManagerCLI():
         '''
         Expect.expect_retval(connection,
                              "rhui-manager repo add_comps " +
-                             f"--repo_id {repo_id} --comps '{comps}'",
+                             f"--repo_id {repo_id} --comps {comps}",
                              timeout=120)
+        # better export the repo in case a previously added comps file for this repo is diferent
+        RHUIManagerCLI.repo_export(connection, repo_id)
 
     @staticmethod
     def repo_export(connection, repo_id):
@@ -253,16 +286,7 @@ class RHUIManagerCLI():
         upload packages from a remote URL to a custom repository
         '''
         cmd = f"rhui-manager packages remote --repo_id {repo_id} --url {url}"
-        _, stdout, _ = connection.exec_command(cmd)
-        output = stdout.read().decode().splitlines()
-        successfully_uploaded_packages = [basename(line.split()[0]) for line in output \
-                                          if line.endswith("successfully uploaded")]
-        if not successfully_uploaded_packages:
-            raise RuntimeError("\n".join(output) or f"no output from '{cmd}'")
-        successfully_uploaded_packages.sort()
-        expected_packages = [basename(url)] if url.endswith(".rpm") else Util.get_rpm_links(url)
-        expected_packages.sort()
-        nose.tools.eq_(successfully_uploaded_packages, expected_packages)
+        Expect.expect_retval(connection, cmd)
 
     @staticmethod
     def packages_upload(connection, repo_id, path):
@@ -270,21 +294,7 @@ class RHUIManagerCLI():
         upload a package or a directory with packages to the custom repo
         '''
         cmd = f"rhui-manager packages upload --repo_id {repo_id} --packages '{path}'"
-        _, stdout, _ = connection.exec_command(cmd)
-        output = stdout.read().decode().splitlines()
-        successfully_uploaded_packages = [line.split()[0] for line in output \
-                                          if line.endswith("successfully uploaded")]
-        if not successfully_uploaded_packages:
-            raise RuntimeError("\n".join(output) or f"no output from '{cmd}'")
-        successfully_uploaded_packages.sort()
-        path_type = Util.get_file_type(connection, path)
-        if path_type == "regular file":
-            expected_packages = [path]
-        elif path_type == "directory":
-            expected_packages = [join(path, rpm) for rpm in Util.get_rpms_in_dir(connection, path)]
-        else:
-            expected_packages = []
-        nose.tools.eq_(successfully_uploaded_packages, expected_packages)
+        Expect.expect_retval(connection, cmd)
 
     @staticmethod
     def client_labels(connection):

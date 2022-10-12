@@ -292,26 +292,14 @@ class RHUIManagerRepo():
         '''
         upload content to a custom repository
         '''
-        # Check whether "path" is a file or a directory.
-        # If it is a directory, get a list of *.rpm files in it.
-        path_type = Util.get_file_type(connection, path)
-        if path_type == "regular file":
-            content = [basename(path)]
-        elif path_type == "directory":
-            content = Util.get_rpms_in_dir(connection, path)
-        else:
-            # This should not happen. Getting here means that "path" is neither a file
-            # nor a directory.
-            # Anyway, going on with no content,
-            # leaving it up to proceed_with_check() to handle this situation.
-            content = []
-        # Continue in rhui-manager.
         RHUIManager.screen(connection, "repo")
         Expect.enter(connection, "u")
         RHUIManager.select(connection, repolist)
         Expect.expect(connection, "will be uploaded:")
         Expect.enter(connection, path)
-        RHUIManager.proceed_with_check(connection, "The following RPMs will be uploaded:", content)
+        # proceeding without checking the TUI as its content is random/unpreditable;
+        # you should check if the packages were uploaded
+        RHUIManager.proceed_without_check(connection)
         RHUIManager.quit(connection, timeout=60)
 
     @staticmethod
@@ -319,17 +307,14 @@ class RHUIManagerRepo():
         '''
         upload content from a remote web site to a custom repository
         '''
-        # Check whether "url" is an RPM file or a directory.
-        # If it is a directory, get a list of *.rpm links in it.
-        rpms = [basename(url)] if url.endswith(".rpm") else Util.get_rpm_links(url)
-        # Continue in rhui-manager.
         RHUIManager.screen(connection, "repo")
         Expect.enter(connection, "ur")
         RHUIManager.select(connection, repolist)
         Expect.expect(connection, "will be uploaded:")
         Expect.enter(connection, url)
-        if rpms:
-            RHUIManager.proceed_with_check(connection, "The following RPMs will be uploaded:", rpms)
+        # proceeding without checking the TUI as its content is random/unpreditable;
+        # you should check if the packages were uploaded
+        RHUIManager.proceed_without_check(connection)
         RHUIManager.quit(connection, timeout=60)
 
     @staticmethod

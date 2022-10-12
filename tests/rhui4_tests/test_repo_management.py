@@ -121,10 +121,6 @@ class TestRepo():
         RHUIManagerRepo.upload_remote_content(RHUA,
                                               [CUSTOM_REPOS[2]],
                                               self.remote_content["html_with_links"])
-        # and finally also some bad stuff
-        # issues are handled in the TUI libraries -- no packages will be found and uploaded
-        rhua = ConMgr.get_rhua_hostname()
-        RHUIManagerRepo.upload_remote_content(RHUA, [CUSTOM_REPOS[2]], f"https://{rhua}/")
 
     def test_07_check_for_package(self):
         '''check package lists'''

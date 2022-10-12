@@ -1,5 +1,6 @@
 '''User management tests'''
 
+import itertools
 from os.path import basename
 import time
 
@@ -15,6 +16,7 @@ from rhui4_tests_lib.util import Util
 logging.basicConfig(level=logging.DEBUG)
 
 CREDS_BACKUP = "/root/rhui-subscription-sync.conf"
+TEST_COMMAND = "cert info"
 RHUA = ConMgr.connect()
 
 def setup():
@@ -89,9 +91,24 @@ def test_08_auto_load_password():
     '''
     nose.tools.ok_(not Util.is_logged_in(RHUA))
     Expect.ping_pong(RHUA,
-                     "rhui-manager --noninteractive cert info",
+                     f"rhui-manager --noninteractive {TEST_COMMAND}",
                      "Red Hat Entitlements",
                      timeout=5)
+
+def test_09_username_password_options():
+    '''
+       supply good and bad credentials on the command line, expect corresponding exit codes
+    '''
+    usernames = ["admin", "baduser"]
+    passwords = [Util.get_saved_password(RHUA), "badpassword"]
+    username_options = ["-u", "--username"]
+    password_options = ["-p", "--password"]
+    for user, passwd in itertools.product(usernames, passwords):
+        for u_opt, p_opt in itertools.product(username_options, password_options):
+            Expect.expect_retval(RHUA,
+                                 f"rhui-manager {u_opt} {user} {p_opt} {passwd} {TEST_COMMAND}",
+                                 0 if user == usernames[0] and passwd == passwords[0] else 1)
+
 def teardown():
     '''
        announce the end of the test run

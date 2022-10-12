@@ -16,6 +16,7 @@ Welcome to the RHUI 4 Test Plan!
    cds_hap_interop
    client_management
    cmdline
+   comps
    containers
    custom_certs
    entitlements
@@ -30,6 +31,7 @@ Welcome to the RHUI 4 Test Plan!
    sosreport
    status
    subscription
+   switch_storage
    sync_management
    updateinfo
    user_management

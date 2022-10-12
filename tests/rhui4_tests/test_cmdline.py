@@ -18,6 +18,7 @@ from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI, \
                                                 CustomRepoAlreadyExists, \
                                                 CustomRepoGpgKeyNotFound
+from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.util import Util
 
 logging.basicConfig(level=logging.DEBUG)
@@ -38,6 +39,14 @@ CERTS = {"Atomic": "rhcert_atomic.pem",
          "empty": "rhcert_empty.pem"}
 TMPDIR = mkdtemp()
 YUM_REPO_FILE = join(TMPDIR, "rh-cloud.repo")
+IMPORT_REPO_FILES_DIR = join(DATADIR, "repo_files")
+IMPORT_REPO_FILES = {"good": join(IMPORT_REPO_FILES_DIR, "atomic_repos.yaml"),
+                     "wrongrepo": join(IMPORT_REPO_FILES_DIR, "wrong_repo_id.yaml"),
+                     "noname": join(IMPORT_REPO_FILES_DIR, "no_name.yaml"),
+                     "noids": join(IMPORT_REPO_FILES_DIR, "no_repo_ids.yaml"),
+                     "badname": join(IMPORT_REPO_FILES_DIR, "bad_name.yaml"),
+                     "badids": join(IMPORT_REPO_FILES_DIR, "bad_ids.yaml"),
+                     "notafile": join(IMPORT_REPO_FILES_DIR, "not_a_file.yaml")}
 
 class TestCLI():
     '''
@@ -168,9 +177,9 @@ class TestCLI():
         '''add a Red Hat repo by its ID'''
         RHUIManagerCLI.repo_add_by_repo(RHUA, [self.yum_repo_ids[1]])
         # also try an invalid repo ID, expect a non-zero exit code
-        RHUIManagerCLI.repo_add_by_repo(RHUA, ["foo"], True)
+        RHUIManagerCLI.repo_add_by_repo(RHUA, ["foo"], False, True)
         # try the already added repo, also expect a non-zero exit code
-        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.yum_repo_ids[1]], True)
+        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.yum_repo_ids[1]], False, True)
 
     def test_13_add_rh_repo_by_product(self):
         '''add a Red Hat repo by its product name'''
@@ -447,6 +456,65 @@ class TestCLI():
         # clean up
         RHUIManagerCLI.repo_delete(RHUA, self.product["id"])
         RHUIManager.remove_rh_certs(RHUA)
+
+    @staticmethod
+    def test_47_add_by_file():
+        '''check that all repos defined in an input file get added'''
+        # get a list of repos that are expected to be added
+        expected_repo_ids = sorted(Helpers.get_repos_from_yaml(RHUA, IMPORT_REPO_FILES["good"]))
+        # upload a cert and try adding the repos from the file, sync them all the same time
+        RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["Atomic"]))
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"], True)
+        # check the sync status
+        for repo in expected_repo_ids:
+            info = RHUIManagerCLI.repo_info(RHUA, repo)
+            nose.tools.ok_(info["lastsync"] != "Never")
+        actual_repo_ids = RHUIManagerCLI.repo_list(RHUA, True).splitlines()
+        # ok?
+        nose.tools.eq_(expected_repo_ids, actual_repo_ids)
+        # re-adding the repos should produce a bad exit code
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"], False, True)
+        # clean up
+        for repo in actual_repo_ids:
+            RHUIManagerCLI.repo_delete(RHUA, repo)
+        RHUIManager.remove_rh_certs(RHUA)
+        # also check an input file with an invalid repo ID
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["wrongrepo"], False, True)
+        # and with no name for the repo set
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noname"], False, True)
+        # and with no repos at all
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noids"], False, True)
+        # and with an incorrectly specified name for the repo set
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badname"], False, True)
+        # and with an incorrectly specified repo IDs
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badids"], False, True)
+        # also check a non-existing file
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["notafile"], False, True)
+        # and a file which isn't valid YAML
+        RHUIManagerCLI.repo_add_by_file(RHUA, "/etc/issue", False, True)
+
+    @staticmethod
+    def test_48_rhui_scripts():
+        '''test argument handling in rhui-* scripts'''
+        scripts = ["rhui-export-repos", "rhui-subscription-sync"]
+        logs = ["/var/log/rhui/rhui-export-repos.log", "/var/log/rhui-subscription-sync.log"]
+        bad_config = "/etc/motd"
+        bad_sync_config = "/etc/ansible/ansible.cfg"
+        for script, log in zip(scripts, logs):
+            Expect.expect_retval(RHUA, f"{script} --config {bad_config}", 1)
+            Expect.ping_pong(RHUA, f"tail -2 {log}", "(pulp_api_url|cert_dir) is not valid")
+            Expect.expect_retval(RHUA, f"{script} --sync-config {bad_sync_config}", 1)
+            Expect.ping_pong(RHUA, f"tail -2 {log}", "username is not valid")
+
+    @staticmethod
+    def test_49_rhui_manager_help():
+        '''test help handling in rhui-manager'''
+        for arg in ["-h", "--help"]:
+            Expect.ping_pong(RHUA, f"rhui-manager {arg}", "Usage:.*Options:.*Commands:")
+            # -h doesn't work with 1-level subcommands like --help, skip it
+            if arg != "-h":
+                Expect.ping_pong(RHUA, f"rhui-manager cert {arg}", "upload.*uploads.*info.*display")
+            Expect.ping_pong(RHUA, f"rhui-manager cert info {arg}", "info: display")
 
     @staticmethod
     def test_99_cleanup():
