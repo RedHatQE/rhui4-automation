@@ -14,7 +14,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 RHUA = ConMgr.connect()
 
-DOC = "https://access.redhat.com/documentation/en-us/red_hat_update_infrastructure/4"
+DOC = "https://access.redhat.com/documentation/en-us/red_hat_update_infrastructure/4/html/" \
+      "release_notes/index"
 VERSION_STRING = r"4\.[0-9]+ Release Notes"
 
 def _check_rpms():
@@ -52,17 +53,29 @@ def _check_rpms():
     nose.tools.ok_(rpms_count >= min_count, msg=error_msg)
     rhui_tools_rpms = [rpm for rpm in rpms if rpm.startswith("rhui-tools")]
     nose.tools.ok_(rhui_tools_rpms, msg="rhui-tools*: no such link")
-    # check if the latest version in the repo is the latest documented one
+
     rhui_tools_rpms.sort()
     latest_rhui_rpm_in_repo = rhui_tools_rpms[-1]
-    latest_documented_title = re.findall(VERSION_STRING, requests.get(DOC).text)[0]
-    nose.tools.eq_(latest_rhui_rpm_in_repo.rsplit('-', 2)[1].split('.')[1],
-                   latest_documented_title.split()[0].split('.')[1])
     # can the latest version actually be fetched?
     Expect.expect_retval(RHUA,
                          cmd.replace("-q -O -", "-O /dev/null") +
                          "Packages/r/" +
                          latest_rhui_rpm_in_repo)
+
+    latest_rpm_version = latest_rhui_rpm_in_repo.rsplit('-', 2)[1]
+    latest_rpm_xy_list = latest_rpm_version.split(".")[:2]
+    return float(".".join(latest_rpm_xy_list))
+
+def _check_latest_documented_version(expected_version):
+    '''
+        helper method to check if the latest released and documented versions match
+        the version is expected to be a floating point number representing major.minor
+    '''
+    documented_titles = re.findall(VERSION_STRING, requests.get(DOC).text)
+    documented_versions = [float(title.split()[0]) for title in documented_titles]
+    documented_versions.sort()
+    latest_documented_version = documented_versions[-1]
+    nose.tools.eq_(expected_version, latest_documented_version)
 
 def _check_listing(major, min_eus, max_eus):
     '''
@@ -91,9 +104,10 @@ def setup():
 
 def test_01_rhui_4_for_rhel_8_check():
     '''
-        check if the RHUI 4 packages for RHEL 8 are available
+        check if the RHUI 4 packages for RHEL 8 are available and the latest version is documented
     '''
-    _check_rpms()
+    rhui_version = _check_rpms()
+    _check_latest_documented_version(rhui_version)
 
 def test_02_eus_6_repos_check():
     '''
