@@ -11,6 +11,8 @@ from stitches.expect import Expect
 from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.util import Util
 
+DEFAULT_ENT_CERT = "/tmp/extra_rhui_files/rhcert.pem"
+
 def _get_repo_status(connection, repo_name):
     '''
     get the status of the given repository
@@ -74,12 +76,14 @@ class RHUIManagerCLI():
     The RHUI manager command-line interface (shell commands to control the RHUA).
     '''
     @staticmethod
-    def cert_upload(connection, cert="/tmp/extra_rhui_files/rhcert.pem"):
+    def cert_upload(connection, cert=DEFAULT_ENT_CERT):
         '''
         upload a new or updated Red Hat content certificate and return a list of valid entitlements
         '''
         # get the complete output and split it into (left-stripped) lines
         _, stdout, _ = connection.exec_command(f"rhui-manager cert upload --cert {cert}")
+        if cert == DEFAULT_ENT_CERT:
+            Helpers.copy_repo_mappings(connection)
         return _ent_list(stdout)
 
     @staticmethod

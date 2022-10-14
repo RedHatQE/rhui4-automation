@@ -1,11 +1,12 @@
 """Helper Functions for RHUI Test Cases"""
 
 from os.path import basename, join
+import time
 
 from configparser import ConfigParser
 import yaml
 
-from stitches.expect import Expect
+from stitches.expect import Expect, ExpectFailed
 import nose
 
 RHUI_CFG = "/etc/rhui/rhui-tools.conf"
@@ -227,3 +228,26 @@ class Helpers():
         import_repo_data = yaml.safe_load(stdout)
         repo_ids = import_repo_data["repo_ids"]
         return repo_ids
+
+    @staticmethod
+    def copy_repo_mappings(connection, best_effort=True):
+        """copy the repo cache from extra files to the cache dir to speed up repo management"""
+        # with best_effort set to True, this method won't fail is the mapping file can't be copied
+        # if this method is called right after the cert upload is executed, the cert may not
+        # be available yet; let's sleep
+        time.sleep(7)
+        _, stdout, _ = connection.exec_command("ls /etc/pki/rhui/redhat/")
+        cert_files = stdout.read().decode().splitlines()
+        if not cert_files:
+            raise RuntimeError("No uploaded certificate was found.")
+        if len(cert_files) > 1:
+            raise RuntimeError("More than one uploaded certificate was found.")
+        mapping_file = f"/var/cache/rhui/{cert_files[0]}.mappings"
+        try:
+            Expect.expect_retval(connection,
+                                 f"cp /tmp/extra_rhui_files/rhcert.mappings {mapping_file}")
+        except ExpectFailed:
+            if best_effort:
+                pass
+            else:
+                raise RuntimeError("Could not copy the mappings.") from None

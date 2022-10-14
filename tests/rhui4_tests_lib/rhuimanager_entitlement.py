@@ -4,8 +4,11 @@ import re
 
 from stitches.expect import CTRL_C, Expect
 from rhui4_tests_lib.rhuimanager import RHUIManager
+from rhui4_tests_lib.helpers import Helpers
 
 PROMPT = r"rhui \(entitlements\) => "
+
+DEFAULT_ENT_CERT = "/tmp/extra_rhui_files/rhcert.pem"
 
 class MissingCertificate(Exception):
     """
@@ -66,7 +69,7 @@ class RHUIManagerEntitlements():
         return repo_list
 
     @staticmethod
-    def upload_rh_certificate(connection, certificate_file="/tmp/extra_rhui_files/rhcert.pem"):
+    def upload_rh_certificate(connection, certificate_file=DEFAULT_ENT_CERT):
         '''
         upload a new or updated Red Hat content certificate
         '''
@@ -100,4 +103,6 @@ class RHUIManagerEntitlements():
         for entitlement in pattern.findall(matched_string):
             entitlements_list.append(entitlement.strip())
         Expect.enter(connection, 'q')
+        if certificate_file == DEFAULT_ENT_CERT:
+            Helpers.copy_repo_mappings(connection)
         return entitlements_list
