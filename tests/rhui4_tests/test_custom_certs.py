@@ -197,6 +197,9 @@ def test_99_cleanup():
                          "rm -rf "
                          f"{BACKUPDIR}/{ORIG_CERTS_SUBDIR} "
                          f"{BACKUPDIR}/{ORIG_KEYS_SUBDIR}")
+    # the user supplied certificate options must be cleared in the answers file now
+    cmd = r"sed -i 's/\(user_supplied_[^:]*\).*/\1: null/' /root/.rhui/answers.yaml"
+    Expect.expect_retval(RHUA, cmd)
     RHUIManagerCLIInstance.delete(RHUA, "cds", [CDS_HOSTNAME], force=True)
     RHUIManagerCLIInstance.delete(RHUA, "haproxy", [HAPROXY_HOSTNAME], force=True)
     ConMgr.remove_ssh_keys(RHUA)
