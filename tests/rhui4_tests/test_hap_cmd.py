@@ -1,6 +1,7 @@
 '''HAProxy management tests for the CLI'''
 
 from os.path import basename
+import time
 
 import logging
 import nose
@@ -45,6 +46,7 @@ def test_03_add_safe_unknown_key():
     # for RHBZ#1409460
     # make sure its key is unknown
     ConMgr.remove_ssh_keys(RHUA)
+    time.sleep(30)
     # try adding the Load-balancer
     status = RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME)
     nose.tools.ok_(not status, msg=f"unexpected addition status: {status}")
