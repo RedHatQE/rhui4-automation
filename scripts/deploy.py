@@ -61,9 +61,6 @@ PRS.add_argument("--prep",
 PRS.add_argument("--patch",
                  help="patch to apply to rhui4-automation",
                  metavar="file")
-PRS.add_argument("--rhel7b",
-                 help="RHEL 7 Beta baseurl or compose",
-                 metavar="URL/compose")
 PRS.add_argument("--rhel8b",
                  help="RHEL 8 Beta baseurl or compose",
                  metavar="URL/compose")
@@ -145,16 +142,6 @@ else:
 # see if the configuration contains templates for RHEL Beta baseurls;
 # if so, expand them
 # if not, use the arguments verbatim
-if ARGS.rhel7b:
-    if ":/" not in ARGS.rhel7b and R4A_CFG.has_option("beta", "rhel7_template"):
-        try:
-            ARGS.rhel7b = R4A_CFG.get("beta", "rhel7_template") % ARGS.rhel7b
-        except TypeError:
-            print(f"The RHEL 7 Beta URL template is written incorrectly in {CFG_FILE}. " +
-                  "It must contain '%s' in one place.")
-            sys.exit(1)
-    EVARS += " rhel7_beta_baseurl=" + ARGS.rhel7b
-
 if ARGS.rhel8b:
     if ":/" not in ARGS.rhel8b and R4A_CFG.has_option("beta", "rhel8_template"):
         try:

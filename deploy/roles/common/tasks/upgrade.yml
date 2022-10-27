@@ -1,14 +1,5 @@
 # file: roles/common/upgrade.yml
 
-- name: create a yum repo file for an unreleased RHEL 7 compose
-  yum_repository:
-    name: rhel7_beta
-    description: Unreleased RHEL 7 Compose
-    baseurl: "{{ rhel7_beta_baseurl }}"
-    gpgcheck: no
-  when: rhel7_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 7
-  tags: rhel7_beta
-
 - name: create a yum repo file for an unreleased RHEL 8 compose - BaseOS
   yum_repository:
     file: rhel8_beta
@@ -54,11 +45,6 @@
   when:  upgrade_all_pkg is defined and upgrade_all_pkg | bool
   tags: upgrade_all_pkg
 
-- name: upgrade to RHEL 7 Beta
-  package: name=* state=latest update_cache=yes
-  when: rhel7_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 7
-  tags: rhel7_beta
-
 - name: upgrade to RHEL 8 Beta
   package: name=* state=latest update_cache=yes
   when: rhel8_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 8
@@ -68,11 +54,6 @@
   package: name=* state=latest update_cache=yes
   when: rhel9_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 9
   tags: rhel9_beta
-
-- name: reboot RHEL 7 machines after upgrading to Beta
-  reboot:
-  when: rhel7_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 7
-  tags: rhel7_beta
 
 - name: reboot RHEL 8 machines after upgrading to Beta
   reboot:

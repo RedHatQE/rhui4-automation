@@ -10,8 +10,8 @@ Usage
 * Run the [stack creation script](../scripts/README.md) to launch VMs and get an inventory file with information about the VMs.
 * Run the [deployment script](../scripts/deploy.py) to deploy RHUI on the VMs.
 
-Note that if you use `--rhel7b`, all RHEL 7 systems will get rebooted after the update
-to the given compose. Ditto for `--rhel8b`.
+Note that if you use `--rhel8b`, all RHEL 8 systems will get rebooted after the update
+to the given compose. Ditto for `--rhel9b`.
 This will allow a new kernel to boot, apps to load with a new glibc, etc.
 
 If you want to use Red Hat CCSP credentials instead of the ISO, the credentials file must look
@@ -23,12 +23,11 @@ username=YOUR_RH_USERNAME
 password=YOUR_RH_PASSWORD
 ````
 
-The deployment script can also read templates for RHEL 7, 8, or 9 Beta URLs
+The deployment script can also read templates for RHEL 8 or 9 Beta URLs
 from `~/.rhui4-automation.cfg`; the expected format is as follows:
 
 ```
 [beta]
-rhel7_template=http://host/path/%s/path/
 rhel8_template=http://host/path/%s/path/
 rhel9_template=http://host/path/%s/path/
 ```
