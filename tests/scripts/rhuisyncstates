@@ -1,0 +1,56 @@
+#!/usr/bin/python
+"""Check for errors in RHUI repository synchronization statuses"""
+
+import argparse
+import os
+import socket
+import sys
+
+from stitches.expect import Expect
+from rhui4_tests_lib.conmgr import ConMgr, DOMAIN, USER_KEY, USER_NAME, SUDO_USER_NAME
+from rhui4_tests_lib.rhuimanager import RHUIManager
+
+R4A_CLOUDFORMATION = socket.gethostname().endswith(DOMAIN)
+
+PRS = argparse.ArgumentParser(description="Change the RHUI password on one or more RHUA nodes.",
+                              formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+# the default values of the following options depend on whether this script is running
+# on a RHUI deployed by rhui4-automation or not
+PRS.add_argument("--hostname",
+                 help="RHUA hostname",
+                 default=ConMgr.get_rhua_hostname() if R4A_CLOUDFORMATION else None)
+PRS.add_argument("--ssh-user",
+                 help="SSH user name",
+                 default=USER_NAME if R4A_CLOUDFORMATION else SUDO_USER_NAME)
+PRS.add_argument("--ssh-key",
+                 help="SSH private key",
+                 default=USER_KEY if R4A_CLOUDFORMATION else os.path.expanduser("~/.ssh/id_rsa"))
+PRS.add_argument("--rhui-admin-password",
+                 help="the RHUI administrator password (in case it's necessary to log in)")
+ARGS = PRS.parse_args()
+
+if not ARGS.hostname:
+    print("No hostname specified.")
+    PRS.print_help()
+    sys.exit(1)
+
+RHUA = ConMgr.connect(ARGS.hostname, ARGS.ssh_user, ARGS.ssh_key)
+if ARGS.ssh_user != "root":
+    Expect.enter(RHUA, "sudo su -")
+
+try:
+    RHUIManager.initial_run(RHUA, password=ARGS.rhui_admin_password)
+except TypeError:
+    print("Not logged in and no password specified.")
+    sys.exit(1)
+
+RHUIManager.screen(RHUA, "sync")
+Expect.enter(RHUA, "vr")
+raw_lines = RHUIManager.list_lines(RHUA, "Enter value", False)
+Expect.enter(RHUA, "b")
+Expect.enter(RHUA, "q")
+
+errors = [line for line in raw_lines[4:] if "Success" not in line]
+if errors:
+    print("\n".join(errors))
+    sys.exit(1)
