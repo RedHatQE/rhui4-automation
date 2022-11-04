@@ -50,7 +50,7 @@ raw_lines = RHUIManager.list_lines(RHUA, "Enter value", False)
 Expect.enter(RHUA, "b")
 Expect.enter(RHUA, "q")
 
-errors = [line for line in raw_lines[4:] if "Success" not in line]
+errors = [line for line in raw_lines[4:] if "Success" not in line and "Client Config" not in line]
 if errors:
     print("\n".join(errors))
     sys.exit(1)
