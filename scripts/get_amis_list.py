@@ -20,6 +20,9 @@ argparser.add_argument('rhel',
                        (e.g. RHEL-7.5_HVM_GA-20180322-x86_64-1-Hourly2-GP2)',
                        metavar='AMI',
                        nargs='?')
+argparser.add_argument('--skip-regions',
+                       metavar='list',
+                       help='A comma-separated list of regions to ignore')
 
 args = argparser.parse_args()
 
@@ -51,6 +54,10 @@ CMD = "aws ec2 describe-regions " \
       "--output text"
 cmd_out = subprocess.check_output(CMD, shell=True)
 regions = cmd_out.decode().splitlines()
+
+if args.skip_regions:
+    for region in args.skip_regions.split(','):
+        regions.remove(region)
 
 CMD = "aws ec2 describe-images " \
       "--filters Name=name,Values=*{0}* " \
