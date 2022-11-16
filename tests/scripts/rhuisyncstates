@@ -28,6 +28,8 @@ PRS.add_argument("--ssh-key",
                  default=USER_KEY if R4A_CLOUDFORMATION else os.path.expanduser("~/.ssh/id_rsa"))
 PRS.add_argument("--rhui-admin-password",
                  help="the RHUI administrator password (in case it's necessary to log in)")
+PRS.add_argument("--pattern",
+                 help="only care about repos matching the given regular expression")
 PRS.add_argument("--ignore-beta-8",
                  help="ignore errors syncing RHEL 8 Beta repos",
                  action="store_true")
@@ -58,11 +60,20 @@ Expect.enter(RHUA, "b")
 Expect.enter(RHUA, "q")
 
 errors = [line for line in raw_lines[4:] if "Success" not in line and "Client Config" not in line]
-if ARGS.ignore_beta_8:
-    errors = [line for line in errors if not re.search("Linux 8.*Beta", line) and
+
+if ARGS.pattern:
+    matches = []
+    for number, content in enumerate(errors):
+        if re.match("[ 0-9]+-.*" + ARGS.pattern, content):
+            matches.extend(errors[number:number+2])
+    errors = matches
+
+else:
+    if ARGS.ignore_beta_8:
+        errors = [line for line in errors if not re.search("Linux 8.*Beta", line) and
                                          "beta/rhel8" not in line]
-if ARGS.ignore_beta_9:
-    errors = [line for line in errors if not re.search("Linux 9.*Beta", line) and
+    if ARGS.ignore_beta_9:
+        errors = [line for line in errors if not re.search("Linux 9.*Beta", line) and
                                          "beta/rhel9" not in line]
 if errors:
     print("\n".join(errors))
