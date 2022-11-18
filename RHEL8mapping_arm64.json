@@ -32,11 +32,17 @@
     "eu-central-1": {
         "AMI": "ami-0b1f9107ca43b26eb"
     },
+    "eu-central-2": {
+        "AMI": "ami-059406ef4f55c1553"
+    },
     "eu-north-1": {
         "AMI": "ami-041a502efa9f2906f"
     },
     "eu-south-1": {
         "AMI": "ami-0a75b8a8f1654d80a"
+    },
+    "eu-south-2": {
+        "AMI": "ami-0a613f5a907e26b98"
     },
     "eu-west-1": {
         "AMI": "ami-056fb88ff1be985b1"
@@ -46,6 +52,9 @@
     },
     "eu-west-3": {
         "AMI": "ami-061e89a9fb7441bd7"
+    },
+    "me-central-1": {
+        "AMI": "ami-06065d92d217ad48b"
     },
     "me-south-1": {
         "AMI": "ami-094fba69fbbf5b1af"

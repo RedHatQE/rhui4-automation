@@ -41,6 +41,9 @@
     "eu-south-1": {
         "AMI": "ami-09fb8010a69b4d03d"
     },
+    "eu-south-2": {
+        "AMI": "ami-0db9d7d50af6f87f7"
+    },
     "eu-west-1": {
         "AMI": "ami-0fa992faca3b056de"
     },
