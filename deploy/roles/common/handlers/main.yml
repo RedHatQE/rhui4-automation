@@ -1,6 +1,6 @@
 ---
 # file: roles/common/handlers/main.yml
 # include the common handlers
-- include: network.yml
-- include: ntp.yml
-- include: restorecon.yml
+- import_tasks: network.yml
+- import_tasks: ntp.yml
+- import_tasks: restorecon.yml

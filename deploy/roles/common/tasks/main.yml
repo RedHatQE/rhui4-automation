@@ -6,10 +6,10 @@
 # set up custom DNS if requested
 # disable (or remove) cloud-init
 # install vim
-- include: upgrade.yml
-- include: fips.yml
-- include: ntp.yml
-- include: hosts.yml
-- include: dns_override.yml
-- include: cloud-init.yml
-- include: vim.yml
+- import_tasks: upgrade.yml
+- import_tasks: fips.yml
+- import_tasks: ntp.yml
+- import_tasks: hosts.yml
+- import_tasks: dns_override.yml
+- import_tasks: cloud-init.yml
+- import_tasks: vim.yml

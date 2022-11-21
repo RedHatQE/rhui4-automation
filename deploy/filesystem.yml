@@ -3,6 +3,6 @@
 # filesystem playbook
 - hosts: NFS
   handlers:
-    - include: roles/common/handlers/main.yml
+    - import_tasks: roles/common/handlers/main.yml
   roles:
     - nfs

@@ -3,7 +3,7 @@
 # dns playbook
 - hosts: DNS
   handlers:
-    - include: roles/common/handlers/main.yml
+    - import_tasks: roles/common/handlers/main.yml
   roles:
     - dns 
 

@@ -5,7 +5,7 @@
   hostname: name=rhua.example.com
   tags: rhua
 
-- include: ssh.yml
+- import_tasks: ssh.yml
 
 - name: install Ansible Engine
   package: name=ansible state=present
