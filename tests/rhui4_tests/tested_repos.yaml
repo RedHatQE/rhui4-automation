@@ -34,16 +34,16 @@ yum_repos:
             test_package: "zhongyi-song-fonts"
     9:
         x86_64:
-            name: "Red Hat Enterprise Linux 9 for ARM 64 - Supplementary (RPMs) from RHUI"
-            version: "9"
-            kind: "Yum"
-            path: "content/dist/rhel9/rhui/9/aarch64/supplementary/os"
-            test_package: "zhongyi-song-fonts"
-        aarch64:
             name: "Red Hat Enterprise Linux 9 for x86_64 - Supplementary (RPMs) from RHUI"
             version: "9"
             kind: "Yum"
             path: "content/dist/rhel9/rhui/9/x86_64/supplementary/os"
+            test_package: "zhongyi-song-fonts"
+        aarch64:
+            name: "Red Hat Enterprise Linux 9 for ARM 64 - Supplementary (RPMs) from RHUI"
+            version: "9"
+            kind: "Yum"
+            path: "content/dist/rhel9/rhui/9/aarch64/supplementary/os"
             test_package: "zhongyi-song-fonts"
 CLI_repo1:
     name: "Red Hat Enterprise Linux Atomic Host (Debug RPMs) from RHUI"
