@@ -303,8 +303,6 @@ class TestCLI():
     def test_26_create_acs_config_rpm(self):
         '''create an alternate content source configuration RPM'''
         # for RHBZ#1695464
-        # broken in 4.0; terminate this test now
-        raise nose.exc.SkipTest("Not yet implemented.")
         name = ALT_CONTENT_SRC_NAME
         RHUIManagerCLI.client_content_source(RHUA,
                                              self.yum_repo_labels,
