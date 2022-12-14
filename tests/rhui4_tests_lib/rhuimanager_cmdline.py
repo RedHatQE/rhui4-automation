@@ -193,7 +193,6 @@ class RHUIManagerCLI():
                            repo_id,
                            path="",
                            display_name="",
-                           entitlement="",
                            redhat_content=False,
                            protected=False,
                            gpg_public_keys=""):
@@ -206,8 +205,6 @@ class RHUIManagerCLI():
             cmd += f" --path {path}"
         if display_name:
             cmd += f" --display_name '{display_name}'"
-        if entitlement:
-            cmd += f" --entitlement {entitlement}"
         if redhat_content:
             cmd += " --redhat_content"
         if protected:
