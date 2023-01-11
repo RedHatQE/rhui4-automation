@@ -5,9 +5,10 @@ import random
 
 import logging
 import nose
+from stitches.expect import Expect
 
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.helpers import Helpers
+from rhui4_tests_lib.helpers import Helpers, RHUI_CFG
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
 from rhui4_tests_lib.rhuimanager import RHUIManager
 
@@ -94,7 +95,23 @@ def test_06_reinstall_cds():
     cds_list.sort()
     nose.tools.eq_(cds_list, CDS_HOSTNAMES)
 
-def test_07_readd_cds_noforce():
+def test_07_reinstall_all():
+    '''
+    check the ability to reinstall all CDSes using a generic command
+    '''
+    # first, modify the RHUI configuration file on all CDSes
+    for cds_conn in CDS:
+        Helpers.edit_rhui_tools_conf(cds_conn, "unprotected_repo_prefix", "huh")
+    # run the reinstallation
+    status = RHUIManagerCLIInstance.reinstall(RHUA, "cds", all_nodes=True)
+    nose.tools.ok_(status, msg=f"unexpected 'all CDS' reinstallation status: {status}")
+    # check if the RHUI configuration file was reset after the reinstallation
+    # meaning, the backup copy made while modifying the configuration matches the main file
+    verification_cmd = f"cmp {RHUI_CFG} {RHUI_CFG}.bak"
+    for cds_conn in CDS:
+        Expect.expect_retval(cds_conn, verification_cmd)
+
+def test_08_readd_cds_noforce():
     '''
     check if rhui refuses to add a CDS again if no extra parameter is used
     '''
@@ -103,7 +120,7 @@ def test_07_readd_cds_noforce():
     status = RHUIManagerCLIInstance.add(RHUA, "cds", cds, unsafe=True)
     nose.tools.ok_(not status, msg=f"unexpected {cds} readdition status: {status}")
 
-def test_08_list_cds():
+def test_09_list_cds():
     '''
     check if nothing extra has been added
     '''
@@ -112,7 +129,7 @@ def test_08_list_cds():
     cds_list.sort()
     nose.tools.eq_(cds_list, CDS_HOSTNAMES)
 
-def test_09_readd_cds():
+def test_10_readd_cds():
     '''
     add one of the CDSs again by using force
     '''
@@ -121,7 +138,7 @@ def test_09_readd_cds():
     status = RHUIManagerCLIInstance.add(RHUA, "cds", cds, force=True, unsafe=True)
     nose.tools.ok_(status, msg=f"unexpected {cds} readdition status: {status}")
 
-def test_10_list_cds():
+def test_11_list_cds():
     '''
     check if the CDSs are still tracked, and nothing extra has appeared
     '''
@@ -130,7 +147,7 @@ def test_10_list_cds():
     cds_list.sort()
     nose.tools.eq_(cds_list, CDS_HOSTNAMES)
 
-def test_11_delete_cds_noforce():
+def test_12_delete_cds_noforce():
     '''
     check if rhui refuses to delete the node when it's the only/last one and force isn't used
     '''
@@ -140,7 +157,7 @@ def test_11_delete_cds_noforce():
     status = RHUIManagerCLIInstance.delete(RHUA, "cds", [CDS_HOSTNAMES[0]])
     nose.tools.ok_(not status, msg=f"unexpected deletion status: {status}")
 
-def test_12_list_cds():
+def test_13_list_cds():
     '''
     check if the last CDS really hasn't been deleted
     '''
@@ -148,21 +165,21 @@ def test_12_list_cds():
     nose.tools.eq_(cds_list, [CDS_HOSTNAMES[0]])
 
 
-def test_13_delete_cds_force():
+def test_14_delete_cds_force():
     '''
     delete the last CDS forcibly
     '''
     status = RHUIManagerCLIInstance.delete(RHUA, "cds", [CDS_HOSTNAMES[0]], force=True)
     nose.tools.ok_(status, msg=f"unexpected deletion status: {status}")
 
-def test_14_list_cds():
+def test_15_list_cds():
     '''
     check if the last CDS has been deleted
     '''
     cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
     nose.tools.eq_(cds_list, [])
 
-def test_15_add_bad_cds():
+def test_16_add_bad_cds():
     '''
     try adding an incorrect CDS hostname, expect trouble and nothing added
     '''
@@ -171,7 +188,7 @@ def test_15_add_bad_cds():
     cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
     nose.tools.eq_(cds_list, [])
 
-def test_16_delete_bad_cds():
+def test_17_delete_bad_cds():
     '''
     try deleting a non-existing CDS hostname, expect trouble
     '''
@@ -194,7 +211,7 @@ def test_16_delete_bad_cds():
     cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
     nose.tools.eq_(cds_list, [])
 
-def test_17_add_cds_changed_case():
+def test_18_add_cds_changed_case():
     '''
     add and delete a CDS with uppercase characters, should work
     '''
@@ -208,7 +225,7 @@ def test_17_add_cds_changed_case():
     status = RHUIManagerCLIInstance.delete(RHUA, "cds", [cds_up], force=True)
     nose.tools.ok_(status, msg=f"unexpected {cds_up} deletion status: {status}")
 
-def test_18_delete_unreachable():
+def test_19_delete_unreachable():
     '''
     add a CDS, make it unreachable, and see if it can still be deleted from the RHUA
     '''
@@ -236,7 +253,7 @@ def test_18_delete_unreachable():
     RHUIManagerCLIInstance.add(RHUA, "cds", cds, unsafe=True)
     RHUIManagerCLIInstance.delete(RHUA, "cds", [cds], force=True)
 
-def test_19_check_cleanup():
+def test_20_check_cleanup():
     '''
     check if nginx was stopped and the remote file system unmounted on all CDSs
     '''
