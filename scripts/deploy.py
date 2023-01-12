@@ -61,6 +61,8 @@ PRS.add_argument("--prep",
 PRS.add_argument("--patch",
                  help="patch to apply to rhui4-automation",
                  metavar="file")
+PRS.add_argument("--branch",
+                 help="clone and install a particular rhui4-automation branch")
 PRS.add_argument("--rhel8b",
                  help="RHEL 8 Beta baseurl or compose",
                  metavar="URL/compose")
@@ -174,6 +176,9 @@ if ARGS.patch:
     else:
         print(f"--patch was specified but {ARGS.patch} does not exist, exiting.")
         sys.exit(1)
+
+if ARGS.branch:
+    EVARS += " branch=" + ARGS.branch
 
 if ARGS.extra_vars:
     EVARS += " " + ARGS.extra_vars
