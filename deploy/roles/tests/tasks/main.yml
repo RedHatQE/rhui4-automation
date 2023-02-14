@@ -44,12 +44,17 @@
       - make
       - gcc
       - python3-devel
+      - openssl-devel
       - cargo
     state: present
   tags: tests
 
 - name: install the PyPI dependencies of required libraries
   command: pip3 install setuptools_rust
+  tags: tests
+
+- name: Update old RPM-based dependencies to their latest PyPI versions
+  command: pip3 install --target /usr/lib64/python3.6/site-packages --upgrade cffi
   tags: tests
 
 - name: install tests
