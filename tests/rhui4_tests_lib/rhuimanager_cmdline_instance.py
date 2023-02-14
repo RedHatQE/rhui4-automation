@@ -60,14 +60,19 @@ class RHUIManagerCLIInstance():
         return connection.recv_exit_status(cmd, timeout=300) == 0
 
     @staticmethod
-    def reinstall(connection, node_type, hostname):
+    def reinstall(connection, node_type, hostname="", all_nodes=False):
         '''
-        Reinstall a CDS or HAProxy node.
+        Reinstall a CDS or HAProxy node. One hostname or all tracked nodes.
         Return True if the command exited with 0, and False otherwise.
         '''
         _validate_node_type(node_type)
-        cmd = f"rhui-manager {node_type} reinstall --hostname {hostname}"
-        return connection.recv_exit_status(cmd, timeout=120) == 0
+        if all_nodes:
+            cmd = f"rhui-manager {node_type} reinstall --all"
+        elif hostname:
+            cmd = f"rhui-manager {node_type} reinstall --hostname {hostname}"
+        else:
+            raise ValueError("Either a hostname or '--all' must be used.")
+        return connection.recv_exit_status(cmd, timeout=240) == 0
 
     @staticmethod
     def delete(connection, node_type, hostnames="", force=False):

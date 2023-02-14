@@ -88,63 +88,79 @@ def test_06_reinstall_hap():
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
     nose.tools.eq_(hap_list, [HA_HOSTNAME])
 
-def test_07_readd_hap_noforce():
+def test_07_reinstall_all():
+    '''
+    check the ability to reinstall all the nodes using a generic command
+    '''
+    # first, delete the HAProxy configuration
+    cfg = "/etc/haproxy/haproxy.cfg"
+    delete_cmd = f"rm {cfg}"
+    check_cmd = f"test -f {cfg}"
+    Expect.expect_retval(HAPROXY, delete_cmd)
+    Expect.expect_retval(HAPROXY, check_cmd, 1)
+    # run the reinstallation
+    status = RHUIManagerCLIInstance.reinstall(RHUA, "haproxy", all_nodes=True)
+    nose.tools.ok_(status, msg=f"unexpected 'all HAProxy' reinstallation status: {status}")
+    # check if the HAProxy configuration file was reset after the reinstallation
+    Expect.expect_retval(HAPROXY, check_cmd)
+
+def test_08_readd_hap_noforce():
     '''
     check if rhui refuses to add the HAProxy Load-balancer again if no extra parameter is used
     '''
     status = RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME, unsafe=True)
     nose.tools.ok_(not status, msg=f"unexpected readdition status: {status}")
 
-def test_08_list_hap():
+def test_09_list_hap():
     '''
     check if nothing extra has been added
     '''
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
     nose.tools.eq_(hap_list, [HA_HOSTNAME])
 
-def test_09_readd_hap():
+def test_10_readd_hap():
     '''
     add the HAProxy Load-balancer again by using force
     '''
     status = RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME, force=True, unsafe=True)
     nose.tools.ok_(status, msg=f"unexpected readdition status: {status}")
 
-def test_10_list_hap():
+def test_11_list_hap():
     '''
     check if the HAProxy Load-balancer is still tracked, and only once
     '''
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
     nose.tools.eq_(hap_list, [HA_HOSTNAME])
 
-def test_11_delete_hap_noforce():
+def test_12_delete_hap_noforce():
     '''
     check if rhui refuses to delete the node when it's the only/last one and force isn't used
     '''
     status = RHUIManagerCLIInstance.delete(RHUA, "haproxy", [HA_HOSTNAME])
     nose.tools.ok_(not status, msg=f"unexpected deletion status: {status}")
 
-def test_12_list_hap():
+def test_13_list_hap():
     '''
     check if the HAProxy Load-balancer really hasn't been deleted
     '''
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
     nose.tools.eq_(hap_list, [HA_HOSTNAME])
 
-def test_13_delete_hap_force():
+def test_14_delete_hap_force():
     '''
     delete the HAProxy Load-balancer forcibly
     '''
     status = RHUIManagerCLIInstance.delete(RHUA, "haproxy", [HA_HOSTNAME], force=True)
     nose.tools.ok_(status, msg=f"unexpected deletion status: {status}")
 
-def test_14_list_hap():
+def test_15_list_hap():
     '''
     check if the HAProxy Load-balancer has been deleted
     '''
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
     nose.tools.eq_(hap_list, [])
 
-def test_15_add_bad_hap():
+def test_16_add_bad_hap():
     '''
     try adding an incorrect HAProxy hostname, expect trouble and nothing added
     '''
@@ -153,7 +169,7 @@ def test_15_add_bad_hap():
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
     nose.tools.eq_(hap_list, [])
 
-def test_16_delete_bad_hap():
+def test_17_delete_bad_hap():
     '''
     try deleting a non-existing HAProxy hostname, expect trouble
     '''
@@ -176,7 +192,7 @@ def test_16_delete_bad_hap():
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")
     nose.tools.eq_(hap_list, [])
 
-def test_17_add_hap_changed_case():
+def test_18_add_hap_changed_case():
     '''
     add and delete an HAProxy Load-balancer with uppercase characters, should work
     '''
@@ -189,7 +205,7 @@ def test_17_add_hap_changed_case():
     status = RHUIManagerCLIInstance.delete(RHUA, "haproxy", [hap_up], force=True)
     nose.tools.ok_(status, msg=f"unexpected deletion status: {status}")
 
-def test_18_delete_unreachable():
+def test_19_delete_unreachable():
     '''
     add a Load-balancer, make it unreachable, and see if it can still be deleted from the RHUA
     '''
@@ -216,7 +232,7 @@ def test_18_delete_unreachable():
     RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME, unsafe=True)
     RHUIManagerCLIInstance.delete(RHUA, "haproxy", [HA_HOSTNAME], force=True)
 
-def test_19_custom_haproxy_config():
+def test_20_custom_haproxy_config():
     '''
     check the ability to install HAProxy with a custom configuration file
     '''
@@ -237,7 +253,7 @@ def test_19_custom_haproxy_config():
     RHUIManagerCLIInstance.delete(RHUA, "haproxy", [HA_HOSTNAME], force=True)
     Expect.expect_retval(RHUA, f"rm -f {cfg}")
 
-def test_20_check_cleanup():
+def test_21_check_cleanup():
     '''
     check if the haproxy service was stopped
     '''

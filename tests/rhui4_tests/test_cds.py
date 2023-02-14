@@ -219,6 +219,12 @@ def test_14_autoheal():
     for i, _ in enumerate(old_pids):
         nose.tools.assert_not_equal(old_pids[i], new_pids[i])
 
+def test_15_check_ansible_warnings():
+    '''
+    check whether instance management did not trigger any Ansible warnings
+    '''
+    Expect.expect_retval(RHUA, "grep -i warning /var/log/rhui/rhua_ansible.log", 1)
+
 def teardown():
     '''
        announce the end of the test run

@@ -1,6 +1,5 @@
 """ RHUIManager Repo functions """
 
-from os.path import basename
 import re
 import time
 
@@ -26,7 +25,6 @@ class RHUIManagerRepo():
                         displayname="",
                         path="",
                         entitlement="y",
-                        entitlement_path="",
                         redhat_gpg="y",
                         custom_gpg=None):
         '''
@@ -61,19 +59,6 @@ class RHUIManagerRepo():
                           "Should the repository require an entitlement certificate " +
                           r"to access\? \(y/n\)")
             Expect.enter(connection, entitlement)
-            if entitlement == "y":
-                Expect.expect(connection,
-                              "Path that should be used when granting an entitlement " +
-                              "for this repository.*:")
-                Expect.enter(connection, entitlement_path)
-                if entitlement_path != "":
-                    checklist.append("Entitlement: " + entitlement_path)
-                else:
-                    educated_guess, replace_count = re.subn("(i386|x86_64)", "$basearch", path_real)
-                    if replace_count > 1:
-                        # bug 815975
-                        educated_guess = path_real
-                    checklist.append("Entitlement: " + educated_guess)
             Expect.expect(connection, r"packages are signed by a GPG key\? \(y/n\)")
             if redhat_gpg == "y" or custom_gpg:
                 Expect.enter(connection, "y")

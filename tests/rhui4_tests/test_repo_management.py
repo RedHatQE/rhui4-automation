@@ -83,7 +83,6 @@ class TestRepo():
                                         "",
                                         CUSTOM_PATHS[2],
                                         "y",
-                                        "",
                                         "n")
 
     @staticmethod
