@@ -15,6 +15,7 @@ import yaml
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
+from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
 from rhui4_tests_lib.rhuimanager_entitlement import RHUIManagerEntitlements
 from rhui4_tests_lib.rhuimanager_repo import AlreadyExistsError, RHUIManagerRepo
 from rhui4_tests_lib.util import Util
@@ -208,7 +209,8 @@ class TestRepo():
                                       self.containers["rh"]["id"],
                                       self.containers["rh"]["displayname"])
         # then a Quay container
-        Helpers.set_registry_credentials(RHUA, "quay", backup=False)
+        # use the installer to change the configuration this time
+        Helpers.set_registry_credentials(RHUA, "quay", backup=False, use_installer=True)
         RHUIManagerRepo.add_container(RHUA, self.containers["alt"]["quay"]["name"])
         # and finaly a Gitlab container
         url = Helpers.get_registry_url("gitlab")
@@ -218,6 +220,7 @@ class TestRepo():
         repo_list = RHUIManagerRepo.list(RHUA)
         nose.tools.ok_(len(repo_list) == 3,
                        msg=f"The containers weren't added. Actual repolist: {repo_list}")
+        RHUIManagerCLI.repo_sync_all(RHUA)
 
     def test_14_display_container(self):
         '''check detailed information on the RH container'''

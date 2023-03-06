@@ -178,6 +178,17 @@ class RHUIManagerCLI():
         _wait_till_repo_synced(connection, repo_id, expected_status=expected_status)
 
     @staticmethod
+    def repo_sync_all(connection):
+        '''
+        sync all repos
+        '''
+        cmd = "rhui-manager repo sync_all"
+        repo_ids = RHUIManagerCLI.repo_list(connection, True).splitlines()
+        Expect.expect_retval(connection, cmd)
+        for repo_id in repo_ids:
+            _wait_till_repo_synced(connection, repo_id)
+
+    @staticmethod
     def repo_info(connection, repo_id):
         '''
         return a dictionary containing information about the given repo
