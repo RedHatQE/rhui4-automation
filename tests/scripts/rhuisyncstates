@@ -36,6 +36,9 @@ PRS.add_argument("--ignore-beta-8",
 PRS.add_argument("--ignore-beta-9",
                  help="ignore errors syncing RHEL 9 Beta repos",
                  action="store_true")
+PRS.add_argument("--ignore-running",
+                 help="ignore repos that are currently being synced",
+                 action="store_true")
 ARGS = PRS.parse_args()
 
 if not ARGS.hostname:
@@ -75,6 +78,8 @@ else:
     if ARGS.ignore_beta_9:
         errors = [line for line in errors if not re.search("Linux 9.*Beta", line) and
                                          "beta/rhel9" not in line]
+    if ARGS.ignore_running:
+        errors = [line for line in errors if "Running" not in line]
 if errors:
     print("\n".join(errors))
     sys.exit(1)
