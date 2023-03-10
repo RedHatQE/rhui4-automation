@@ -1,9 +1,15 @@
 """ RHUIManager Client functions """
 
+import re
+
 from stitches.expect import Expect
 
 from rhui4_tests_lib.rhuimanager import RHUIManager
 
+class ContainerSupportDisabledError(Exception):
+    '''
+    To be raised if container support is disabled in RHUI configuration.
+    '''
 
 class RHUIManagerClient():
     '''
@@ -66,7 +72,17 @@ class RHUIManagerClient():
         '''
         RHUIManager.screen(connection, "client")
         Expect.enter(connection, "d")
-        Expect.expect(connection, "Full path to local directory.*:")
+        state = Expect.expect_list(connection,
+                                   [(re.compile(".*Full path to local directory.*:",
+                                                re.DOTALL),
+                                     1),
+                                    (re.compile(".*Container support is not currently enabled.*",
+                                                re.DOTALL),
+                                     2)])
+        if state == 2:
+            Expect.enter(connection, "q")
+            raise ContainerSupportDisabledError()
+
         Expect.enter(connection, dirname)
         Expect.expect(connection, "Name of the RPM:")
         Expect.enter(connection, rpmname)

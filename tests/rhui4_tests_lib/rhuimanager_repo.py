@@ -15,6 +15,11 @@ class AlreadyExistsError(Exception):
     To be raised if a custom repo already exists with this name.
     '''
 
+class ContainerSupportDisabledError(Exception):
+    '''
+    To be raised if container support is disabled in RHUI configuration.
+    '''
+
 class RHUIManagerRepo():
     '''
     Represents -= Repository Management =- RHUI screen
@@ -163,7 +168,17 @@ class RHUIManagerRepo():
         # this method will fail otherwise, because it will expect rhui-manager to ask for them
         RHUIManager.screen(connection, "repo")
         Expect.enter(connection, "ac")
-        Expect.expect(connection, "Specify URL of registry .*:")
+        state = Expect.expect_list(connection,
+                                   [(re.compile(".*Specify URL of registry .*:",
+                                                re.DOTALL),
+                                     1),
+                                    (re.compile(".*Container support is not currently enabled.*",
+                                                re.DOTALL),
+                                     2)])
+        if state == 2:
+            Expect.enter(connection, "q")
+            raise ContainerSupportDisabledError()
+
         if credentials and credentials[0]:
             registry = credentials[0]
             Expect.enter(connection, registry)
