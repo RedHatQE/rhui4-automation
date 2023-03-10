@@ -27,6 +27,7 @@ Welcome to the RHUI 4 Test Plan!
    repo_management
    retain_package_versions
    rhui_4_repos
+   rhui_without_rhua
    security
    sosreport
    status
