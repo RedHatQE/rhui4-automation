@@ -5,6 +5,8 @@ yum_repos:
             version: "6Server"
             kind: "Yum"
             path: "content/dist/rhel/rhui/server/6/6Server/x86_64/sap/os"
+            id: "rhel-sap-for-rhel-6-server-rhui-rpms-6Server"
+            label: "rhel-sap-for-rhel-6-server-rhui-rpms"
             test_package: "vm-dump-metrics"
     7:
         x86_64:
@@ -12,12 +14,16 @@ yum_repos:
             version: "7Server-x86_64"
             kind: "Yum"
             path: "content/dist/rhel/rhui/server/7/7Server/x86_64/sap/os"
+            id: "rhel-sap-for-rhel-7-server-rhui-rpms-7Server-x86_64"
+            label: "rhel-sap-for-rhel-7-server-rhui-rpms"
             test_package: "vm-dump-metrics"
         aarch64:
             name: "Red Hat Developer Tools (for RHEL 7 Server for ARM 64) RPMs from RHUI"
             version: "7Server-aarch64"
             kind: "Yum"
             path: "content/dist/rhel-alt/rhui/server/7/7Server/armv8-a/aarch64/devtools/1/os"
+            id: "rhel-7-server-for-arm-64-devtools-rhui-rpms-aarch64"
+            label: "rhel-7-server-for-arm-64-devtools-rhui-rpms"
             test_package: "rust-toolset-7-rust-doc"
     8:
         x86_64:
@@ -25,12 +31,16 @@ yum_repos:
             version: "8"
             kind: "Yum"
             path: "content/dist/rhel8/rhui/8/x86_64/highavailability/os"
+            id: "rhel-8-for-x86_64-highavailability-rhui-rpms-8"
+            label: "rhel-8-for-x86_64-highavailability-rhui-rpms"
             test_package: "clufter-common"
         aarch64:
             name: "Red Hat Enterprise Linux 8 for ARM 64 - Supplementary (RPMs) from RHUI"
             version: "8"
             kind: "Yum"
             path: "content/dist/rhel8/rhui/8/aarch64/supplementary/os"
+            id: "rhel-8-for-aarch64-supplementary-rhui-rpms-8"
+            label: "rhel-8-for-aarch64-supplementary-rhui-rpms"
             test_package: "zhongyi-song-fonts"
     9:
         x86_64:
@@ -38,12 +48,16 @@ yum_repos:
             version: "9"
             kind: "Yum"
             path: "content/dist/rhel9/rhui/9/x86_64/supplementary/os"
+            id: "rhel-9-for-x86_64-supplementary-rhui-rpms-9"
+            label: "rhel-9-for-x86_64-supplementary-rhui-rpms"
             test_package: "zhongyi-song-fonts"
         aarch64:
             name: "Red Hat Enterprise Linux 9 for ARM 64 - Supplementary (RPMs) from RHUI"
             version: "9"
             kind: "Yum"
             path: "content/dist/rhel9/rhui/9/aarch64/supplementary/os"
+            id: "rhel-9-for-aarch64-supplementary-rhui-rpms-9"
+            label: "rhel-9-for-aarch64-supplementary-rhui-rpms"
             test_package: "zhongyi-song-fonts"
 CLI_repo1:
     name: "Red Hat Enterprise Linux Atomic Host (Debug RPMs) from RHUI"

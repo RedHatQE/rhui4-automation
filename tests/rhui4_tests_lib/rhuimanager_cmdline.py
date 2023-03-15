@@ -71,6 +71,11 @@ class CustomRepoGpgKeyNotFound(Exception):
     Raised if the GPG key path to use with a custom repo is invalid
     '''
 
+class NoValidEntitlementsProvided(Exception):
+    '''
+    Raised if the specified repositories do not exist in this RHUI
+    '''
+
 class RHUIManagerCLI():
     '''
     The RHUI manager command-line interface (shell commands to control the RHUA).
@@ -382,7 +387,7 @@ class RHUIManagerCLI():
         else:
             cmd += " --cert"
             if isinstance(certdata[-1], int):
-                cmd += " --days " + certdata.pop()
+                cmd += f" --days {certdata.pop()}"
             cmd += " --repo_label " + ",".join(certdata)
         cmd += " --rpm_name " + rpmdata[0]
         if len(rpmdata) > 1:
@@ -394,6 +399,35 @@ class RHUIManagerCLI():
                          cmd,
                          f"Location: {directory}/{rpmdata[0]}-{rpmdata[1]}/build/RPMS/noarch/" +
                          f"{rpmdata[0]}-{rpmdata[1]}-1.noarch.rpm")
+
+    @staticmethod
+    def client_acs_config(connection, certdata, directory, ssl_ca_cert=""):
+        '''
+        generate an alternate source config configuration JSON
+        (also similar to client_rpm() -- see the usage described there)
+        '''
+        cmd = "rhui-manager client acs_config"
+        if certdata[0].startswith("/"):
+            cmd += f" --private_key {certdata[0]} --entitlement_cert {certdata[1]}"
+        else:
+            cmd += " --cert"
+            if isinstance(certdata[-1], int):
+                cmd += f" --days {certdata.pop()}"
+            cmd += " --repo_label " + ",".join(certdata)
+        cmd += " --dir " + directory
+        if ssl_ca_cert:
+            cmd += " --ssl_ca_cert " + ssl_ca_cert
+        Expect.enter(connection, cmd)
+        state = Expect.expect_list(connection,
+                                   [(re.compile(f".*Location: {directory}/acs-configuration.json.*",
+                                                re.DOTALL),
+                                     1),
+                                    (re.compile(".*no valid entitlements provided.*",
+                                                re.DOTALL),
+                                     2)])
+        if state == 2:
+            raise NoValidEntitlementsProvided()
+        nose.tools.eq_(state, 1, msg="Execution failed.")
 
     @staticmethod
     def logout(connection):

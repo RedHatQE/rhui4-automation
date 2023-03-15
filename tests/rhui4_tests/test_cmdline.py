@@ -1,5 +1,6 @@
 '''RHUI CLI tests'''
 
+import json
 import logging
 from os.path import basename, getsize, join
 import random
@@ -17,7 +18,8 @@ from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI, \
                                                 CustomRepoAlreadyExists, \
-                                                CustomRepoGpgKeyNotFound
+                                                CustomRepoGpgKeyNotFound, \
+                                                NoValidEntitlementsProvided
 from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.util import Util
 
@@ -38,6 +40,7 @@ CERTS = {"Atomic": "rhcert_atomic.pem",
          "partial": "rhcert_partially_invalid.pem",
          "empty": "rhcert_empty.pem"}
 TMPDIR = mkdtemp()
+# the TMPDIR path is also used on the RHUA, where it's automatically created later
 YUM_REPO_FILE = join(TMPDIR, "rh-cloud.repo")
 IMPORT_REPO_FILES_DIR = join(DATADIR, "repo_files")
 IMPORT_REPO_FILES = {"good": join(IMPORT_REPO_FILES_DIR, "atomic_repos.yaml"),
@@ -220,7 +223,7 @@ class TestCLI():
                                    self.yum_repo_labels + [CUSTOM_REPOS[1]],
                                    CLI_CFG[0],
                                    365,
-                                   "/tmp")
+                                   TMPDIR)
 
     @staticmethod
     def test_20_check_cli_crt_sig():
@@ -228,7 +231,7 @@ class TestCLI():
         # for RHBZ#1628957
         sigs_expected = ["sha256", "sha256"]
         _, stdout, _ = RHUA.exec_command("openssl x509 -noout -text -in " +
-                                         f"/tmp/{CLI_CFG[0]}.crt")
+                                         f"{TMPDIR}/{CLI_CFG[0]}.crt")
         cert_details = stdout.read().decode()
         sigs_actual = re.findall("sha[0-9]+", cert_details)
         nose.tools.eq_(sigs_expected, sigs_actual)
@@ -236,7 +239,7 @@ class TestCLI():
     def test_21_check_stray_custom_repo(self):
         '''check if only the wanted repos are in the certificate'''
         repo_labels_expected = [f"custom-{CUSTOM_REPOS[1]}"] + self.yum_repo_labels
-        _, stdout, _ = RHUA.exec_command(f"cat /tmp/{CLI_CFG[0]}-extensions.txt")
+        _, stdout, _ = RHUA.exec_command(f"cat {TMPDIR}/{CLI_CFG[0]}-extensions.txt")
         extensions = stdout.read().decode()
         repo_labels_actual = re.findall("|".join(["custom-.*"] + self.yum_repo_labels),
                                         extensions)
@@ -246,13 +249,13 @@ class TestCLI():
     def test_22_create_cli_config_rpm():
         '''create a client configuration RPM'''
         RHUIManagerCLI.client_rpm(RHUA,
-                                  [f"/tmp/{CLI_CFG[0]}.key", f"/tmp/{CLI_CFG[0]}.crt"],
+                                  [f"{TMPDIR}/{CLI_CFG[0]}.key", f"{TMPDIR}/{CLI_CFG[0]}.crt"],
                                   CLI_CFG,
-                                  "/tmp",
+                                  TMPDIR,
                                   [CUSTOM_REPOS[0]],
                                   "_none_")
         # check if the rpm was created
-        conf_rpm = f"/tmp/{CLI_CFG[0]}-{CLI_CFG[1]}/build/RPMS/noarch/" + \
+        conf_rpm = f"{TMPDIR}/{CLI_CFG[0]}-{CLI_CFG[1]}/build/RPMS/noarch/" + \
                    f"{CLI_CFG[0]}-{CLI_CFG[1]}-{CLI_CFG[2]}.noarch.rpm"
         Expect.expect_retval(RHUA, f"test -f {conf_rpm}")
 
@@ -260,7 +263,7 @@ class TestCLI():
         '''ensure that GPG checking is configured in the client configuration as expected'''
         # for RHBZ#1428756
         # we'll need the repo file in a few tests; fetch it now
-        remote_repo_file = f"/tmp/{CLI_CFG[0]}-{CLI_CFG[1]}/build/BUILD/" + \
+        remote_repo_file = f"{TMPDIR}/{CLI_CFG[0]}-{CLI_CFG[1]}/build/BUILD/" + \
                            f"{CLI_CFG[0]}-{CLI_CFG[1]}/rh-cloud.repo"
         try:
             Util.fetch(RHUA, remote_repo_file, YUM_REPO_FILE)
@@ -307,9 +310,9 @@ class TestCLI():
         RHUIManagerCLI.client_content_source(RHUA,
                                              self.yum_repo_labels,
                                              [name],
-                                             "/tmp")
+                                             TMPDIR)
         # check that
-        cmd = f"rpm2cpio /tmp/{name}-2.0/build/RPMS/noarch/{name}-2.0-1.noarch.rpm | " + \
+        cmd = f"rpm2cpio {TMPDIR}/{name}-2.0/build/RPMS/noarch/{name}-2.0-1.noarch.rpm | " + \
               r"cpio -i --to-stdout \*.conf | " + \
               "sed -n -e '/^paths:/,$p' | " + \
               "sed s/paths://"
@@ -321,8 +324,71 @@ class TestCLI():
         paths_expected = [p for p in self.yum_repo_paths if "ostree" not in p]
         nose.tools.eq_(paths_expected, paths_actual)
 
+    def test_27_create_acs_config_json(self):
+        '''create an alternate content source configuration JSON file'''
+        # for RHBZ#2001087
+        ssl_ca_file = f"{DATADIR}/custom_certs/ssl.crt"
+        lb_hostname = ConMgr.get_cds_lb_hostname()
+        # create the configuration: using labels to generate a new cert, valid for 1 day, custom CA
+        RHUIManagerCLI.client_acs_config(RHUA,
+                                         self.yum_repo_labels + [CUSTOM_REPOS[2], 1],
+                                         TMPDIR,
+                                         ssl_ca_file)
+        # check that
+        _, stdout, _ = RHUA.exec_command(f"cat {TMPDIR}/acs-configuration.json")
+        configuration = json.load(stdout)
+        # first the base URL
+        nose.tools.eq_(configuration["base_url"], f"https://{lb_hostname}/pulp/content/")
+        # paths
+        nose.tools.eq_(sorted(configuration["paths"]),
+                       sorted(self.yum_repo_paths + [f"protected/{CUSTOM_REPOS[2]}"]))
+        # other pieces of information
+        for field in ["ca_cert", "entitlement_cert", "private_key"]:
+            nose.tools.ok_(field in configuration,
+                           msg=f"configuration consists of {list(configuration.keys())}")
+        # expiration: will it be expired 25 hours from now?
+        nose.tools.ok_(Util.cert_expired(RHUA, f"{TMPDIR}/acs-entitlement.crt", 90000))
+        # but not 23 hours from now?
+        nose.tools.ok_(not Util.cert_expired(RHUA, f"{TMPDIR}/acs-entitlement.crt", 82800))
+        # whether the custom CA cert was used
+        _, stdout, _ = RHUA.exec_command(f"cat {ssl_ca_file}")
+        orig_ca_cert = stdout.read().decode()
+        nose.tools.eq_(configuration["ca_cert"], orig_ca_cert)
+
+        # also the scenario with a supplied cert & key (created in test_19), default SSL cert
+        base_file_name = join(TMPDIR, CLI_CFG[0])
+        custom_cert = base_file_name + ".crt"
+        custom_key = base_file_name + ".key"
+        RHUIManagerCLI.client_acs_config(RHUA, [custom_key, custom_cert], TMPDIR)
+        # check that; load the JSON data first
+        _, stdout, _ = RHUA.exec_command(f"cat {TMPDIR}/acs-configuration.json")
+        configuration = json.load(stdout)
+        # paths
+        nose.tools.eq_(sorted(configuration["paths"]),
+                       sorted(self.yum_repo_paths + [f"protected/huh-{CUSTOM_REPOS[1]}"]))
+        # load the cert and compare it
+        _, stdout, _ = RHUA.exec_command(f"cat {custom_cert}")
+        orig_ent_cert = stdout.read().decode()
+        nose.tools.eq_(configuration["entitlement_cert"], orig_ent_cert)
+        # load the key and compare it
+        _, stdout, _ = RHUA.exec_command(f"cat {custom_key}")
+        orig_ent_key = stdout.read().decode()
+        nose.tools.eq_(configuration["private_key"], orig_ent_key)
+        # load the default SSL CA cert and compare it
+        default_ca_path = Helpers.get_from_rhui_tools_conf(RHUA, "security", "ssl_ca_crt")
+        _, stdout, _ = RHUA.exec_command(f"cat {default_ca_path}")
+        default_ca_cert = stdout.read().decode()
+        nose.tools.eq_(configuration["ca_cert"], default_ca_cert)
+
+        # try using an invalid repo label
+        nose.tools.assert_raises(NoValidEntitlementsProvided,
+                                 RHUIManagerCLI.client_acs_config,
+                                 RHUA,
+                                 ["rhel-foo"],
+                                 TMPDIR)
+
     @staticmethod
-    def test_27_upload_expired_cert():
+    def test_28_upload_expired_cert():
         '''check expired certificate handling'''
         try:
             RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["expired"]))
@@ -331,7 +397,7 @@ class TestCLI():
                            msg=f"unexpected error: {err}")
 
     @staticmethod
-    def test_28_upload_incompat_cert():
+    def test_29_upload_incompat_cert():
         '''check incompatible certificate handling'''
         cert = join(DATADIR, CERTS["incompatible"])
         if Util.cert_expired(RHUA, cert):
@@ -361,7 +427,7 @@ class TestCLI():
     def test_39_list_repos():
         '''get a list of available repos for further examination'''
         Expect.expect_retval(RHUA,
-                             "rhui-manager repo unused > /tmp/repos.stdout 2> /tmp/repos.stderr",
+                             f"rhui-manager repo unused > {TMPDIR}/repos.out 2> {TMPDIR}/repos.err",
                              timeout=1200)
 
     @staticmethod
@@ -369,13 +435,13 @@ class TestCLI():
         '''check if non-RPM repos were ignored'''
         # for RHBZ#1199426
         Expect.expect_retval(RHUA,
-                             "egrep 'Containers|Images|ISOs|Kickstart' /tmp/repos.stdout", 1)
+                             f"egrep 'Containers|Images|ISOs|Kickstart' {TMPDIR}/repos.out", 1)
 
     @staticmethod
     def test_41_check_pygiwarning():
         '''check if PyGIWarning was not issued'''
         # for RHBZ#1450430
-        Expect.expect_retval(RHUA, "grep PyGIWarning /tmp/repos.stderr", 1)
+        Expect.expect_retval(RHUA, f"grep PyGIWarning {TMPDIR}/repos.err", 1)
 
     def test_42_check_repo_sorting(self):
         '''check if repo lists are sorted'''
@@ -517,19 +583,10 @@ class TestCLI():
     @staticmethod
     def test_99_cleanup():
         '''cleanup: remove temporary files'''
-        Expect.ping_pong(RHUA,
-                         f"rm -rf /tmp/{CLI_CFG[0]}* ; " +
-                         f"ls /tmp/{CLI_CFG[0]}* 2>&1",
-                         "No such file or directory")
-        Expect.ping_pong(RHUA,
-                         "rm -f /tmp/repos.std{out,err} ; " +
-                         "ls /tmp/repos.std{out,err} 2>&1",
-                         "No such file or directory")
-        Expect.ping_pong(RHUA,
-                         f"rm -rf /tmp/{ALT_CONTENT_SRC_NAME}* ; " +
-                         f"ls /tmp/{ALT_CONTENT_SRC_NAME}* 2>&1",
-                         "No such file or directory")
         rmtree(TMPDIR)
+        Expect.expect_retval(RHUA, f"rm -rf {TMPDIR}")
+        Expect.expect_retval(RHUA, f"rm -f /tmp/{CLI_CFG[0]}-{CLI_CFG[1]}.spec")
+        Expect.expect_retval(RHUA, f"rm -f /tmp/{ALT_CONTENT_SRC_NAME}-2.0.spec")
 
     @staticmethod
     def teardown_class():

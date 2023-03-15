@@ -11,6 +11,7 @@ Welcome to the RHUI 4 Test Plan!
    :maxdepth: 2
    :caption: Contents:
    
+   acs_client
    cds
    cds_cmd
    cds_hap_interop
