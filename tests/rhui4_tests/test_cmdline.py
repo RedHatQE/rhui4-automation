@@ -408,6 +408,59 @@ class TestCLI():
             nose.tools.ok_("does not contain any entitlements" in str(err),
                            msg=f"unexpected error: {err}")
 
+    @staticmethod
+    def test_30_remove_package():
+        '''check if a package can be removed from a custom repo'''
+        # export the custom repo first, as the removal of the symlinks must be tested
+        RHUIManagerCLI.repo_export(RHUA, CUSTOM_REPOS[0])
+        time.sleep(5)
+        # make sure the symlink for the packages to be removed exists
+        symlink_test = "test -L /var/lib/rhui/remote_share/symlinks/pulp/content/" \
+                       f"unprotected/{CUSTOM_REPOS[0]}/Packages/{TEST_RPM[0].lower()}/{TEST_RPM}"
+        Expect.expect_retval(RHUA, symlink_test)
+        # get a list of repo packages
+        before_list = RHUIManagerCLI.packages_list(RHUA, CUSTOM_REPOS[0])
+        (name, version, release_arch_ext) = TEST_RPM.rsplit("-", 2)
+        release = release_arch_ext.split(".")[0]
+        # run the removal command
+        RHUIManagerCLI.packages_remove(RHUA,
+                                       CUSTOM_REPOS[0],
+                                       name,
+                                       f"{version}-{release}",
+                                       True)
+        time.sleep(5)
+        # find out what's missing now, should be the removed package
+        after_list = RHUIManagerCLI.packages_list(RHUA, CUSTOM_REPOS[0])
+        difference = set(before_list) ^ set(after_list)
+        nose.tools.eq_(difference, {TEST_RPM})
+        # also check if the symlink is gone
+        Expect.expect_retval(RHUA, symlink_test, 1)
+
+    def test_31_remove_all_packages(self):
+        '''remove all packages from a custom repo'''
+        # export the custom repo first, as the removal of the symlinks must be tested
+        RHUIManagerCLI.repo_export(RHUA, CUSTOM_REPOS[1])
+        time.sleep(5)
+        # make sure the symlink for one of the packages to be removed exists
+        rpm = basename(self.remote_content["rpm"])
+        symlink_test = "test -L /var/lib/rhui/remote_share/symlinks/pulp/content/" \
+                       f"protected/huh-{CUSTOM_REPOS[1]}/Packages/{rpm[0].lower()}/{rpm}"
+        Expect.expect_retval(RHUA, symlink_test)
+        # get a list of repo packages
+        before_list = RHUIManagerCLI.packages_list(RHUA, CUSTOM_REPOS[1])
+        names = [filename.rsplit("-", 2)[0] for filename in before_list]
+        # run the removal commands
+        for name in names:
+            RHUIManagerCLI.packages_remove(RHUA, CUSTOM_REPOS[1], name, force=True)
+            time.sleep(5)
+        after_list = RHUIManagerCLI.packages_list(RHUA, CUSTOM_REPOS[1])
+        # the package list for the repo should be empty now
+        nose.tools.eq_(after_list, [])
+        # also check if the symlinks are gone
+        symlink_test = "[[ $(find /var/lib/rhui/remote_share/symlinks/pulp/content/" \
+                       f"protected/huh-{CUSTOM_REPOS[1]}/Packages -type l | wc -l) == 0 ]]"
+        Expect.expect_retval(RHUA, symlink_test)
+
     def test_37_resync_repo(self):
         '''sync the repo again'''
         RHUIManagerCLI.repo_sync(RHUA, self.yum_repo_ids[1])

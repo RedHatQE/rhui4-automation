@@ -306,6 +306,18 @@ class RHUIManagerCLI():
         Expect.expect_retval(connection, cmd)
 
     @staticmethod
+    def packages_remove(connection, repo_id, package_name, package_vr="", force=False):
+        '''
+        remove a package from a custom repo; an RPM name must used, and optionally version-release
+        '''
+        cmd = f"rhui-manager packages remove --repo_id {repo_id} --package {package_name}"
+        if package_vr:
+            cmd += f" --vr {package_vr}"
+        if force:
+            cmd += " --force"
+        Expect.expect_retval(connection, cmd)
+
+    @staticmethod
     def packages_upload(connection, repo_id, path):
         '''
         upload a package or a directory with packages to the custom repo
