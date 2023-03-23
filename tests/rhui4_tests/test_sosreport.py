@@ -92,6 +92,24 @@ def test_04_cds_sosreport_check():
         sosreport_location = location.read()
     Sos.check_files_in_archive(CONNECTION_CDS, WANTED_FILES_CDS, sosreport_location)
 
+def test_05_check_confidential_data():
+    '''
+        check if known confidential information is obfuscated in the archive
+    '''
+    with open(SOSREPORT_LOCATION_RHUA, encoding="utf-8") as location:
+        sosreport_location = location.read()
+    # cookies
+    for cookie in ["csrftoken", "sessionid"]:
+        Sos.is_obfuscated(CONNECTION_RHUA,
+                          cookie,
+                          "/root/.rhui/http-localhost:24817/cookies.txt",
+                          sosreport_location)
+    # registry password
+    Sos.is_obfuscated(CONNECTION_RHUA,
+                      "registry_password",
+                      "/etc/rhui/rhui-tools.conf",
+                      sosreport_location)
+
 def test_99_cleanup():
     '''
         delete the archives and their checksum files, local caches; remove CDS
