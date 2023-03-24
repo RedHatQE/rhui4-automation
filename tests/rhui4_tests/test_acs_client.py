@@ -20,6 +20,7 @@ from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
 from rhui4_tests_lib.util import Util
+from rhui4_tests_lib.yummy import Yummy
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -60,6 +61,8 @@ class TestACSClient():
 
     def test_02_add_repos(self):
         """add a Red Hat and create a custom repo"""
+        if not getenv("RHUISKIPSETUP"):
+            RHUIManagerCLI.cert_upload(RHUA)
         RHUIManagerCLI.repo_add_by_repo(RHUA, [self.rh_repo_id], True)
         RHUIManagerCLI.repo_create_custom(RHUA, self.custom_repo_id, protected=True)
 
@@ -115,9 +118,7 @@ class TestACSClient():
         # get rid of undesired repos first
         Util.remove_amazon_rhui_conf_rpm(CLI)
         Util.disable_beta_repos(CLI)
-        _, stdout, _ = CLI.exec_command("yum -q repolist")
-        raw_output = stdout.read().decode().splitlines()
-        actual_repos = [line.split()[0] for line in raw_output if not line.startswith("repo ")]
+        actual_repos = Yummy.yum_repolist(CLI)
         nose.tools.eq_(actual_repos, sorted([self.rh_repo_id, self.custom_repo_id]))
 
     def test_06_check_test_package(self):
