@@ -26,6 +26,7 @@ Welcome to the RHUI 4 Test Plan!
    hap
    hap_cmd
    repo_management
+   repo_prefix
    retain_package_versions
    rhui_4_repos
    rhui_without_rhua
