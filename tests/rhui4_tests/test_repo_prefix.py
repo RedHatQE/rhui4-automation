@@ -204,6 +204,7 @@ class TestRepoPrefix():
         Helpers.restore_rhui_tools_conf(RHUA)
         # uninstall HAProxy & CDS, forget their keys
         if not getenv("RHUISKIPSETUP"):
+            RHUIManager.remove_rh_certs(RHUA)
             RHUIManagerCLIInstance.delete(RHUA, "haproxy", force=True)
             RHUIManagerCLIInstance.delete(RHUA, "cds", force=True)
             ConMgr.remove_ssh_keys(RHUA)

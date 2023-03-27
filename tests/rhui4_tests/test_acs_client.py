@@ -140,6 +140,7 @@ class TestACSClient():
             RHUIManagerCLI.repo_delete(RHUA, repo)
         # uninstall HAProxy & CDS, forget their keys
         if not getenv("RHUISKIPSETUP"):
+            RHUIManager.remove_rh_certs(RHUA)
             RHUIManagerCLIInstance.delete(RHUA, "haproxy", force=True)
             RHUIManagerCLIInstance.delete(RHUA, "cds", force=True)
             ConMgr.remove_ssh_keys(RHUA)
