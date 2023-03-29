@@ -6,23 +6,24 @@ from os.path import basename
 import subprocess
 
 import nose
+import requests
+import urllib3
 
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
 
 logging.basicConfig(level=logging.DEBUG)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 HOSTNAMES = {"RHUA": ConMgr.get_rhua_hostname(),
              "CDS": ConMgr.get_cds_hostnames()[0],
              "HAProxy": ConMgr.get_cds_lb_hostname()}
 PORTS = { "https": 443 }
-PROTOCOL_TEST_CMD = "echo | openssl s_client -%s -connect %s:%s; echo $?"
+PROTOCOL_TEST_CMD = "echo | openssl s_client -%s -connect %s:%s"
 # these are in fact the s_client options for protocols, just without the dash
-PROTOCOLS = {"good": ["tls1_2"],
+PROTOCOLS = {"good": ["tls1_2", "tls1_3"],
              "bad": ["tls1", "tls1_1"]}
-RESULTS = {"good": "Secure Renegotiation IS supported",
-           "bad": "Secure Renegotiation IS NOT supported"}
 
 # connections to the RHUA and the HAProxy nodes
 RHUA = ConMgr.connect()
@@ -32,28 +33,14 @@ def _check_protocols(hostname, port):
     """helper method to try various protocols on hostname:port"""
     # check allowed protocols
     for protocol in PROTOCOLS["good"]:
-        raw_output = subprocess.check_output(PROTOCOL_TEST_CMD % (protocol, hostname, port),
-                                             shell=True,
-                                             stderr=subprocess.STDOUT)
-        output_lines = raw_output.decode().splitlines()
-        # check for the line that indicates a good result
-        nose.tools.ok_(RESULTS["good"] in output_lines,
-                       msg=f"s_client didn't print '{RESULTS['good']}' when using {protocol}" +
-                           f"with {hostname}:{port}")
-        # also check the exit status (the last line), should be 0 to indicate success
-        nose.tools.eq_(int(output_lines[-1]), 0)
+        exitcode = subprocess.call(PROTOCOL_TEST_CMD % (protocol, hostname, port) + " &> /dev/null",
+                                   shell=True)
+        nose.tools.eq_(exitcode, 0)
     # check disallowed protocols
     for protocol in PROTOCOLS["bad"]:
-        raw_output = subprocess.check_output(PROTOCOL_TEST_CMD % (protocol, hostname, port),
-                                             shell=True,
-                                             stderr=subprocess.STDOUT)
-        output_lines = raw_output.decode().splitlines()
-        # check for the line that indicates a bad result
-        nose.tools.ok_(RESULTS["bad"] in output_lines,
-                       msg=f"s_client didn't print '{RESULTS['bad']}' when using {protocol}" +
-                           f"with {hostname}:{port}")
-        # also check the exit status (the last line), should be 1 to indicate a failure
-        nose.tools.eq_(int(output_lines[-1]), 1)
+        exitcode = subprocess.call(PROTOCOL_TEST_CMD % (protocol, hostname, port) + " &> /dev/null",
+                                   shell=True)
+        nose.tools.eq_(exitcode, 1)
 
 def setup():
     """announce the beginning of the test run"""
@@ -85,6 +72,12 @@ def test_04_haproxy_stats():
     nose.tools.eq_(httpsstats["FRONTEND"], "OPEN")
     nose.tools.eq_(httpsstats["BACKEND"], "UP")
     nose.tools.eq_(httpsstats[HOSTNAMES["CDS"]], "UP")
+
+def test_05_hsts():
+    """check if HTTP Strict Transport Security is used"""
+    response = requests.head(f"https://{HOSTNAMES['HAProxy']}/", verify=False)
+    nose.tools.ok_("Strict-Transport-Security" in response.headers,
+                   msg=f"Got these headers: {response.headers}")
 
 def test_99_cleanup():
     """delete CDS and HAProxy nodes"""
