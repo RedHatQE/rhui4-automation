@@ -103,26 +103,34 @@ class TestRhuiManagerStatus():
         Expect.expect_retval(RHUA, CMD, expected_exit_code, TIMEOUT)
 
     @staticmethod
-    def test_09_check_broken_service():
+    def test_09_check_broken_external_service():
         """turn off the haproxy service, check status, and expect yet another bad status"""
         Expect.expect_retval(HAPROXY, "systemctl stop haproxy")
         expected_exit_code = REPO_SYNC_ERROR + CA_CERT_WARN + SERVICE_ERROR
         Expect.expect_retval(RHUA, CMD, expected_exit_code, TIMEOUT)
 
+    def test_10_check_broken_pulp_worker_service(self):
+        """fix the environment but turn off a Pulp worker, expect a service error"""
+        # for RHBZ#2174633
+        Expect.expect_retval(HAPROXY, "systemctl start haproxy")
+        RHUIManagerCLI.repo_delete(RHUA, self.bad_repo)
+        Helpers.restore_rhui_tools_conf(RHUA)
+        Expect.expect_retval(RHUA, "systemctl stop pulpcore-worker@2")
+        expected_exit_code = SERVICE_ERROR
+        Expect.expect_retval(RHUA, CMD, expected_exit_code, TIMEOUT)
+
     @staticmethod
-    def test_10_check_output_with___code():
+    def test_11_check_output_with___code():
         """check if the output is only the return code when --code is used"""
+        Expect.expect_retval(RHUA, "systemctl start pulpcore-worker@2")
         _, stdout, _ = RHUA.exec_command(CMD)
         output = stdout.read().decode().splitlines()
         nose.tools.eq_(len(output), 1)
-        nose.tools.eq_(output[0], str(REPO_SYNC_ERROR + CA_CERT_WARN + SERVICE_ERROR))
+        nose.tools.eq_(output[0], str(OK))
 
-    def test_11_cleanup(self):
+    def test_99_cleanup(self):
         """clean up"""
-        Expect.expect_retval(HAPROXY, "systemctl start haproxy")
-        Helpers.restore_rhui_tools_conf(RHUA)
         RHUIManagerCLI.repo_delete(RHUA, self.good_repo)
-        RHUIManagerCLI.repo_delete(RHUA, self.bad_repo)
         if not getenv("RHUISKIPSETUP"):
             RHUIManager.remove_rh_certs(RHUA)
             RHUIManagerCLIInstance.delete(RHUA, "haproxy", force=True)
