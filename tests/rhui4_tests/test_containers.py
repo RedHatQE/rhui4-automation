@@ -28,6 +28,7 @@ from rhui4_tests_lib.util import Util
 logging.basicConfig(level=logging.DEBUG)
 
 RHUA = ConMgr.connect()
+# __reusable_clients_with_cds
 # To make this script communicate with a client machine different from cli01.example.com, run:
 # export RHUICLI=hostname
 # in your shell before running this script, replacing "hostname" with the actual client host name.
