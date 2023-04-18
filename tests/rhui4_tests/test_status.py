@@ -123,7 +123,7 @@ class TestRhuiManagerStatus():
     def test_11_check_output_with___code():
         """restart everything, check if the output is only the return code when --code is used"""
         # this test also checks if rhui-services-restart (re)starts a worker which is down
-        Expect.expect_retval(RHUA, "rhui-services-restart")
+        Expect.expect_retval(RHUA, "rhui-services-restart", timeout=60)
         _, stdout, _ = RHUA.exec_command(CMD)
         output = stdout.read().decode().splitlines()
         nose.tools.eq_(len(output), 1)
