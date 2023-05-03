@@ -90,3 +90,20 @@ class Yummy():
         # so, let's remove such signs if they're present
         packagelist = [pkg[1:] if pkg[0] in ["+", "-", "="] else pkg for pkg in packagelist]
         return sorted(packagelist)
+
+    @staticmethod
+    def yum_repolist(connection, alll=False, enabled=True, disabled=False):
+        """return a list of yum repositories, only enabled by default"""
+        cmd = "yum -q repolist"
+        if alll:
+            cmd += " all"
+        elif disabled:
+            cmd += " disabled"
+        elif enabled:
+            pass
+        else:
+            raise ValueError("You cannot turn all options off.")
+        _, stdout, _ = connection.exec_command(cmd)
+        raw_output = stdout.read().decode().splitlines()
+        repos = [line.split()[0] for line in raw_output if not line.startswith("repo ")]
+        return repos

@@ -15,6 +15,11 @@ class AlreadyExistsError(Exception):
     To be raised if a custom repo already exists with this name.
     '''
 
+class ContainerSupportDisabledError(Exception):
+    '''
+    To be raised if container support is disabled in RHUI configuration.
+    '''
+
 class RHUIManagerRepo():
     '''
     Represents -= Repository Management =- RHUI screen
@@ -163,7 +168,17 @@ class RHUIManagerRepo():
         # this method will fail otherwise, because it will expect rhui-manager to ask for them
         RHUIManager.screen(connection, "repo")
         Expect.enter(connection, "ac")
-        Expect.expect(connection, "Specify URL of registry .*:")
+        state = Expect.expect_list(connection,
+                                   [(re.compile(".*Specify URL of registry .*:",
+                                                re.DOTALL),
+                                     1),
+                                    (re.compile(".*Container support is not currently enabled.*",
+                                                re.DOTALL),
+                                     2)])
+        if state == 2:
+            Expect.enter(connection, "q")
+            raise ContainerSupportDisabledError()
+
         if credentials and credentials[0]:
             registry = credentials[0]
             Expect.enter(connection, registry)
@@ -273,6 +288,41 @@ class RHUIManagerRepo():
             time.sleep(10)
 
     @staticmethod
+    def remove_packages(connection, reponame, packages):
+        '''
+        remove packages (a list of "N-V-R.A.rpm" items) from a custom repository
+        '''
+        RHUIManager.screen(connection, "repo")
+        Expect.enter(connection, "r")
+        RHUIManager.select_one(connection, reponame)
+        RHUIManager.select(connection, packages)
+        RHUIManager.proceed_with_check(connection,
+                                       "The following packages will be removed:",
+                                       packages)
+        RHUIManager.quit(connection)
+
+    @staticmethod
+    def remove_all_packages(connection, reponame):
+        '''
+        remove all packages from a custom repository
+        '''
+        RHUIManager.screen(connection, "repo")
+        Expect.enter(connection, "r")
+        RHUIManager.select_one(connection, reponame)
+        status = Expect.expect_list(connection,
+                                    [(re.compile(".*no packages.*", re.DOTALL), 1),
+                                     (re.compile(".*Enter value.*", re.DOTALL), 2)],
+                                    360)
+        if status == 1:
+            Expect.enter(connection, "q")
+            return
+        Expect.enter(connection, "a")
+        Expect.expect(connection, "Enter value .*:")
+        Expect.enter(connection, "c")
+        RHUIManager.proceed_without_check(connection)
+        RHUIManager.quit(connection)
+
+    @staticmethod
     def upload_content(connection, repolist, path):
         '''
         upload content to a custom repository
@@ -303,7 +353,7 @@ class RHUIManagerRepo():
         RHUIManager.quit(connection, timeout=60)
 
     @staticmethod
-    def check_for_package(connection, reponame, package):
+    def check_for_package(connection, reponame, package=""):
         '''
         list packages in a repository
         '''

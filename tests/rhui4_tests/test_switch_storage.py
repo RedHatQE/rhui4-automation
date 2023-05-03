@@ -21,9 +21,10 @@ CDS = ConMgr.connect(CDS_HOSTNAME)
 
 ANSWERS = "/root/.rhui/answers.yaml"
 ANSWERS_BAK = ANSWERS + ".backup_test"
+NEW_FS_OPTIONS = "timeo=100"
 REMOTE_SHARE = "/var/lib/rhui/remote_share"
 
-def _check_rhui_mountpoint(connection, fs_server):
+def _check_rhui_mountpoint(connection, fs_server, options=""):
     """check the RHUI mountpoint"""
     for mount_info_file in ["/proc/mounts", "/etc/fstab"]:
         _, stdout, _ = connection.exec_command(f"cat {mount_info_file}")
@@ -33,8 +34,20 @@ def _check_rhui_mountpoint(connection, fs_server):
         nose.tools.eq_(len(matches), 1,
                        msg=f"unexpected matches in {mount_info_file}: {matches}")
         # and it must be using the expected FS server
-        nose.tools.ok_(fs_server in matches[0],
-                       msg=f"{fs_server} not found in {mount_info_file}, found: {matches[0]}")
+        properties = matches[0].split()
+        actual_share = properties[0]
+        test = actual_share.startswith(fs_server)
+        nose.tools.ok_(test,
+                       msg=f"{fs_server} not found in {mount_info_file}, found: {actual_share}")
+        # if also checking options, find and compare them; options are in the fourth column
+        if options:
+            # in /proc/mounts, there are many options added by the NFS kernel module,
+            # whereas in /etc/fstab the options are standalone
+            actual_options = properties[3]
+            test = options in actual_options if mount_info_file == "/proc/mounts" else \
+                   actual_options == options
+            nose.tools.ok_(test,
+                           msg=f"{options} not found in {mount_info_file}, found: {actual_options}")
 
 def setup():
     """announce the beginning of the test run"""
@@ -77,6 +90,27 @@ def test_06_check_cds_mountpoint():
     """check if the new remote share is now used on the CDS"""
     _check_rhui_mountpoint(CDS, RHUA_HOSTNAME)
 
+def test_07_rerun_installer():
+    """rerun the installer with different mount options"""
+    # first check if the installer fails if options change but Pulp is running
+    installer_cmd = f"rhui-installer --rerun --rhua-mount-options {NEW_FS_OPTIONS}"
+    Expect.expect_retval(RHUA, installer_cmd, 1, 60)
+    # now with stopped Pulp services
+    Expect.expect_retval(RHUA, r"systemctl stop pulpcore\*")
+    Expect.expect_retval(RHUA, installer_cmd, timeout=300)
+
+def test_08_check_rhua_mountpoint():
+    """check if the new options have replaced the old ones on the RHUA"""
+    _check_rhui_mountpoint(RHUA, RHUA_HOSTNAME, NEW_FS_OPTIONS)
+
+def test_09_reinstall_cds():
+    """reinstall the CDS"""
+    RHUIManagerCLIInstance.reinstall(RHUA, "cds", CDS_HOSTNAME)
+
+def test_10_check_cds_mountpoint():
+    """check if the new options are now used on the CDS"""
+    _check_rhui_mountpoint(CDS, RHUA_HOSTNAME, NEW_FS_OPTIONS)
+
 def test_99_cleanup():
     """clean up: delete the CDS and rerun the installer with the original remote FS"""
     RHUIManagerCLIInstance.delete(RHUA, "cds", [CDS_HOSTNAME], force=True)
@@ -85,12 +119,15 @@ def test_99_cleanup():
     answers = yaml.safe_load(stdout)
     original_fs_server = answers["rhua"]["remote_fs_server"]
     fs_hostname = original_fs_server.split(":")[0]
-    installer_cmd = f"rhui-installer --rerun --remote-fs-server {original_fs_server}"
-    # stop pulpcore services and rerun the installer with the original FS server
+    original_fs_options = answers["rhua"]["rhua_mount_options"]
+    installer_cmd = f"rhui-installer --rerun " \
+                    f"--remote-fs-server {original_fs_server} " \
+                    f"--rhua-mount-options {original_fs_options}"
+    # stop pulpcore services and rerun the installer with the original FS server and options
     Expect.expect_retval(RHUA, r"systemctl stop pulpcore\*")
     Expect.expect_retval(RHUA, installer_cmd, timeout=300)
     # did it work?
-    _check_rhui_mountpoint(RHUA, fs_hostname)
+    _check_rhui_mountpoint(RHUA, fs_hostname, original_fs_options)
     # finish the cleanup
     Expect.expect_retval(RHUA, f"rm -f {ANSWERS_BAK}")
     ConMgr.remove_ssh_keys(RHUA)

@@ -33,6 +33,7 @@ logging.basicConfig(level=logging.DEBUG)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 RHUA = ConMgr.connect()
+# __reusable_clients_with_cds
 # To make this script communicate with a client machine different from cli01.example.com, run:
 # export RHUICLI=hostname
 # in your shell before running this script, replacing "hostname" with the actual client host name.

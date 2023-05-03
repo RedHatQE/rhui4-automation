@@ -17,7 +17,7 @@ if [[ $1 == all ]]; then
     fi
     tests_pretty="all tests"
 elif [[ $1 == client ]]; then
-    tests=$(grep -l RHUICLI=hostname test_*.py)
+    tests=$(grep -l __reusable_clients_with_cds test_*.py)
     if [ $? -ne 0 ]; then
         echo "No client test cases found. The installation of rhui4_tests_lib is broken."
         exit 1

@@ -72,15 +72,19 @@ class Helpers():
         return credentials
 
     @staticmethod
+    def get_from_rhui_tools_conf(connection, section, option):
+        """get the value of the given option from the given section in RHUI configuration"""
+        # raises standard configparser exceptions on failures
+        rhuicfg = ConfigParser()
+        _, stdout, _ = connection.exec_command(f"cat {RHUI_CFG}")
+        rhuicfg.read_file(stdout)
+        return rhuicfg.get(section, option)
+
+    @staticmethod
     def get_registry_url(site, connection=""):
         """get the URL for the given container registry or for the saved one (use "default" then)"""
         if site == "default":
-            rhuicfg = ConfigParser()
-            _, stdout, _ = connection.exec_command(f"cat {RHUI_CFG}")
-            rhuicfg.read_file(stdout)
-            if not rhuicfg.has_option("container", "registry_url"):
-                return None
-            return rhuicfg.get("container", "registry_url")
+            return Helpers.get_from_rhui_tools_conf(connection, "container", "registry_url")
         urls = {"rh": "https://registry.redhat.io",
                 "quay": "https://quay.io",
                 "gitlab": "https://registry.gitlab.com"}
@@ -89,7 +93,7 @@ class Helpers():
         return None
 
     @staticmethod
-    def set_registry_credentials(connection, site="rh", data="", backup=True):
+    def set_registry_credentials(connection, site="rh", data="", backup=True, use_installer=False):
         """put container registry credentials into the RHUI configuration file"""
         # if "site" isn't in credentials.conf, then "data" is supposed to be:
         # [username, password, url], or just [url] if no authentication is to be used for "site";
@@ -130,8 +134,15 @@ class Helpers():
         if backup:
             Helpers.backup_rhui_tools_conf(connection)
         # save (rewrite) the configuration file with the newly added credentials
-        stdin, _, _ = connection.exec_command(f"cat > {RHUI_CFG}")
-        rhuicfg.write(stdin)
+        if use_installer:
+            cmd = "rhui-installer --rerun"
+            for item in ["url", "auth", "username", "password"]:
+                cmd += f" --registry-{item} "
+                cmd += rhuicfg.get("container", f"registry_{item}", fallback="\"\"")
+            Expect.expect_retval(connection, cmd, timeout=600)
+        else:
+            stdin, _, _ = connection.exec_command(f"cat > {RHUI_CFG}")
+            rhuicfg.write(stdin)
 
     @staticmethod
     def backup_rhui_tools_conf(connection):

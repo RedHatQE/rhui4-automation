@@ -187,14 +187,15 @@ class Util():
                          f"/pulp/content/{path}.*{package_escaped}")
 
     @staticmethod
-    def cert_expired(connection, cert):
+    def cert_expired(connection, cert, seconds=0):
         '''
-        check if the certificate has already expired, return true if so
+        check if the certificate has already expired or will expire, return true if so
         '''
         file_exists = connection.recv_exit_status("test -f " + cert) == 0
         if not file_exists:
             raise OSError(cert + " does not exist")
-        return connection.recv_exit_status("openssl x509 -checkend -noout -in " + cert) == 1
+        cmd = f"openssl x509 -noout -in {cert} -checkend {seconds}"
+        return connection.recv_exit_status(cmd) == 1
 
     @staticmethod
     def fetch(connection, source, dest):

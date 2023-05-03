@@ -11,6 +11,7 @@ Welcome to the RHUI 4 Test Plan!
    :maxdepth: 2
    :caption: Contents:
    
+   acs_client
    cds
    cds_cmd
    cds_hap_interop
@@ -24,9 +25,12 @@ Welcome to the RHUI 4 Test Plan!
    gpg
    hap
    hap_cmd
+   pulp_workers
    repo_management
+   repo_prefix
    retain_package_versions
    rhui_4_repos
+   rhui_without_rhua
    security
    sosreport
    status
