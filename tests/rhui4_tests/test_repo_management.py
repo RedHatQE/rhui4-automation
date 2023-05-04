@@ -276,9 +276,8 @@ class TestRepo():
     def test_20_repo_select_0():
         '''check if no repo is chosen if 0 is entered when adding a repo'''
         # for RHBZ#1305612
-        # upload the small cert and try entering 0 when the list of repos is displayed
-        RHUIManagerEntitlements.upload_rh_certificate(RHUA,
-                                                      "/tmp/extra_rhui_files/rhcert_atomic.pem")
+        # upload the cert and try entering 0 when the list of repos is displayed
+        RHUIManagerEntitlements.upload_rh_certificate(RHUA)
         RHUIManager.screen(RHUA, "repo")
         Expect.enter(RHUA, "a")
         Expect.expect(RHUA, "Enter value", 180)

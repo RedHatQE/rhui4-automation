@@ -28,13 +28,13 @@ logging.basicConfig(level=logging.DEBUG)
 RHUA = ConMgr.connect()
 CUSTOM_REPOS = ["my_custom_repo", "another_custom_repo", "yet_another_custom_repo"]
 CR_NAMES = [cr.replace("_", " ").title() for cr in CUSTOM_REPOS]
-ALT_CONTENT_SRC_NAME = "atomic_cs"
+ALT_CONTENT_SRC_NAME = "test_acs"
 CLI_CFG = ["test-rhui", "1.0", "0.1"]
 DATADIR = "/tmp/extra_rhui_files"
 KEYFILE = "test_gpg_key"
 TEST_RPM = "rhui-rpm-upload-test-1-1.noarch.rpm"
-TEST_RH_RPM = "ostree"
-CERTS = {"Atomic": "rhcert_atomic.pem",
+TEST_RH_RPM = "awscli"
+CERTS = {"normal": "rhcert.pem",
          "expired": "rhcert_expired.pem",
          "incompatible": "rhcert_incompatible.pem",
          "partial": "rhcert_partially_invalid.pem",
@@ -43,7 +43,7 @@ TMPDIR = mkdtemp()
 # the TMPDIR path is also used on the RHUA, where it's automatically created later
 YUM_REPO_FILE = join(TMPDIR, "rh-cloud.repo")
 IMPORT_REPO_FILES_DIR = join(DATADIR, "repo_files")
-IMPORT_REPO_FILES = {"good": join(IMPORT_REPO_FILES_DIR, "atomic_repos.yaml"),
+IMPORT_REPO_FILES = {"good": join(IMPORT_REPO_FILES_DIR, "good_repos.yaml"),
                      "wrongrepo": join(IMPORT_REPO_FILES_DIR, "wrong_repo_id.yaml"),
                      "noname": join(IMPORT_REPO_FILES_DIR, "no_name.yaml"),
                      "noids": join(IMPORT_REPO_FILES_DIR, "no_repo_ids.yaml"),
@@ -60,11 +60,16 @@ class TestCLI():
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
             doc = yaml.safe_load(configfile)
 
-        self.yum_repo_names = [doc["CLI_repo1"]["name"], doc["CLI_repo2"]["name"]]
-        self.yum_repo_ids = [doc["CLI_repo1"]["id"], doc["CLI_repo2"]["id"]]
-        self.yum_repo_labels = [doc["CLI_repo1"]["label"], doc["CLI_repo2"]["label"]]
-        self.yum_repo_paths = [doc["CLI_repo1"]["path"], doc["CLI_repo2"]["path"]]
-        self.product = doc["CLI_product"]
+        self.yum_repo_names = [doc["yum_repos"][6]["x86_64"]["name"],
+                               doc["yum_repos"][8]["x86_64"]["name"]]
+        self.yum_repo_ids = [doc["yum_repos"][6]["x86_64"]["id"],
+                             doc["yum_repos"][8]["x86_64"]["id"]]
+        self.yum_repo_labels = [doc["yum_repos"][6]["x86_64"]["label"],
+                                doc["yum_repos"][8]["x86_64"]["label"]]
+        self.yum_repo_paths = [doc["yum_repos"][6]["x86_64"]["path"],
+                               doc["yum_repos"][8]["x86_64"]["path"]]
+        self.product_name = doc["product"]["name"]
+        self.product_ids = doc["product"]["ids"]
         self.remote_content = doc["remote_content"]
 
     @staticmethod
@@ -156,8 +161,8 @@ class TestCLI():
 
     @staticmethod
     def test_08_upload_certificate():
-        '''upload the Atomic (the small) entitlement certificate'''
-        RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["Atomic"]))
+        '''upload the entitlement certificate'''
+        RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["normal"]))
 
     def test_09_check_certificate_info(self):
         '''check certificate info for validity'''
@@ -191,7 +196,7 @@ class TestCLI():
     def test_14_repo_list(self):
         '''check the added repos'''
         repolist_actual = RHUIManagerCLI.repo_list(RHUA, True, True).splitlines()
-        nose.tools.eq_(self.yum_repo_ids, repolist_actual)
+        nose.tools.eq_(sorted(self.yum_repo_ids), repolist_actual)
 
     def test_15_start_syncing_repo(self):
         '''sync one of the repos'''
@@ -200,7 +205,7 @@ class TestCLI():
     def test_16_repo_info(self):
         '''verify that the repo name is part of the information about the specified repo ID'''
         info = RHUIManagerCLI.repo_info(RHUA, self.yum_repo_ids[1])
-        nose.tools.eq_(info["name"], Util.format_repo(self.yum_repo_names[1], "x86_64"))
+        nose.tools.eq_(info["name"], Util.format_repo(self.yum_repo_names[1], 8))
 
     def test_17_check_package_in_repo(self):
         '''check a random package in the repo'''
@@ -320,9 +325,7 @@ class TestCLI():
         paths_actual_raw = stdout.read().decode().splitlines()
         # the paths are indented, let's get rid of the formatting
         paths_actual = [p.lstrip() for p in paths_actual_raw]
-        # the OSTree repo must not be included
-        paths_expected = [p for p in self.yum_repo_paths if "ostree" not in p]
-        nose.tools.eq_(paths_expected, paths_actual)
+        nose.tools.eq_(sorted(self.yum_repo_paths), sorted(paths_actual))
 
     def test_27_create_acs_config_json(self):
         '''create an alternate content source configuration JSON file'''
@@ -564,14 +567,15 @@ class TestCLI():
     def test_46_multi_repo_product(self):
         '''check that all repos in a multi-repo product get added'''
         # for RHBZ#1651638
-        RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["Atomic"]))
-        RHUIManagerCLI.repo_add(RHUA, self.product["name"])
-        # wait a few seconds for the repo to actually get added
+        RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["normal"]))
+        RHUIManagerCLI.repo_add(RHUA, self.product_name)
+        # wait a few seconds for the repos to actually get added
         time.sleep(4)
         repolist_actual = RHUIManagerCLI.repo_list(RHUA, True).splitlines()
-        nose.tools.eq_([self.product["id"]], repolist_actual)
+        nose.tools.eq_(self.product_ids, repolist_actual)
         # clean up
-        RHUIManagerCLI.repo_delete(RHUA, self.product["id"])
+        for repo in self.product_ids:
+            RHUIManagerCLI.repo_delete(RHUA, repo)
         RHUIManager.remove_rh_certs(RHUA)
 
     @staticmethod
@@ -579,8 +583,8 @@ class TestCLI():
         '''check that all repos defined in an input file get added'''
         # get a list of repos that are expected to be added
         expected_repo_ids = sorted(Helpers.get_repos_from_yaml(RHUA, IMPORT_REPO_FILES["good"]))
-        # upload a cert and try adding the repos from the file, sync them all the same time
-        RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["Atomic"]))
+        # upload the cert and try adding the repos from the file, sync them all the same time
+        RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["normal"]))
         RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"], True)
         # check the sync status
         for repo in expected_repo_ids:

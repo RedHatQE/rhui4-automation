@@ -28,7 +28,7 @@ Run the [deployment script](../scripts/deploy.py) to deploy RHUI on the VMs.
 
 You need a ZIP file with the following files in the root of the archive:
 
-* `rhcert.pem`, `rhcert_atomic.pem` — These must be valid Red Hat content certificates allowing access to the products that provide the repositories configured in `rhui4_tests/tested_repos.yaml`.
+* `rhcert.pem` — This must be a valid Red Hat content certificate allowing access to the repositories used in `rhui4_tests/tested_repos.yaml`.
 * `rhcert.mapping` — Optional; a copy of the repo cache for rhcert.pem, taken from an existing RHUA. Using this file will speed up adding repos significantly.
 * `rhcert_empty.pem` — This must be a Red Hat content certificate containing no entitlement.
 * `rhcert_expired.pem` — This must be an expired Red Hat content certificate.
@@ -59,7 +59,7 @@ custom_certs/ssl.key
 * `repo_files/FILES`: Several files that will be used to test the ability to add repos specified in a file. Details are in `test_cmdline.py`, but in a nutshell the following content is expected:
 
 ```
-repo_files/atomic_repos.yaml
+repo_files/good_repos.yaml
 repo_files/bad_ids.yaml
 repo_files/bad_name.yaml
 repo_files/no_name.yaml

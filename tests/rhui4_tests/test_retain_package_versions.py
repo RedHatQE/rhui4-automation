@@ -22,8 +22,8 @@ class TestCLI():
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
             doc = yaml.safe_load(configfile)
 
-        self.repo_id = doc["CLI_repo2"]["id"]
-        self.test_package = doc["CLI_repo2"]["test_package"]
+        self.repo_id = doc["yum_repos"][8]["x86_64"]["id"]
+        self.test_package = doc["yum_repos"][8]["x86_64"]["test_package"]
 
     @staticmethod
     def setup_class():
@@ -37,8 +37,8 @@ class TestCLI():
 
     @staticmethod
     def test_02_upload_certificate():
-        '''upload the Atomic (the small) entitlement certificate'''
-        RHUIManagerCLI.cert_upload(RHUA, "/tmp/extra_rhui_files/rhcert_atomic.pem")
+        '''upload the entitlement certificate'''
+        RHUIManagerCLI.cert_upload(RHUA)
 
     @staticmethod
     def test_03_set_config_1():

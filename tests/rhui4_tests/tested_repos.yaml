@@ -33,7 +33,7 @@ yum_repos:
             path: "content/dist/rhel8/rhui/8/x86_64/highavailability/os"
             id: "rhel-8-for-x86_64-highavailability-rhui-rpms-8"
             label: "rhel-8-for-x86_64-highavailability-rhui-rpms"
-            test_package: "clufter-common"
+            test_package: "libknet1-compress-bzip2-plugin"
         aarch64:
             name: "Red Hat Enterprise Linux 8 for ARM 64 - Supplementary (RPMs) from RHUI"
             version: "8"
@@ -59,21 +59,13 @@ yum_repos:
             id: "rhel-9-for-aarch64-supplementary-rhui-rpms-9"
             label: "rhel-9-for-aarch64-supplementary-rhui-rpms"
             test_package: "zhongyi-song-fonts"
-CLI_repo1:
-    name: "Red Hat Enterprise Linux Atomic Host (Debug RPMs) from RHUI"
-    id: "rhel-atomic-host-rhui-debug-rpms-x86_64"
-    label: "rhel-atomic-host-rhui-debug-rpms"
-    path: "content/dist/rhel/rhui/atomic/7/7Server/x86_64/debug"
-    test_package: ""
-CLI_repo2:
-    name: "Red Hat Enterprise Linux Atomic Host (RPMs) from RHUI"
-    id: "rhel-atomic-host-rhui-rpms-x86_64"
-    label: "rhel-atomic-host-rhui-rpms"
-    path: "content/dist/rhel/rhui/atomic/7/7Server/x86_64/os"
-    test_package: "atomic-devmode"
-CLI_product:
-    name: "Red Hat Enterprise Linux Atomic Host (RPMs) from RHUI"
-    id: "rhel-atomic-host-rhui-rpms-x86_64"
+product:
+    name: "Red Hat Enterprise Linux 8 for x86_64 - SAP Solutions - Extended Update Support from RHUI (RPMs)"
+    ids:
+      - rhel-8-for-x86_64-sap-solutions-eus-rhui-rpms-8.1
+      - rhel-8-for-x86_64-sap-solutions-eus-rhui-rpms-8.2
+      - rhel-8-for-x86_64-sap-solutions-eus-rhui-rpms-8.4
+      - rhel-8-for-x86_64-sap-solutions-eus-rhui-rpms-8.6
 status_repos:
     good: "rhel-sap-for-rhel-7-server-rhui-rpms-7Server-x86_64"
     bad: "rhel-server-rhscl-6-rhui-source-rpms-6Server-i386"
