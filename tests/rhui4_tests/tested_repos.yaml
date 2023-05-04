@@ -79,13 +79,9 @@ container_primary:
     name: "rhcertification/redhat-certification"
     id: "rhcert"
     displayname: "RH Certification Container"
-container_rhel7:
-    x86_64:
-        name: "rhel7-minimal"
-        displayname: "RHEL 7 Minimal"
-    aarch64:
-        name: "rhel7-aarch64"
-        displayname: "RHEL 7 ARM64"
+container_cli:
+    name: "ubi8-minimal"
+    displayname: "UBI 8 Minimal"
 container_alt:
     quay:
         name: "pusher/oauth2_proxy"
