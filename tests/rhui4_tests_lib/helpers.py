@@ -169,8 +169,8 @@ class Helpers():
         return connection.recv_exit_status("subscription-manager identity") == 0
 
     @staticmethod
-    def restart_rhui_services(connection, node_type="rhua"):
-        """restart RHUI services on the remote host (according to the specified type)"""
+    def restart_rhui_services(connection):
+        """restart RHUI services on the remote host (according to the determined type)"""
         services = {
                     "rhua":    [
                                 "nginx",
@@ -188,8 +188,17 @@ class Helpers():
                                 "haproxy"
                                ]
                    }
-        if node_type not in services:
-            raise ValueError(f"{node_type} is not a known node type") from None
+        test_packages = {"rhua": "rhui-tools", "cds": "python3-gunicorn", "haproxy": "haproxy"}
+        query = f"rpm -q {' '.join(test_packages.values())} | grep -v 'not installed'"
+        _, stdout, _ = connection.exec_command(query)
+        whats_installed = stdout.read().decode()
+        node_type = None
+        for node, package in test_packages.items():
+            if whats_installed.startswith(package):
+                node_type = node
+                break
+        if not node_type:
+            raise ValueError("Unknown RHUI node type") from None
         get_pids_cmd = "systemctl -p MainPID show %s | awk -F = '/PID/ { print $2 }'"
         # fetch the current PIDs
         _, stdout, _ = connection.exec_command(get_pids_cmd % " ".join(services[node_type]))

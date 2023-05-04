@@ -33,13 +33,13 @@ def test_01_login_add_hap():
     RHUIManager.initial_run(RHUA)
     RHUIManagerInstance.add_instance(RHUA, "loadbalancers")
     # also check the restart script there
-    Helpers.restart_rhui_services(HAPROXY, "haproxy")
+    Helpers.restart_rhui_services(HAPROXY)
 
 def test_02_add_first_cds():
     """[TUI] add the first CDS, check the restart script"""
     RHUIManagerInstance.add_instance(RHUA, "cds", CDS_HOSTNAMES[0])
     # also check the restart script there
-    Helpers.restart_rhui_services(CDS, "cds")
+    Helpers.restart_rhui_services(CDS)
     # check if the latest available module stream is installed
     _, stdout, _ = CDS.exec_command("rpm -q --qf '%{VERSION}' nginx")
     major_minor_installed = stdout.read().decode().rsplit(".", 1)[0]
