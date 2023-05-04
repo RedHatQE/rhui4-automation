@@ -75,7 +75,7 @@ def test_04_haproxy_stats():
 
 def test_05_hsts():
     """check if HTTP Strict Transport Security is used"""
-    response = requests.head(f"https://{HOSTNAMES['HAProxy']}/", verify=False)
+    response = requests.head(f"https://{HOSTNAMES['HAProxy']}/", timeout=10, verify=False)
     nose.tools.ok_("Strict-Transport-Security" in response.headers,
                    msg=f"Got these headers: {response.headers}")
 

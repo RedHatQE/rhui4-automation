@@ -62,7 +62,7 @@ class TestClient():
         self.version = Util.get_rhel_version(CLI)["major"]
         arch = Util.get_arch(CLI)
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
-            doc = yaml.load(configfile)
+            doc = yaml.safe_load(configfile)
             try:
                 self.yum_repo_name = doc["yum_repos"][self.version][arch]["name"]
                 self.yum_repo_version = doc["yum_repos"][self.version][arch]["version"]
@@ -231,10 +231,12 @@ class TestClient():
         cds_lb = ConMgr.get_cds_lb_hostname()
         nose.tools.ok_(not requests.head(f"https://{cds_lb}/pulp/content/" +
                                          f"{self.yum_repo_path}/repodata/repomd.xml",
+                                         timeout=10,
                                          verify=False).ok)
         # also check the protected custom repo
         nose.tools.ok_(not requests.head(f"https://{cds_lb}/pulp/content/" +
                                          f"protected/{CUSTOM_PATH}/repodata/repomd.xml",
+                                         timeout=10,
                                          verify=False).ok)
 
     def test_15_check_cli_plugins(self):

@@ -53,7 +53,7 @@ class TestClient():
         arch = Util.get_arch(CLI)
 
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
-            doc = yaml.load(configfile)
+            doc = yaml.safe_load(configfile)
 
         try:
             self.container_name = doc["container_rhel7"][arch]["name"]

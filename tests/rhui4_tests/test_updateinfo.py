@@ -42,7 +42,7 @@ class TestClient():
         self.arch = Util.get_arch(CLI)
         self.version = Util.get_rhel_version(CLI)["major"]
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
-            doc = yaml.load(configfile)
+            doc = yaml.safe_load(configfile)
             try:
                 self.test = doc["updateinfo"][self.version][self.arch]
             except KeyError:

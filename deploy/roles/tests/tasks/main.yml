@@ -35,36 +35,13 @@
   tags: tests
 
 - name: install pip
-  package: name=python3-pip state=present
-  tags: tests
-
-- name: install the RPM dependencies of required libraries
-  package:
-    name:
-      - make
-      - gcc
-      - python3-devel
-      - openssl-devel
-      - cargo
-    state: present
-  tags: tests
-
-- name: install the PyPI dependencies of required libraries
-  command: pip3 install setuptools_rust
-  tags: tests
-
-- name: Update old RPM-based dependencies to their latest PyPI versions
-  command: pip3 install --target /usr/lib64/python3.6/site-packages --upgrade cffi
+  package: name=python39-pip state=present
   tags: tests
 
 - name: install tests
   command: pip3 install --prefix /usr .
   args:
     chdir: /root/rhui4-automation/tests
-  tags: tests
-
-- name: install certifi
-  command: pip3 install --prefix /usr certifi
   tags: tests
 
 - name: generate ssh keys

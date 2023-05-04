@@ -39,7 +39,7 @@ class TestRhuiManagerStatus():
     """class for the rhui-manager status tests """
     def __init__(self):
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
-            doc = yaml.load(configfile)
+            doc = yaml.safe_load(configfile)
             self.good_repo = doc["status_repos"]["good"]
             self.bad_repo = doc["status_repos"]["bad"]
 

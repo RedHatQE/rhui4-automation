@@ -42,7 +42,7 @@ class TestEUSCLI():
         self.cli_version = Util.get_rhel_version(CLI)["major"]
         arch = Util.get_arch(CLI)
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
-            doc = yaml.load(configfile)
+            doc = yaml.safe_load(configfile)
             try:
                 self.repo_id = doc["EUS_repos"][self.cli_version]["id"]
                 self.repo_label = doc["EUS_repos"][self.cli_version]["label"]

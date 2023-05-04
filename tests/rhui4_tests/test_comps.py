@@ -38,7 +38,7 @@ class TestCompsXML():
     """class to test comps XML handling"""
     def __init__(self):
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
-            doc = yaml.load(configfile)
+            doc = yaml.safe_load(configfile)
             self.test_repos = list(doc["comps"].keys())[:2]
             self.test_repo_names = [doc["comps"][repo]["name"] for repo in self.test_repos]
             self.test_groups = [doc["comps"][repo]["test_group"] for repo in self.test_repos]

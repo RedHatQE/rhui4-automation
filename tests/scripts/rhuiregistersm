@@ -11,7 +11,7 @@ from rhui4_tests_lib.subscription import RHSMRHUI
 from rhui4_tests_lib.util import Util
 
 with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
-    CFG = yaml.load(configfile)
+    CFG = yaml.safe_load(configfile)
     SUBSCRIPTION = CFG["subscriptions"]["RHUI"]
 
 PRS = argparse.ArgumentParser(description="Register the RHUA with RHSM.",

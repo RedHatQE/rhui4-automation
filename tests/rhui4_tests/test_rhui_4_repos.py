@@ -71,7 +71,7 @@ def _check_latest_documented_version(expected_version):
         helper method to check if the latest released and documented versions match
         the version is expected to be a floating point number representing major.minor
     '''
-    documented_titles = re.findall(VERSION_STRING, requests.get(DOC).text)
+    documented_titles = re.findall(VERSION_STRING, requests.get(DOC, timeout=30).text)
     documented_versions = [float(title.split()[0]) for title in documented_titles]
     documented_versions.sort()
     latest_documented_version = documented_versions[-1]

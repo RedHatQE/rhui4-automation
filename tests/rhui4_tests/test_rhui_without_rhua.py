@@ -53,7 +53,7 @@ class TestRHUIWithoutRHUA():
         self.version = Util.get_rhel_version(CLI)["major"]
         arch = Util.get_arch(CLI)
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
-            doc = yaml.load(configfile)
+            doc = yaml.safe_load(configfile)
             try:
                 self.yum_repo_name = doc["yum_repos"][self.version][arch]["name"]
                 self.yum_repo_version = doc["yum_repos"][self.version][arch]["version"]
@@ -115,7 +115,7 @@ class TestRHUIWithoutRHUA():
     def test_07_check_container_urls():
         """check container related URLs, should not be available/found"""
         for path in CONTAINER_TEST_PATHS:
-            response = requests.head(f"https://{CDS_HOSTNAME}{path}", verify=False)
+            response = requests.head(f"https://{CDS_HOSTNAME}{path}", timeout=10, verify=False)
             nose.tools.eq_(response.status_code, 404)
 
     @staticmethod

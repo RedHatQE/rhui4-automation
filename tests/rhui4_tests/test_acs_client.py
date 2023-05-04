@@ -41,7 +41,7 @@ class TestACSClient():
         self.version = Util.get_rhel_version(CLI)["major"]
         arch = Util.get_arch(CLI)
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
-            doc = yaml.load(configfile)
+            doc = yaml.safe_load(configfile)
             self.rh_repo_id = doc["yum_repos"][self.version][arch]["id"]
             self.rh_repo_label = doc["yum_repos"][self.version][arch]["label"]
             self.custom_repo_id = "test-acs"
