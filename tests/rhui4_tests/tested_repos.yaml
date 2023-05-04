@@ -110,6 +110,12 @@ EUS_repos:
         name: "Red Hat Enterprise Linux 8 for x86_64 - SAP Solutions - Update Services for SAP Solutions from RHUI (RPMs) (8.2)"
         path: "content/e4s/rhel8/rhui/8.2/x86_64/sap-solutions/os"
         test_package: "compat-sap-c++-9"
+    9:
+        id: "rhel-9-for-x86_64-sap-solutions-e4s-rhui-rpms-9.0"
+        label: "rhel-9-for-x86_64-sap-solutions-e4s-rhui-rpms"
+        name: "Red Hat Enterprise Linux 9 for x86_64 - SAP Solutions - Update Services for SAP Solutions from RHUI (RPMs) (9.0)"
+        path: "content/e4s/rhel9/rhui/9.0/x86_64/sap-solutions/os"
+        test_package: "vm-dump-metrics"
 updateinfo:
     0:
         all:
