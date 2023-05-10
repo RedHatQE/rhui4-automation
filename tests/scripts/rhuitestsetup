@@ -16,6 +16,9 @@ PRS.add_argument("--cert",
                  help="upload an entitlement certificate; " +
                  "use 'no' to skip this, or a non-default cert name to override the default cert",
                  default="default")
+PRS.add_argument("--cert-only",
+                 help="only upload the cert, skip the rest of the setup",
+                 action="store_true")
 PRS.add_argument("--one-cds-only",
                  help="add only one CDS node",
                  action="store_true")
@@ -42,6 +45,9 @@ if ARGS.cert != "no":
         RHUIManagerEntitlements.upload_rh_certificate(RHUA,
                                                       "/tmp/extra_rhui_files/" +
                                                       f"rhcert_{ARGS.cert}.pem")
+
+if ARGS.cert_only:
+    sys.exit(0)
 
 if ARGS.one_cds_only:
     CDS_HOSTNAMES = [CDS_HOSTNAMES[0]]
