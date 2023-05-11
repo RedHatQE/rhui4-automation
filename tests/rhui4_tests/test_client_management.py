@@ -6,6 +6,10 @@
 # in your shell before running this script.
 # The cleanup will be skipped, too, so you ought to clean up eventually.
 
+# To use this test just to set the RHUI environment up with repos for further manual tests, run:
+# export RHUIPREP=1
+# in your shell before running this script.
+
 from os import getenv
 from os.path import basename, join
 import re
@@ -210,6 +214,8 @@ class TestClient():
         '''
            install an RPM from the custom repo
         '''
+        if getenv("RHUIPREP"):
+            raise nose.SkipTest("Only the setup was requested.")
         test_rpm_name = self.custom_rpm.rsplit('-', 2)[0]
         Expect.expect_retval(CLI, f"yum install -y {test_rpm_name} --nogpgcheck", timeout=20)
 
@@ -217,6 +223,8 @@ class TestClient():
         '''
            install an RPM from the RH repo
         '''
+        if getenv("RHUIPREP"):
+            raise nose.SkipTest("Only the setup was requested.")
         Expect.expect_retval(CLI, f"yum install -y {self.test_package}", timeout=20)
         # but make sure the RPM is taken from the RHUI
         Util.check_package_url(CLI, self.test_package, self.yum_repo_path)
@@ -225,6 +233,8 @@ class TestClient():
         '''
            verify that RHUI repo content cannot be fetched without an entitlement certificate
         '''
+        if getenv("RHUIPREP"):
+            raise nose.SkipTest("Only the setup was requested.")
         # try HEADing the repodata file for the already added repo
         # the HTTP request must not complete (not even with HTTP 403);
         # it is supposed to raise an SSLError instead
@@ -244,6 +254,8 @@ class TestClient():
            check if irrelevant Yum plug-ins are not enabled on the client with the config RPM
         '''
         # for RHBZ#1415681
+        if getenv("RHUIPREP"):
+            raise nose.SkipTest("Only the setup was requested.")
         if self.version <= 7:
             cmd = "yum"
         else:
@@ -258,6 +270,8 @@ class TestClient():
            check EUS release handling (working with /etc/yum/vars/releasever on the client)
         '''
         # for RHBZ#1504229
+        if getenv("RHUIPREP"):
+            raise nose.SkipTest("Only the setup was requested.")
         Expect.expect_retval(CLI, "rhui-set-release --set 7.5")
         Expect.expect_retval(CLI, "[[ $(</etc/yum/vars/releasever) == 7.5 ]]")
         Expect.expect_retval(CLI, "[[ $(rhui-set-release) == 7.5 ]]")
@@ -280,6 +294,8 @@ class TestClient():
         '''
             check for proper logs if a legacy CA is used
         '''
+        if getenv("RHUIPREP"):
+            raise nose.SkipTest("Only the setup was requested.")
         # get the CA cert from the RHUA and upload it to the CDS
         # the cert is among the extra RHUI files, ie. in the directory also containing custom RPMs
         remote_ca_file = join(CUSTOM_RPMS_DIR, LEGACY_CA_FILE)
@@ -296,6 +312,8 @@ class TestClient():
         '''
            remove repos, certs, cli rpms; remove rpms from cli, uninstall cds, hap
         '''
+        if getenv("RHUIPREP"):
+            raise nose.SkipTest("Only the setup was requested.")
         test_rpm_name = self.custom_rpm.rsplit('-', 2)[0]
         RHUIManagerRepo.delete_all_repos(RHUA)
         nose.tools.assert_equal(RHUIManagerRepo.list(RHUA), [])

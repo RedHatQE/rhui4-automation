@@ -1,14 +1,18 @@
 #!/usr/bin/python
 '''Remove certificates and unregister CDS and HAProxy nodes. '''
 
+from os import getenv
+
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
 from rhui4_tests_lib.rhuimanager_repo import RHUIManagerRepo
+from rhui4_tests_lib.util import Util
 
 RHUA = ConMgr.connect()
 CDS_HOSTNAMES = ConMgr.get_cds_hostnames()
 HA_HOSTNAME = ConMgr.get_cds_lb_hostname()
+CLI_HOSTNAMES = ConMgr.get_cli_hostnames()
 
 print("Removing entitlement certificates.")
 RHUIManager.remove_rh_certs(RHUA)
@@ -36,3 +40,11 @@ if RHUIManagerRepo.list(RHUA):
     print("Done.")
 else:
     print("There were none.")
+
+if getenv("RHUIPREP"):
+    print("Uninstalling the test client configuration RPM.")
+    for host in CLI_HOSTNAMES:
+        print(f"Using {host}.")
+        cli = ConMgr.connect(host)
+        Util.remove_rpm(cli, ["test_cli_rpm"])
+        print("Done.")
