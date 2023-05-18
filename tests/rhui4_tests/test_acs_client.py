@@ -119,12 +119,12 @@ class TestACSClient():
         # get rid of undesired repos first
         Util.remove_amazon_rhui_conf_rpm(CLI)
         Util.disable_beta_repos(CLI)
-        actual_repos = Yummy.yum_repolist(CLI)
+        actual_repos = Yummy.repolist(CLI)
         nose.tools.eq_(actual_repos, sorted([self.rh_repo_id, self.custom_repo_id]))
 
     def test_06_check_test_package(self):
         """check if the client can install a test package"""
-        Expect.expect_retval(CLI, f"yum -y install {self.test_package}", timeout=20)
+        Yummy.install(CLI, [self.test_package])
 
     def test_99_cleanup(self):
         """clean up"""

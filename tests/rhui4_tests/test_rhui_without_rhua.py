@@ -171,7 +171,7 @@ class TestRHUIWithoutRHUA():
         _, stdout, _ = CLI.exec_command("yum -v repolist 2>&1")
         output = stdout.read().decode()
         nose.tools.ok_("404" in output, msg=f"Unexpected output: {output}")
-        Expect.expect_retval(CLI, f"yum -y install {self.test_package}", 1)
+        Yummy.install(CLI, [self.test_package], expect_trouble=True)
 
     def test_14_export_repo(self):
         """export the repo"""
@@ -181,10 +181,10 @@ class TestRHUIWithoutRHUA():
 
     def test_15_get_available_content(self):
         """check if the repo is available now"""
-        actual_repos = Yummy.yum_repolist(CLI)
+        actual_repos = Yummy.repolist(CLI)
         prefix = Helpers.get_from_rhui_tools_conf(RHUA, "rhui", "client_repo_prefix")
         nose.tools.eq_(actual_repos, [prefix + self.yum_repo_label])
-        Expect.expect_retval(CLI, f"yum -y install {self.test_package}", timeout=20)
+        Yummy.install(CLI, [self.test_package])
 
     def test_99_cleanup(self):
         """clean up"""

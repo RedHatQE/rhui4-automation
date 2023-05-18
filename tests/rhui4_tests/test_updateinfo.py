@@ -22,6 +22,7 @@ from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
 from rhui4_tests_lib.rhuimanager_repo import RHUIManagerRepo
 from rhui4_tests_lib.util import Util
+from rhui4_tests_lib.yummy import Yummy
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -158,7 +159,7 @@ class TestClient():
            install an old version of an RPM from the repo
         '''
         nvr = f"{self.test['test_package']}-{self.test['old_version']}"
-        Expect.expect_retval(CLI, "yum -y install " + nvr, timeout=60)
+        Yummy.install(CLI, [nvr], timeout=60)
 
     def test_11_check_updateinfo(self):
         '''

@@ -32,6 +32,7 @@ from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
 from rhui4_tests_lib.rhuimanager_repo import RHUIManagerRepo
 from rhui4_tests_lib.rhuimanager_sync import RHUIManagerSync
 from rhui4_tests_lib.util import Util
+from rhui4_tests_lib.yummy import Yummy
 
 logging.basicConfig(level=logging.DEBUG)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -217,7 +218,7 @@ class TestClient():
         if getenv("RHUIPREP"):
             raise nose.SkipTest("Only the setup was requested.")
         test_rpm_name = self.custom_rpm.rsplit('-', 2)[0]
-        Expect.expect_retval(CLI, f"yum install -y {test_rpm_name} --nogpgcheck", timeout=20)
+        Yummy.install(CLI, [test_rpm_name], False)
 
     def test_13_inst_rpm_rh_repo(self):
         '''
@@ -225,7 +226,7 @@ class TestClient():
         '''
         if getenv("RHUIPREP"):
             raise nose.SkipTest("Only the setup was requested.")
-        Expect.expect_retval(CLI, f"yum install -y {self.test_package}", timeout=20)
+        Yummy.install(CLI, [self.test_package])
         # but make sure the RPM is taken from the RHUI
         Util.check_package_url(CLI, self.test_package, self.yum_repo_path)
 

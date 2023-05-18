@@ -97,7 +97,7 @@ class TestCompsXML():
 
     def test_06_check_groups(self):
         """compare client's available groups with the 1st original comps file, check a test group"""
-        groups_on_client = Yummy.yum_grouplist(CLI)
+        groups_on_client = Yummy.grouplist(CLI)
         original_comps_xml = f"{TEST_DIR}/{self.test_repos[0]}/comps.xml"
         groups_in_xml = Yummy.comps_xml_grouplist(RHUA, original_comps_xml)
         nose.tools.eq_(groups_on_client, groups_in_xml)
@@ -105,7 +105,7 @@ class TestCompsXML():
 
     def test_07_check_test_package(self):
         """check if the client can see the 1st test package as available in group information"""
-        packages = Yummy.yum_group_packages(CLI, self.test_groups[0])
+        packages = Yummy.group_packages(CLI, self.test_groups[0])
         nose.tools.ok_(self.test_packages[0] in packages,
                        msg=f"{self.test_packages[0]} not found in {packages}")
 
@@ -121,7 +121,7 @@ class TestCompsXML():
     def test_09_check_groups(self):
         """compare client's available groups with the 2nd original comps file, check a test group"""
         Expect.expect_retval(CLI, "yum clean all")
-        groups_on_client = Yummy.yum_grouplist(CLI)
+        groups_on_client = Yummy.grouplist(CLI)
         original_comps_xml = f"{TEST_DIR}/{self.test_repos[1]}/comps.xml"
         groups_in_xml = Yummy.comps_xml_grouplist(RHUA, original_comps_xml)
         nose.tools.eq_(groups_on_client, groups_in_xml)
@@ -129,7 +129,7 @@ class TestCompsXML():
 
     def test_10_check_test_package(self):
         """check if the client can see the 2nd test package as available in group information"""
-        packages = Yummy.yum_group_packages(CLI, self.test_groups[1])
+        packages = Yummy.group_packages(CLI, self.test_groups[1])
         nose.tools.ok_(self.test_packages[1] in packages,
                        msg=f"{self.test_packages[1]} not found in {packages}")
 
@@ -158,7 +158,7 @@ class TestCompsXML():
         Expect.expect_retval(CLI, "yum clean all")
         # compare client's available groups with the *original* comps file,
         # expecting all the original groups plus the extra group
-        groups_on_client = Yummy.yum_grouplist(CLI)
+        groups_on_client = Yummy.grouplist(CLI)
         original_comps_xml = f"{TEST_DIR}/{repo}/comps.xml"
         groups_in_xml = Yummy.comps_xml_grouplist(RHUA, original_comps_xml)
         # trick: put the extra group to the right place in the sorted list

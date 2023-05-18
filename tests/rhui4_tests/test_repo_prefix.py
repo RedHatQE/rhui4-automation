@@ -99,7 +99,7 @@ class TestRepoPrefix():
 
     def test_06_check_repo_ids(self):
         """check if the repos on the client use the custom prefix"""
-        cli_repos = Yummy.yum_repolist(CLI)
+        cli_repos = Yummy.repolist(CLI)
         nose.tools.eq_(cli_repos,
                        sorted([f"{PREFIXES[0]}{self.rh_repo_label}",
                                f"{PREFIXES[0]}custom-{self.prot_custom_repo_id}",
@@ -136,7 +136,7 @@ class TestRepoPrefix():
 
     def test_11_check_repo_ids(self):
         """check if the repos on the client use the other custom prefix"""
-        cli_repos = Yummy.yum_repolist(CLI)
+        cli_repos = Yummy.repolist(CLI)
         nose.tools.eq_(cli_repos,
                        sorted([f"{PREFIXES[1]}{self.rh_repo_label}",
                                f"{PREFIXES[1]}custom-{self.prot_custom_repo_id}",
@@ -185,7 +185,7 @@ class TestRepoPrefix():
 
     def test_17_check_repo_ids(self):
         """check if the repos on the client do not use any prefix"""
-        cli_repos = Yummy.yum_repolist(CLI)
+        cli_repos = Yummy.repolist(CLI)
         nose.tools.eq_(cli_repos,
                        sorted([self.rh_repo_label,
                               f"custom-{self.prot_custom_repo_id}",

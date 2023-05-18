@@ -66,7 +66,7 @@ class Yummy():
         return None
 
     @staticmethod
-    def yum_grouplist(connection):
+    def grouplist(connection):
         """return a sorted list of yum groups available to the client"""
         # first clean metadata, which may contain outdated information
         Expect.expect_retval(connection, "yum clean all")
@@ -78,7 +78,7 @@ class Yummy():
         return sorted(grouplist)
 
     @staticmethod
-    def yum_group_packages(connection, group):
+    def group_packages(connection, group):
         """return a sorted list of packages available to the client in the given yum group"""
         # fetch the complete output from the command
         _, stdout, _ = connection.exec_command(f"yum groupinfo '{group}'")
@@ -92,7 +92,7 @@ class Yummy():
         return sorted(packagelist)
 
     @staticmethod
-    def yum_repolist(connection, alll=False, enabled=True, disabled=False):
+    def repolist(connection, alll=False, enabled=True, disabled=False):
         """return a list of yum repositories, only enabled by default"""
         cmd = "yum -q repolist"
         if alll:
@@ -107,3 +107,12 @@ class Yummy():
         raw_output = stdout.read().decode().splitlines()
         repos = [line.split()[0] for line in raw_output if not line.startswith("repo ")]
         return repos
+
+    @staticmethod
+    def install(connection, packages, gpgcheck=True, timeout=20, expect_trouble=False):
+        """return a list of yum repositories, only enabled by default"""
+        cmd = "yum -y install "
+        cmd += " ".join(packages)
+        if not gpgcheck:
+            cmd += " --nogpgcheck"
+        Expect.expect_retval(connection, cmd, 1 if expect_trouble else 0, timeout)

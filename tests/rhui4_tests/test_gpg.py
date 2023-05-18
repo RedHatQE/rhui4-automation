@@ -19,6 +19,7 @@ from rhui4_tests_lib.rhuimanager_client import RHUIManagerClient
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
 from rhui4_tests_lib.rhuimanager_repo import RHUIManagerRepo
 from rhui4_tests_lib.util import Util
+from rhui4_tests_lib.yummy import Yummy
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -128,7 +129,7 @@ def test_10_install_signed_pkg():
     '''
        install the signed package from the custom repo (will import the GPG key)
     '''
-    Expect.expect_retval(CLI, "yum -y install " + SIGNED_PACKAGE)
+    Yummy.install(CLI, [SIGNED_PACKAGE])
 
 def test_11_check_gpg_sig():
     '''

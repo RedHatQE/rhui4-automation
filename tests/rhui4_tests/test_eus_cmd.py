@@ -20,6 +20,7 @@ from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
 from rhui4_tests_lib.util import Util
+from rhui4_tests_lib.yummy import Yummy
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -148,7 +149,7 @@ class TestEUSCLI():
         '''
         install the test package (from the test repo)
         '''
-        Expect.expect_retval(CLI, "yum install -y " + self.test_package, timeout=20)
+        Yummy.install(CLI, [self.test_package])
         # check it
         Expect.expect_retval(CLI, "rpm -q " + self.test_package)
 
