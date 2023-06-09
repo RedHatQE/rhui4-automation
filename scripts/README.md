@@ -73,6 +73,8 @@ with the RHEL-5 client hostname and other data commented out so that it is all v
 ignored by `ansible-playbook`. Other than that, you are free to use the launched RHEL-5 client any
 way you want, just be sure to log in as root directly.
 
+Ditto for RHEL 6 and its Python 2.6, which Ansible no longer supports.
+
 Note that RHEL-8 AMIs are missing the unversioned `python` command. This does not affect
 the deployment because the _platform Python_ is automatically set in the case of RHEL 8 hosts.
 

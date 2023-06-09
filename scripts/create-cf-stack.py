@@ -663,9 +663,9 @@ try:
             f.write('\n[CLI]\n')
             for instance in instances_detail:
                 if instance["role"] == "CLI":
-                    # RHEL 5 can't be set up using ansible 2.4+
+                    # RHEL 5 and 6 can't be set up using modern ansible versions
                     # write the data anyway so the user can see it, but comment it out
-                    if instance["OS"] == "RHEL5":
+                    if instance["OS"] in ["RHEL5", "RHEL6"]:
                         f.write('#')
                     f.write(str(instance['public_hostname']))
                     # only RHEL >= 6 has ec2-user, RHEL 5 has just root
@@ -673,12 +673,6 @@ try:
                         f.write(' ansible_ssh_user=root ')
                     if ssh_key:
                         f.write(' ansible_ssh_private_key_file=%s' % ssh_key)
-                    # https://docs.ansible.com/ansible/latest/porting_guides/porting_guide_2.8.html#python-interpreter-discovery
-                    # shouldn't be needed anymore
-                    # however, still needed for tasks delegated to RHEL 8 hosts; needs investigation
-                    # RHEL 9 hosts issue a warning if the default interpreter is used; avoid it
-                    if instance["OS"] in ["RHEL8", "RHEL9"]:
-                        f.write(' ansible_python_interpreter=/usr/libexec/platform-python')
                     if args.ansible_ssh_extra_args:
                         f.write(' ansible_ssh_extra_args="%s"' % args.ansible_ssh_extra_args)
                     f.write('\n')
