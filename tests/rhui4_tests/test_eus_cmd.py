@@ -40,19 +40,17 @@ class TestEUSCLI():
     '''
 
     def __init__(self):
-        self.cli_version = Util.get_rhel_version(CLI)["major"]
+        version = Util.get_rhel_version(CLI)["major"]
         arch = Util.get_arch(CLI)
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
             doc = yaml.safe_load(configfile)
             try:
-                self.repo_id = doc["EUS_repos"][self.cli_version]["id"]
-                self.repo_label = doc["EUS_repos"][self.cli_version]["label"]
-                self.repo_path = doc["EUS_repos"][self.cli_version]["path"]
-                self.test_package = doc["EUS_repos"][self.cli_version]["test_package"]
+                self.repo_id = doc["EUS_repos"][version][arch]["id"]
+                self.repo_label = doc["EUS_repos"][version][arch]["label"]
+                self.repo_path = doc["EUS_repos"][version][arch]["path"]
+                self.test_package = doc["EUS_repos"][version][arch]["test_package"]
             except KeyError as version:
                 raise nose.SkipTest(f"No test repo defined for RHEL {version}")
-            if arch not in self.repo_path:
-                raise nose.SkipTest(f"No test repo defined for {arch}")
 
     @staticmethod
     def setup_class():
