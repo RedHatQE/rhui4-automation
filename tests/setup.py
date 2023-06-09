@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
    Setup file for the rhui4-automation test suite.
-   Use "pip install ." in this directory to install the test suite and its dependencies.
+   Use "pip3.9 install ." in this directory to install the test suite and its dependencies.
 '''
 
 from glob import glob

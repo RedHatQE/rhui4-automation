@@ -39,7 +39,7 @@
   tags: tests
 
 - name: install tests
-  command: pip3 install --prefix /usr .
+  command: pip3.9 install --prefix /usr .
   args:
     chdir: /root/rhui4-automation/tests
   tags: tests
