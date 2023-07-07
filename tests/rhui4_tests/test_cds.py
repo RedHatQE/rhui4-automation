@@ -216,8 +216,8 @@ def test_14_autoheal():
 
     # check if they were all started again
     nose.tools.assert_equal(len(old_pids), len(new_pids))
-    for i, _ in enumerate(old_pids):
-        nose.tools.assert_not_equal(old_pids[i], new_pids[i])
+    for i, j in zip(old_pids, new_pids):
+        nose.tools.assert_not_equal(i, j)
 
 def test_15_check_ansible_warnings():
     '''
