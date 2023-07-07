@@ -94,6 +94,8 @@ argparser.add_argument('--ami-6-override', help='RHEL 6 AMI ID to override the m
 argparser.add_argument('--ami-7-override', help='RHEL 7 AMI ID to override the mapping', metavar='ID')
 argparser.add_argument('--ami-8-override', help='RHEL 8 AMI ID to override the mapping', metavar='ID')
 argparser.add_argument('--ami-9-override', help='RHEL 9 AMI ID to override the mapping', metavar='ID')
+argparser.add_argument('--ami-8-arm64-override', help='RHEL 8 ARM64 AMI ID to override the mapping', metavar='ID')
+argparser.add_argument('--ami-9-arm64-override', help='RHEL 9 ARM64 AMI ID to override the mapping', metavar='ID')
 argparser.add_argument('--ansible-ssh-extra-args', help='Extra arguments for SSH connections established by Ansible', metavar='ARGS')
 argparser.add_argument('--key-pair-name', help='the name of the key pair in the given AWS region, if your local user name differs and SSH configuraion is undefined in the yaml config file')
 
@@ -361,9 +363,14 @@ for i in (5, 6, 7, 8, 9):
                     logging.error("EC2 Classic can only be used with x86_64 instances.")
                     logging.error("Stack creation would fail. Quitting.")
                     sys.exit(1)
-                with open("RHEL%smapping_%s.json" % (i, cli_arch)) as mjson:
-                   image_ids =  json.load(mjson)
-                   image_id = image_ids[args.region]["AMI"]
+                if i == 8 and args.ami_8_arm64_override:
+                    image_id = args.ami_8_arm64_override
+                elif i == 9 and args.ami_9_arm64_override:
+                    image_id = args.ami_9_arm64_override
+                else:
+                    with open("RHEL%smapping_%s.json" % (i, cli_arch)) as mjson:
+                       image_ids =  json.load(mjson)
+                       image_id = image_ids[args.region]["AMI"]
             json_dict['Resources']["cli%inr%i" % (i, j)] = \
                 {u'Properties': {u'ImageId': image_id,
                                    u'InstanceType': instance_type,
