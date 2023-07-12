@@ -66,6 +66,7 @@ product:
       - rhel-8-for-x86_64-sap-solutions-eus-rhui-rpms-8.2
       - rhel-8-for-x86_64-sap-solutions-eus-rhui-rpms-8.4
       - rhel-8-for-x86_64-sap-solutions-eus-rhui-rpms-8.6
+      - rhel-8-for-x86_64-sap-solutions-eus-rhui-rpms-8.8
 status_repos:
     good: "rhel-sap-for-rhel-7-server-rhui-rpms-7Server-x86_64"
     bad: "rhel-server-rhscl-6-rhui-source-rpms-6Server-i386"
