@@ -14,7 +14,7 @@ import nose
 from stitches.expect import Expect
 import yaml
 
-from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.conmgr import ConMgr, USER_NAME
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI, \
                                                 CustomRepoAlreadyExists, \
@@ -636,6 +636,16 @@ class TestCLI():
             if arg != "-h":
                 Expect.ping_pong(RHUA, f"rhui-manager cert {arg}", "upload.*uploads.*info.*display")
             Expect.ping_pong(RHUA, f"rhui-manager cert info {arg}", "info: display")
+
+    @staticmethod
+    def test_50_caller_name():
+        '''check if rhui-manager gets the caller's login name correctly'''
+        # for RHBZ#2156576
+        Expect.ping_pong(RHUA,
+                         "rhui-manager --noninteractive migrate --help",
+                         f"default={USER_NAME}")
+        # also check cron logs
+        Expect.expect_retval(RHUA, "grep -q 'no login name' /var/log/cron", 1)
 
     @staticmethod
     def test_99_cleanup():
