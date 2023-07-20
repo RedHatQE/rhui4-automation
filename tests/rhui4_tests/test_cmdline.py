@@ -648,6 +648,11 @@ class TestCLI():
         Expect.expect_retval(RHUA, "grep -q 'no login name' /var/log/cron", 1)
 
     @staticmethod
+    def test_51_sync_invalid_repo():
+        '''check if rhui-manager correctly handles syncing an invalid repo'''
+        RHUIManagerCLI.repo_sync(RHUA, "bobs-your-uncle", is_valid=False)
+
+    @staticmethod
     def test_99_cleanup():
         '''cleanup: remove temporary files'''
         rmtree(TMPDIR)
