@@ -30,7 +30,7 @@ PRS.add_argument("--rhsm",
                  help="use RHSM instead of a RHUI ISO",
                  action="store_true")
 PRS.add_argument("--client-rpm",
-                 help="RHUI client RPM (another source of RHUI packages)",
+                 help="RHUI client RPM (another source of RHUI packages); '_' = load from config",
                  metavar="file")
 PRS.add_argument("--upgrade",
                  help="upgrade all packages before running the deployment",
@@ -96,6 +96,12 @@ if ARGS.rhsm:
         print(f"--rhsm was used but {ARGS.credentials} does not exist, exiting.")
         sys.exit(1)
 elif ARGS.client_rpm:
+    if ARGS.client_rpm == "_":
+        base_client_rpm_file_name = R4A_CFG.get("main", "client_rpm", fallback=None)
+        if not base_client_rpm_file_name:
+            print("No client RPM is configured, exiting.")
+            sys.exit(1)
+        ARGS.client_rpm = join(RHUI_DIR, base_client_rpm_file_name)
     if not exists(expanduser(ARGS.client_rpm)):
         print(f"{ARGS.client_rpm} is not a file, exiting.")
         sys.exit(1)
