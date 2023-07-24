@@ -187,7 +187,9 @@ class TestCLI():
         # also try an invalid repo ID, expect a non-zero exit code
         RHUIManagerCLI.repo_add_by_repo(RHUA, ["foo"], False, True)
         # try the already added repo, also expect a non-zero exit code
-        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.yum_repo_ids[1]], False, True)
+        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.yum_repo_ids[1]], False, False, True)
+        # try a combination of both, again expect a non-zero exit code
+        RHUIManagerCLI.repo_add_by_repo(RHUA, ["foo", self.yum_repo_ids[1]], False, True, True)
 
     def test_13_add_rh_repo_by_product(self):
         '''add a Red Hat repo by its product name'''
@@ -594,25 +596,25 @@ class TestCLI():
         # ok?
         nose.tools.eq_(expected_repo_ids, actual_repo_ids)
         # re-adding the repos should produce a bad exit code
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"], False, True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["good"], False, "already_added")
         # clean up
         for repo in actual_repo_ids:
             RHUIManagerCLI.repo_delete(RHUA, repo)
         RHUIManager.remove_rh_certs(RHUA)
         # also check an input file with an invalid repo ID
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["wrongrepo"], False, True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["wrongrepo"], trouble="wrong_id")
         # and with no name for the repo set
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noname"], False, True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noname"], trouble="no_name")
         # and with no repos at all
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noids"], False, True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["noids"], trouble="no_id")
         # and with an incorrectly specified name for the repo set
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badname"], False, True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badname"], trouble="bad_name")
         # and with an incorrectly specified repo IDs
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badids"], False, True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["badids"], trouble="bad_id")
         # also check a non-existing file
-        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["notafile"], False, True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["notafile"], trouble="not_a_file")
         # and a file which isn't valid YAML
-        RHUIManagerCLI.repo_add_by_file(RHUA, "/etc/issue", False, True)
+        RHUIManagerCLI.repo_add_by_file(RHUA, "/etc/issue", trouble="invalid_yaml")
 
     @staticmethod
     def test_48_rhui_scripts():
@@ -651,6 +653,15 @@ class TestCLI():
     def test_51_sync_invalid_repo():
         '''check if rhui-manager correctly handles syncing an invalid repo'''
         RHUIManagerCLI.repo_sync(RHUA, "bobs-your-uncle", is_valid=False)
+
+    def test_52_migrate_repos_already_added(self):
+        '''check for a proper exit code if migration is run when a repo already exists'''
+        cmd = "rhui-manager migrate --hostname foo.example.com --password foo"
+        RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["normal"]))
+        RHUIManagerCLI.repo_add_by_repo(RHUA, [self.yum_repo_ids[1]])
+        Expect.expect_retval(RHUA, cmd, 248)
+        RHUIManagerCLI.repo_delete(RHUA, self.yum_repo_ids[1])
+        RHUIManager.remove_rh_certs(RHUA)
 
     @staticmethod
     def test_99_cleanup():
