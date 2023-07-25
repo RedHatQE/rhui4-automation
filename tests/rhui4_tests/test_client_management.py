@@ -195,6 +195,14 @@ class TestClient():
         # get rid of undesired repos first
         Util.remove_amazon_rhui_conf_rpm(CLI)
         Util.disable_beta_repos(CLI)
+        # make sure the system isn't registered with RHSM
+        Expect.expect_retval(CLI, "subscription-manager unregister || :")
+        # auto-enable sub-man's yum/dnf plugins
+        Expect.expect_retval(CLI, "subscription-manager config --rhsm.auto_enable_yum_plugins=1")
+        # check the status of the plugin
+        Expect.expect_retval(CLI,
+                             "grep -q enabled.*1 /etc/yum/pluginconf.d/subscription-manager.conf")
+        # now install the client config RPM
         Util.install_pkg_from_rhua(RHUA,
                                    CLI,
                                    "/root/test_cli_rpm-3.0/build/RPMS/noarch/" +
@@ -255,15 +263,16 @@ class TestClient():
            check if irrelevant Yum plug-ins are not enabled on the client with the config RPM
         '''
         # for RHBZ#1415681
-        if getenv("RHUIPREP"):
-            raise nose.SkipTest("Only the setup was requested.")
-        if self.version <= 7:
-            cmd = "yum"
-        else:
-            cmd = "dnf -v"
+        cmd = "yum" if self.version <= 7 else "dnf -v"
+        cmd += " repolist enabled | egrep '^Loaded plugins.*(rhnplugin|subscription-manager)'"
+        Expect.expect_retval(CLI, cmd, 1)
+        # trigger sub-man (shouldn't re-enable its plugin) and re-check the plugins
+        # (for RHBZ#1957871)
+        Expect.expect_retval(CLI, "subscription-manager facts")
+        Expect.expect_retval(CLI, cmd, 1)
         Expect.expect_retval(CLI,
-                             f"{cmd} repolist enabled | " +
-                             "egrep '^Loaded plugins.*(rhnplugin|subscription-manager)'", 1)
+                             "grep -q enabled.*0 /etc/yum/pluginconf.d/subscription-manager.conf")
+        Expect.expect_retval(CLI, "yum repolist | grep -q 'This system is not registered'", 1)
 
     @staticmethod
     def test_16_release_handling():
