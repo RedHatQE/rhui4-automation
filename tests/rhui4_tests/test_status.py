@@ -10,6 +10,7 @@ import logging
 from os import getenv
 from os.path import basename
 
+import json
 import nose
 from stitches.expect import Expect
 import yaml
@@ -34,6 +35,9 @@ HAPROXY = ConMgr.connect(HA_HOSTNAME)
 
 CMD = "rhui-manager status --code"
 TIMEOUT = 60
+
+MACH_READ_CMD = "rhui-manager status --repo_json"
+MACH_READ_FILE = "/tmp/repo_status.json"
 
 class TestRhuiManagerStatus():
     """class for the rhui-manager status tests """
@@ -109,7 +113,39 @@ class TestRhuiManagerStatus():
         expected_exit_code = REPO_SYNC_ERROR + CA_CERT_WARN + SERVICE_ERROR
         Expect.expect_retval(RHUA, CMD, expected_exit_code, TIMEOUT)
 
-    def test_10_check_broken_pulp_worker_service(self):
+    def test_10_repo_status_json(self):
+        """generate a machine-readable file with repo states and check it"""
+        # for RHBZ#2079391
+        Expect.expect_retval(RHUA, f"{MACH_READ_CMD} {MACH_READ_FILE}")
+        _, stdout, _ = RHUA.exec_command(f"cat {MACH_READ_FILE}")
+        repo_states = json.load(stdout)
+        # are both test repos present?
+        actual_repo_ids = [repo["id"] for repo in repo_states]
+        actual_repo_ids.sort()
+        expected_repo_ids = [self.good_repo, self.bad_repo]
+        expected_repo_ids.sort()
+        nose.tools.eq_(actual_repo_ids, expected_repo_ids)
+        # split the output
+        if actual_repo_ids[0] == self.good_repo:
+            actually_good_repo, actually_bad_repo = repo_states
+        else:
+            actually_bad_repo, actually_good_repo = repo_states
+        # check the good repo
+        nose.tools.ok_(not actually_good_repo["last_sync_exception"])
+        nose.tools.ok_(not actually_good_repo["last_sync_traceback"])
+        nose.tools.ok_(actually_good_repo["last_sync_date"])
+        nose.tools.ok_(actually_good_repo["repo_published"])
+        nose.tools.eq_(actually_good_repo["group"], "redhat")
+        # check the bad repo
+        nose.tools.ok_("404" in actually_bad_repo["last_sync_exception"],
+                       msg=actually_bad_repo["last_sync_exception"])
+        nose.tools.ok_("raise" in actually_bad_repo["last_sync_traceback"],
+                       msg=actually_bad_repo["last_sync_traceback"])
+        nose.tools.ok_(actually_bad_repo["last_sync_date"])
+        nose.tools.ok_(actually_bad_repo["repo_published"])
+        nose.tools.eq_(actually_bad_repo["group"], "redhat")
+
+    def test_11_check_broken_pulp_worker_service(self):
         """fix the environment but turn off a Pulp worker, expect a service error"""
         # for RHBZ#2174633
         Expect.expect_retval(HAPROXY, "systemctl start haproxy")
@@ -120,7 +156,7 @@ class TestRhuiManagerStatus():
         Expect.expect_retval(RHUA, CMD, expected_exit_code, TIMEOUT)
 
     @staticmethod
-    def test_11_check_output_with___code():
+    def test_12_check_output_with___code():
         """restart everything, check if the output is only the return code when --code is used"""
         # this test also checks if rhui-services-restart (re)starts a worker which is down
         Expect.expect_retval(RHUA, "rhui-services-restart", timeout=60)
@@ -131,6 +167,7 @@ class TestRhuiManagerStatus():
 
     def test_99_cleanup(self):
         """clean up"""
+        Expect.expect_retval(RHUA, f"rm -f {MACH_READ_FILE}")
         RHUIManagerCLI.repo_delete(RHUA, self.good_repo)
         if not getenv("RHUISKIPSETUP"):
             RHUIManager.remove_rh_certs(RHUA)
