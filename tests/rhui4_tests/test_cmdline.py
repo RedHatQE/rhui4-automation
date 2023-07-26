@@ -652,9 +652,14 @@ class TestCLI():
     @staticmethod
     def test_51_sync_invalid_repo():
         '''check if rhui-manager correctly handles syncing an invalid repo'''
-        RHUIManagerCLI.repo_sync(RHUA, "bobs-your-uncle", is_valid=False)
+        RHUIManagerCLI.repo_sync(RHUA, "bobs-your-uncle", False)
 
-    def test_52_migrate_repos_already_added(self):
+    @staticmethod
+    def test_52_delete_invalid_repo():
+        '''check if rhui-manager correctly handles deleting an invalid repo'''
+        RHUIManagerCLI.repo_delete(RHUA, "bobs-your-uncle", False)
+
+    def test_53_migrate_repos_already_added(self):
         '''check for a proper exit code if migration is run when a repo already exists'''
         cmd = "rhui-manager migrate --hostname foo.example.com --password foo"
         RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["normal"]))

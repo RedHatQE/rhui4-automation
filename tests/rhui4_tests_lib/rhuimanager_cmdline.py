@@ -288,11 +288,12 @@ class RHUIManagerCLI():
         nose.tools.assert_equal(state, 5)
 
     @staticmethod
-    def repo_delete(connection, repo_id):
+    def repo_delete(connection, repo_id, is_valid=True):
         '''
         delete the given repo
         '''
-        Expect.expect_retval(connection, f"rhui-manager repo delete --repo_id {repo_id}")
+        ecode = 0 if is_valid else 239
+        Expect.expect_retval(connection, f"rhui-manager repo delete --repo_id {repo_id}", ecode)
 
     @staticmethod
     def repo_add_errata(connection, repo_id, updateinfo):
