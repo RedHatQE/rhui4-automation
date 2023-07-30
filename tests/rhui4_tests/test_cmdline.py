@@ -652,7 +652,7 @@ class TestCLI():
     @staticmethod
     def test_51_sync_invalid_repo():
         '''check if rhui-manager correctly handles syncing an invalid repo'''
-        RHUIManagerCLI.repo_sync(RHUA, "bobs-your-uncle", False)
+        RHUIManagerCLI.repo_sync(RHUA, "bobs-your-uncle", is_valid=False)
 
     @staticmethod
     def test_52_delete_invalid_repo():
