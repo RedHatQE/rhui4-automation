@@ -124,32 +124,52 @@ class RHUIManagerCLI():
                          "Successfully added")
 
     @staticmethod
-    def repo_add_by_repo(connection, repo_ids, sync_now=False, expect_trouble=False):
+    def repo_add_by_repo(connection, repo_ids, sync_now=False, unknown=False, already_added=False):
         '''
         add a list of repos specified by their IDs
         '''
         cmd = "rhui-manager repo add_by_repo --repo_ids " + ",".join(repo_ids)
         if sync_now:
             cmd += " --sync_now"
+        if unknown:
+            if already_added:
+                ecode = 243
+            else:
+                ecode = 246
+        elif already_added:
+            ecode = 245
+        else:
+            ecode = 0
         Expect.expect_retval(connection,
                              cmd,
-                             0 if not expect_trouble else 1,
+                             ecode,
                              timeout=600)
         if sync_now:
             for repo_id in repo_ids:
                 _wait_till_repo_synced(connection, repo_id)
 
     @staticmethod
-    def repo_add_by_file(connection, repo_file, sync_now=False, expect_trouble=False):
+    def repo_add_by_file(connection, repo_file, sync_now=False, trouble=None):
         '''
         add a list of repos specified in an input file
         '''
         cmd = "rhui-manager repo add_by_file --file " + repo_file
         if sync_now:
             cmd += " --sync_now"
+        troubles = {
+                    "already_added": 245,
+                    "bad_id": 255,
+                    "bad_name": 240,
+                    "no_name": 249,
+                    "no_id": 249,
+                    "wrong_id": 246,
+                    "not_a_file": 240,
+                    "invalid_yaml": 240
+                   }
+        ecode = troubles[trouble] if trouble in troubles else 0
         Expect.expect_retval(connection,
                              cmd,
-                             0 if not expect_trouble else 1,
+                             ecode,
                              timeout=600)
         if sync_now:
             repo_ids = Helpers.get_repos_from_yaml(connection, repo_file)
@@ -173,14 +193,28 @@ class RHUIManagerCLI():
         return response
 
     @staticmethod
-    def repo_sync(connection, repo_id, expected_status="SUCCESS"):
+    def repo_sync(connection, repo_id, expected_status="SUCCESS", is_valid=True):
         '''
         sync a repo
         '''
-        Expect.ping_pong(connection,
-                         "rhui-manager repo sync --repo_id " + repo_id,
-                         "successfully scheduled for the next available timeslot")
-        _wait_till_repo_synced(connection, repo_id, expected_status=expected_status)
+        cmd = f"rhui-manager repo sync --repo_id {repo_id}; echo $?"
+        _, stdout, _ = connection.exec_command(cmd)
+        output = stdout.read().decode()
+        ecode = int(output.splitlines()[-1])
+        if is_valid:
+            nose.tools.ok_("successfully scheduled" in output,
+                           msg=f"unexpected output: {output}")
+            nose.tools.eq_(ecode, 0)
+            _wait_till_repo_synced(connection, repo_id, expected_status)
+        else:
+            nose.tools.ok_(f"Repo {repo_id} doesn't exist" in output,
+                           msg=f"unexpected output: {output}")
+            nose.tools.eq_(ecode, 241)
+            # also check the RHUI log, which shouldn't contain a traceback for this scenario
+            _, stdout, _ = connection.exec_command("tail -1 /root/.rhui/rhui.log")
+            output = stdout.read().decode()
+            nose.tools.ok_("Successfully connected" in output and "RhuiException" not in output,
+                           msg=f"unexpected log entry: {output}")
 
     @staticmethod
     def repo_sync_all(connection):
@@ -254,11 +288,12 @@ class RHUIManagerCLI():
         nose.tools.assert_equal(state, 5)
 
     @staticmethod
-    def repo_delete(connection, repo_id):
+    def repo_delete(connection, repo_id, is_valid=True):
         '''
         delete the given repo
         '''
-        Expect.expect_retval(connection, f"rhui-manager repo delete --repo_id {repo_id}")
+        ecode = 0 if is_valid else 239
+        Expect.expect_retval(connection, f"rhui-manager repo delete --repo_id {repo_id}", ecode)
 
     @staticmethod
     def repo_add_errata(connection, repo_id, updateinfo):
