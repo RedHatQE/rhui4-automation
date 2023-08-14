@@ -106,6 +106,8 @@ class Yummy():
         _, stdout, _ = connection.exec_command(cmd)
         raw_output = stdout.read().decode().splitlines()
         repos = [line.split()[0] for line in raw_output if not line.startswith("repo ")]
+        # on RHEL 7, the repos are in fact like .../7Server/x86_64; strip that
+        repos = [repo.split("/")[0] for repo in repos]
         return repos
 
     @staticmethod
