@@ -13,7 +13,14 @@ from rhui4_tests_lib.rhuimanager import RHUIManager
 
 R4A_CLOUDFORMATION = socket.gethostname().endswith(DOMAIN)
 
-PRS = argparse.ArgumentParser(description="Change the RHUI password on one or more RHUA nodes.",
+# exit codes: 0 = OK, 1 = runtime error,
+#             2 = sync error, 4 = workflow completion error,
+#             6 = sync & workflow completion errors
+ECODE_GOOD = 0
+ECODE_SYNC_ERROR = 0b10
+ECODE_INCOMP_WF_ERROR = 0b100
+
+PRS = argparse.ArgumentParser(description="Check for sync issues.",
                               formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 # the default values of the following options depend on whether this script is running
 # on a RHUI deployed by rhui4-automation or not
@@ -80,6 +87,26 @@ else:
                                          "beta/rhel9" not in line]
     if ARGS.ignore_running:
         errors = [line for line in errors if "Running" not in line]
+
+# also check the workflow screen
+RHUIManager.screen(RHUA, "sync")
+Expect.enter(RHUA, "wf")
+raw_lines = RHUIManager.list_lines(RHUA, "Enter value", False)
+Expect.enter(RHUA, "b")
+Expect.enter(RHUA, "q")
+
+incomplete_workflows = [line for line in raw_lines[4:] if "✗" in line]
+
+RET_CODE = ECODE_GOOD
+
 if errors:
+    print("Errors:")
     print("\n".join(errors))
-    sys.exit(1)
+    RET_CODE |= ECODE_SYNC_ERROR
+
+if incomplete_workflows:
+    print("Incomplete workflows:")
+    print("\n".join(incomplete_workflows))
+    RET_CODE |= ECODE_INCOMP_WF_ERROR
+
+sys.exit(RET_CODE)
