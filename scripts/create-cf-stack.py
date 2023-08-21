@@ -575,16 +575,25 @@ for i in con_ec2.get_all_instances():
 
 logging.debug(instances_detail)
 result = []
+ids = []
 for instance in instances_detail:
+    iid = str(instance['id'])
     if instance["public_ip"]:
         ip = instance["public_ip"]
-        result_item = dict(role=str(instance['role']), hostname=str(instance['public_hostname']), ip=str(ip))
+        result_item = dict(role=str(instance['role']),
+                           hostname=str(instance['public_hostname']),
+                           ip=str(ip),
+                           instance_id=iid)
         logging.info("Instance with public ip created: %s", result_item)
     else:
         ip = instance["private_ip"]
-        result_item = dict(role=str(instance['role']), hostname=str(instance['private_hostname']), ip=str(ip))
+        result_item = dict(role=str(instance['role']),
+                           hostname=str(instance['private_hostname']),
+                           ip=str(ip),
+                           instance_id=iid)
         logging.info("Instance with private ip created: %s", result_item)
     result.append(result_item)
+    ids.append(iid)
 
 
 for instance in instances_detail:
@@ -731,6 +740,8 @@ for instance in instances_detail:
 # --- dump the result
 print('# --- instances created ---')
 yaml.dump(result, sys.stdout)
+print('# instance IDs: ---')
+print(' '.join(ids))
 print('# --- stack data saved in %s ---' % outfile)
 # check if the file really contains all the hostnames; they should be there, but just in case...
 # (basically, if a line starts with the space character, it's a problem; report the line number)
