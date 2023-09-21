@@ -619,13 +619,19 @@ class TestCLI():
     @staticmethod
     def test_48_rhui_scripts():
         '''test argument handling in rhui-* scripts'''
-        scripts = ["rhui-export-repos", "rhui-subscription-sync"]
-        logs = ["/var/log/rhui/rhui-export-repos.log", "/var/log/rhui-subscription-sync.log"]
+        scripts = ["rhui-export-repos", "rhui-subscription-sync", "rhui-update-mappings"]
+        logs = ["/var/log/rhui/rhui-export-repos.log",
+                "/var/log/rhui-subscription-sync.log",
+                "/var/log/rhui/rhui-update-mappings.log"]
         bad_config = "/etc/motd"
         bad_sync_config = "/etc/ansible/ansible.cfg"
         for script, log in zip(scripts, logs):
             Expect.expect_retval(RHUA, f"{script} --config {bad_config}", 1)
-            Expect.ping_pong(RHUA, f"tail -2 {log}", "(pulp_api_url|cert_dir) is not valid")
+            Expect.ping_pong(RHUA,
+                             f"tail {log}",
+                             "(pulp_api_url|cert_dir|cert_redhat_dir) is not valid")
+            if script == "rhui-update-mappings":
+                continue # this script doesn't have the --sync-config option
             Expect.expect_retval(RHUA, f"{script} --sync-config {bad_sync_config}", 1)
             Expect.ping_pong(RHUA, f"tail -2 {log}", "username is not valid")
 

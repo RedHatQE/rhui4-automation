@@ -260,7 +260,22 @@ class TestRepo():
         Expect.expect_retval(RHUA, "timeout 2 rhui-manager repo unused")
 
     @staticmethod
-    def test_19_missing_cert_handling():
+    def test_19_entitlement_cache_refresh():
+        '''check if the cache is refreshed if a new minor version of a repo appears'''
+        # for RHUI-396
+        # first, remove a couple of lines from the cache
+        mod_cache_cmd = "sed -i '/8.8.x86_64.sap-solutions/d' /var/cache/rhui/*"
+        Expect.expect_retval(RHUA, mod_cache_cmd)
+        # run the command that should update the cache
+        Expect.expect_retval(RHUA, "rhui-update-mappings", timeout=360)
+        # check its log
+        Expect.expect_retval(RHUA, r"grep 'Updating mappings.*sap-solutions.*8\.8' "
+                                   "/var/log/rhui/rhui-update-mappings.log")
+        # but mainly, check whether the cache has been restored
+        Expect.expect_retval(RHUA, f"cmp {CUSTOM_RPMS_DIR}/rhcert.mappings /var/cache/rhui/*")
+
+    @staticmethod
+    def test_20_missing_cert_handling():
         '''check if rhui-manager can handle the loss of the RH cert'''
         # for RHBZ#1325390
         RHUIManagerEntitlements.upload_rh_certificate(RHUA)
@@ -273,7 +288,7 @@ class TestRepo():
         Expect.enter(RHUA, "q")
 
     @staticmethod
-    def test_20_repo_select_0():
+    def test_21_repo_select_0():
         '''check if no repo is chosen if 0 is entered when adding a repo'''
         # for RHBZ#1305612
         # upload the cert and try entering 0 when the list of repos is displayed
