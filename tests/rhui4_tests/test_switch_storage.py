@@ -23,6 +23,7 @@ ANSWERS = "/root/.rhui/answers.yaml"
 ANSWERS_BAK = ANSWERS + ".backup_test"
 NEW_FS_OPTIONS = "timeo=100"
 REMOTE_SHARE = "/var/lib/rhui/remote_share"
+FORCE_FLAG = " --remote-fs-force-change"
 
 def _check_rhui_mountpoint(connection, fs_server, options=""):
     """check the RHUI mountpoint"""
@@ -62,8 +63,7 @@ def test_01_add_cds():
     nose.tools.ok_(cds_list)
 
 def test_02_prep():
-    """stop pulpcore services and back up the answers file"""
-    Expect.expect_retval(RHUA, r"systemctl stop pulpcore\*")
+    """back up the answers file"""
     Expect.expect_retval(RHUA, f"cp {ANSWERS} {ANSWERS_BAK}")
 
 def test_03_rerun_installer():
@@ -75,7 +75,11 @@ def test_03_rerun_installer():
     current_fs_server = answers["rhua"]["remote_fs_server"]
     fs_hostname = current_fs_server.split(":")[0]
     new_fs_server = current_fs_server.replace(fs_hostname, RHUA_HOSTNAME)
+    # first, check if the installer refuses to rerun without the force flag
     installer_cmd = f"rhui-installer --rerun --remote-fs-server {new_fs_server}"
+    Expect.expect_retval(RHUA, installer_cmd, 1)
+    # then, use the force flag and rerun
+    installer_cmd += FORCE_FLAG
     Expect.expect_retval(RHUA, installer_cmd, timeout=300)
 
 def test_04_check_rhua_mountpoint():
@@ -92,11 +96,11 @@ def test_06_check_cds_mountpoint():
 
 def test_07_rerun_installer():
     """rerun the installer with different mount options"""
-    # first check if the installer fails if options change but Pulp is running
+    # first check if the installer fails if options change but the force flag isn't used
     installer_cmd = f"rhui-installer --rerun --rhua-mount-options {NEW_FS_OPTIONS}"
-    Expect.expect_retval(RHUA, installer_cmd, 1, 60)
-    # now with stopped Pulp services
-    Expect.expect_retval(RHUA, r"systemctl stop pulpcore\*")
+    Expect.expect_retval(RHUA, installer_cmd, 1)
+    # now with the force flag
+    installer_cmd += FORCE_FLAG
     Expect.expect_retval(RHUA, installer_cmd, timeout=300)
 
 def test_08_check_rhua_mountpoint():
@@ -122,9 +126,8 @@ def test_99_cleanup():
     original_fs_options = answers["rhua"]["rhua_mount_options"]
     installer_cmd = f"rhui-installer --rerun " \
                     f"--remote-fs-server {original_fs_server} " \
-                    f"--rhua-mount-options {original_fs_options}"
-    # stop pulpcore services and rerun the installer with the original FS server and options
-    Expect.expect_retval(RHUA, r"systemctl stop pulpcore\*")
+                    f"--rhua-mount-options {original_fs_options}" \
+                    f"{FORCE_FLAG}"
     Expect.expect_retval(RHUA, installer_cmd, timeout=300)
     # did it work?
     _check_rhui_mountpoint(RHUA, fs_hostname, original_fs_options)
