@@ -17,6 +17,7 @@ Welcome to the RHUI 4 Test Plan!
    cds_hap_interop
    client_management
    cmdline
+   compliance
    comps
    containers
    custom_certs
