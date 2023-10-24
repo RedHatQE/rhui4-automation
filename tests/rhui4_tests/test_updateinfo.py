@@ -40,6 +40,8 @@ class TestClient():
     '''
 
     def __init__(self):
+        if Util.fips_enabled(CLI):
+            raise nose.SkipTest("This test is unsupported in FIPS mode.")
         self.arch = Util.get_arch(CLI)
         self.version = Util.get_rhel_version(CLI)["major"]
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:

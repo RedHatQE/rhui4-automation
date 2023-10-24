@@ -247,3 +247,12 @@ class Util():
         '''
         cmd = "test -f /root/.rhui/http-localhost:24817/cookies.txt"
         return connection.recv_exit_status(cmd) == 0
+
+    @staticmethod
+    def fips_enabled(connection):
+        '''
+        returns true if FIPS is enabled on the remote host, or false otherwise
+        '''
+        _, stdout, _ = connection.exec_command("cat /proc/sys/crypto/fips_enabled")
+        status = int(stdout.read().decode().strip())
+        return status == 1

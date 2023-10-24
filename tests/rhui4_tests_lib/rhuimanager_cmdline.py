@@ -420,7 +420,8 @@ class RHUIManagerCLI():
         Expect.ping_pong(connection,
                          cmd,
                          f"Location: {directory}/{rpmdata[0]}-{rpmdata[1]}/build/RPMS/noarch/" +
-                         f"{rpmdata[0]}-{rpmdata[1]}-{rpmdata[2]}.noarch.rpm")
+                         f"{rpmdata[0]}-{rpmdata[1]}-{rpmdata[2]}.noarch.rpm",
+                         60)
 
     @staticmethod
     def client_content_source(connection, certdata, rpmdata, directory):
