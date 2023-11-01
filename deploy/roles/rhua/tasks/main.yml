@@ -32,6 +32,10 @@
   failed_when: "'PLAY RECAP' not in installer_log.stdout"
   tags: rhua
 
+- name: check if the entitlement certificate was uploaded by rhui-manager (if using RHSM)
+  shell: "ls /etc/pki/rhui/redhat/*.pem"
+  when: rhui_iso is undefined and credentials is defined and client_rpm is undefined
+
 - name: check if rhui-manager can run
   command: rhui-manager --noninteractive status
   register: rhuimanagercmd
