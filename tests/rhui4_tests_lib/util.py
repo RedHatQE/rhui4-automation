@@ -105,7 +105,7 @@ class Util():
         '''
         Read rhui-manager password from the rhui-subscription-sync configuration file
         '''
-        creds_cfg = ConfigParser()
+        creds_cfg = ConfigParser(interpolation=None)
         _, stdout, _ = connection.exec_command("cat " + creds_file)
         creds_cfg.read_file(stdout)
         return creds_cfg.get("auth", "password") if creds_cfg.has_section("auth") else None
