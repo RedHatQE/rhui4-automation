@@ -13,9 +13,31 @@ from rhui4_tests_lib.util import Util
 
 DEFAULT_ENT_CERT = "/tmp/extra_rhui_files/rhcert.pem"
 
+def _get_repo_statuses_json(connection):
+    '''
+    get the statuses of all Red Hat repositories (using the repo json data)
+    '''
+    # just a list of all the statuses, undefined order, no id<>status mappings
+    cmd = "rhui-manager status --repo_json /tmp/status && " \
+          "jq -r '.[] | select(.group == \"redhat\").last_sync_result' /tmp/status"
+    _, stdout, _ = connection.exec_command(cmd)
+    return stdout.read().decode().splitlines()
+
+def _get_repo_status_json(connection, repo_id):
+    '''
+    get the status of the given repository ID using the repo json data
+    '''
+    cmd = "rhui-manager status --repo_json /tmp/status && " \
+          f"jq -r '.[] | select(.id == \"{repo_id}\").last_sync_result' /tmp/status"
+    _, stdout, _ = connection.exec_command(cmd)
+    status = stdout.read().decode().strip()
+    if status:
+        return status
+    raise RuntimeError("Reponse payload was empty.")
+
 def _get_repo_status(connection, repo_name):
     '''
-    get the status of the given repository
+    get the status of the given repository name by parsing the complete RHUI status report
     '''
     _, stdout, _ = connection.exec_command("rhui-manager status")
     lines = stdout.read().decode().splitlines()
@@ -28,16 +50,34 @@ def _get_repo_status(connection, repo_name):
         return status
     raise RuntimeError("Invalid repository name.")
 
-def _wait_till_repo_synced(connection, repo_id, expected_status="SUCCESS"):
+def _wait_till_repo_synced(connection, repo_id, expect_success=True, use_json=True):
     '''
-    wait until the specified repo is synchronized
+    wait until the specified repo ID is synchronized or the expected status occurs
     '''
-    repo_name = RHUIManagerCLI.repo_info(connection, repo_id)["name"]
-    repo_status = _get_repo_status(connection, repo_name)
-    while repo_status in ["Never", "SCHEDULED", "RUNNING"]:
-        time.sleep(10)
+    if use_json:
+        repo_status = _get_repo_status_json(connection, repo_id)
+        while repo_status in ["null", "running"]:
+            time.sleep(10)
+            repo_status = _get_repo_status_json(connection, repo_id)
+        nose.tools.assert_equal(repo_status, "completed" if expect_success else "failed")
+    else:
+        repo_name = RHUIManagerCLI.repo_info(connection, repo_id)["name"]
         repo_status = _get_repo_status(connection, repo_name)
-    nose.tools.assert_equal(repo_status, expected_status)
+        while repo_status in ["Never", "SCHEDULED", "RUNNING"]:
+            time.sleep(10)
+            repo_status = _get_repo_status(connection, repo_name)
+        nose.tools.assert_equal(repo_status, "SUCCESS" if expect_success else "ERROR")
+
+def _wait_till_all_repos_synced(connection):
+    '''
+    wait until all Red Hat repos are synchronized
+    '''
+    statuses = _get_repo_statuses_json(connection)
+    while not all(s == "completed" for s in statuses):
+        if "failed" in statuses:
+            raise RuntimeError("A repo failed to sync")
+        time.sleep(10)
+        statuses = _get_repo_statuses_json(connection)
 
 def _ent_list(stdout):
     '''
@@ -145,6 +185,7 @@ class RHUIManagerCLI():
                              ecode,
                              timeout=600)
         if sync_now:
+            time.sleep(10)
             for repo_id in repo_ids:
                 _wait_till_repo_synced(connection, repo_id)
 
@@ -173,6 +214,7 @@ class RHUIManagerCLI():
                              timeout=600)
         if sync_now:
             repo_ids = Helpers.get_repos_from_yaml(connection, repo_file)
+            time.sleep(10)
             for repo_id in repo_ids:
                 _wait_till_repo_synced(connection, repo_id)
 
@@ -193,7 +235,7 @@ class RHUIManagerCLI():
         return response
 
     @staticmethod
-    def repo_sync(connection, repo_id, expected_status="SUCCESS", is_valid=True):
+    def repo_sync(connection, repo_id, expect_success=True, is_valid=True, use_json=True):
         '''
         sync a repo
         '''
@@ -205,7 +247,8 @@ class RHUIManagerCLI():
             nose.tools.ok_("successfully scheduled" in output,
                            msg=f"unexpected output: {output}")
             nose.tools.eq_(ecode, 0)
-            _wait_till_repo_synced(connection, repo_id, expected_status)
+            time.sleep(10)
+            _wait_till_repo_synced(connection, repo_id, expect_success, use_json)
         else:
             nose.tools.ok_(f"Repo {repo_id} doesn't exist" in output,
                            msg=f"unexpected output: {output}")
@@ -222,10 +265,9 @@ class RHUIManagerCLI():
         sync all repos
         '''
         cmd = "rhui-manager repo sync_all"
-        repo_ids = RHUIManagerCLI.repo_list(connection, True).splitlines()
         Expect.expect_retval(connection, cmd)
-        for repo_id in repo_ids:
-            _wait_till_repo_synced(connection, repo_id)
+        time.sleep(10)
+        _wait_till_all_repos_synced(connection)
 
     @staticmethod
     def repo_info(connection, repo_id):

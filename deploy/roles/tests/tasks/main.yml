@@ -107,6 +107,7 @@
       - wget
       - sos
       - nc
+      - jq
     state: present
   delegate_to: "{{ item }}"
   with_items: "{{ groups['RHUA']|default([]) + groups['CDS']|default([]) + groups['HAPROXY']|default([]) }}"

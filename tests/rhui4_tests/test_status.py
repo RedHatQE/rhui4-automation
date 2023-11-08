@@ -102,7 +102,7 @@ class TestRhuiManagerStatus():
 
     def test_07_sync_check_bad_repo(self):
         """sync the bad repo and expect a bad status"""
-        RHUIManagerCLI.repo_sync(RHUA, self.bad_repo, "ERROR")
+        RHUIManagerCLI.repo_sync(RHUA, self.bad_repo, False)
         expected_exit_code = REPO_SYNC_ERROR
         Expect.expect_retval(RHUA, CMD, expected_exit_code, TIMEOUT)
 

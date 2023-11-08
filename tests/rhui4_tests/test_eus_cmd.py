@@ -107,7 +107,8 @@ class TestEUSCLI():
         '''
         sync the repo
         '''
-        RHUIManagerCLI.repo_sync(RHUA, self.repo_id)
+        # try the non-json way to wait for the repo sync
+        RHUIManagerCLI.repo_sync(RHUA, self.repo_id, use_json=False)
 
     def test_08_create_cli_config_rpm(self):
         '''
