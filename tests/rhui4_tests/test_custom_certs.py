@@ -105,10 +105,10 @@ def test_04_check_installed_files():
         # only check CA certs and keys, though
         if not fname.endswith("ca"):
             continue
-        Expect.expect_retval(RHUA, "cmp "
+        Expect.expect_retval(RHUA, "diff -u "
                                    f"{CUSTOM_CERTS_DIR}/{fname}.crt "
                                    f"{ORIG_CERTS_BASEDIR}/{ORIG_CERTS_SUBDIR}/{fname}.crt")
-        Expect.expect_retval(RHUA, "cmp "
+        Expect.expect_retval(RHUA, "diff -u "
                                    f"{CUSTOM_CERTS_DIR}/{fname}.key "
                                    f"{ORIG_CERTS_BASEDIR}/{ORIG_KEYS_SUBDIR}/{fname}.key")
 

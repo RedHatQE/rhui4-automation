@@ -107,7 +107,7 @@ def test_07_reinstall_all():
     nose.tools.ok_(status, msg=f"unexpected 'all CDS' reinstallation status: {status}")
     # check if the RHUI configuration file was reset after the reinstallation
     # meaning, the backup copy made while modifying the configuration matches the main file
-    verification_cmd = f"cmp {RHUI_CFG} {RHUI_CFG}.bak"
+    verification_cmd = f"diff -u {RHUI_CFG} {RHUI_CFG}.bak"
     for cds_conn in CDS:
         Expect.expect_retval(cds_conn, verification_cmd)
 

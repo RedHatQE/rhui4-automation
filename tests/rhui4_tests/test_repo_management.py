@@ -272,7 +272,7 @@ class TestRepo():
         Expect.expect_retval(RHUA, r"grep 'Updating mappings.*sap-solutions.*8\.8' "
                                    "/var/log/rhui/rhui-update-mappings.log")
         # but mainly, check whether the cache has been restored
-        Expect.expect_retval(RHUA, f"cmp {CUSTOM_RPMS_DIR}/rhcert.mappings /var/cache/rhui/*")
+        Expect.expect_retval(RHUA, f"diff -u {CUSTOM_RPMS_DIR}/rhcert.mappings /var/cache/rhui/*")
 
     @staticmethod
     def test_20_missing_cert_handling():
