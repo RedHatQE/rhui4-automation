@@ -102,6 +102,10 @@ class TestCLI():
         RHUIManagerCLI.repo_create_custom(RHUA,
                                           repo_id=CUSTOM_REPOS[2],
                                           protected=True)
+        # test an unrecognized option
+        Expect.expect_retval(RHUA,
+                             "rhui-manager repo create_custom --repo_id yay --display-name Yay",
+                             254)
 
     @staticmethod
     def test_03_custom_repo_checks():
@@ -125,6 +129,8 @@ class TestCLI():
         repos_actual = RHUIManagerCLI.repo_list(RHUA, True, False, delimiter)
         nose.tools.eq_(repos_expected, repos_actual)
         # ^ also checks if the repo IDs are sorted
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager repo list --redhat", 254)
 
     @staticmethod
     def test_05_upload_local_rpms():
@@ -132,6 +138,8 @@ class TestCLI():
         RHUIManagerCLI.packages_upload(RHUA, CUSTOM_REPOS[0], join(DATADIR, TEST_RPM))
         # also supply the whole directory
         RHUIManagerCLI.packages_upload(RHUA, CUSTOM_REPOS[0], DATADIR)
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager packages upload --repo_id a --packages / --f", 254)
 
     def test_06_upload_remote_rpms(self):
         '''upload content from remote servers to the custom repos'''
@@ -149,6 +157,10 @@ class TestCLI():
         except RuntimeError as err:
             # the RHUA listens on port 443 and uses a self-signed cert, which should be refused
             nose.tools.ok_("CERTIFICATE_VERIFY_FAILED" in str(err))
+        # test an unrecognized option
+        Expect.expect_retval(RHUA,
+                             "rhui-manager packages remote --repo_id a --url ftp://b.be/c/ --def",
+                             254)
 
     def test_07_check_packages(self):
         '''check that the uploaded packages are now in the repos'''
@@ -158,17 +170,25 @@ class TestCLI():
         nose.tools.eq_(package_lists[1], rpm_ftp_combined)
         linked_rpms = sorted(Util.get_rpm_links(self.remote_content["html_with_links"]))
         nose.tools.eq_(package_lists[2], linked_rpms)
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager packages list --repo_id a --meow", 254)
 
     @staticmethod
     def test_08_upload_certificate():
         '''upload the entitlement certificate'''
         RHUIManagerCLI.cert_upload(RHUA, join(DATADIR, CERTS["normal"]))
+        # test an unrecognized option
+        Expect.expect_retval(RHUA,
+                             "rhui-manager cert upload --cert /tmp/c.crt --lock thedoor",
+                             254)
 
     def test_09_check_certificate_info(self):
         '''check certificate info for validity'''
         ent_list = RHUIManagerCLI.cert_info(RHUA)
         nose.tools.ok_(self.yum_repo_names[0] in ent_list,
                        msg=f"{self.yum_repo_names[0]} not found in {ent_list}")
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager cert info --debug", 254)
 
     @staticmethod
     def test_10_check_certificate_exp():
@@ -180,6 +200,8 @@ class TestCLI():
         unused_repos = RHUIManagerCLI.repo_unused(RHUA)
         nose.tools.ok_(self.yum_repo_names[0] in unused_repos,
                        msg=f"{self.yum_repo_names[0]} not found in {unused_repos}")
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager repo unused --by-repo_id", 254)
 
     def test_12_add_rh_repo_by_id(self):
         '''add a Red Hat repo by its ID'''
@@ -190,19 +212,27 @@ class TestCLI():
         RHUIManagerCLI.repo_add_by_repo(RHUA, [self.yum_repo_ids[1]], False, False, True)
         # try a combination of both, again expect a non-zero exit code
         RHUIManagerCLI.repo_add_by_repo(RHUA, ["foo", self.yum_repo_ids[1]], False, True, True)
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager repo add_by_repo --repo_ids boo --names Boo", 254)
 
     def test_13_add_rh_repo_by_product(self):
         '''add a Red Hat repo by its product name'''
         RHUIManagerCLI.repo_add(RHUA, self.yum_repo_names[0])
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager repo add --product_name All --sync_now", 254)
 
     def test_14_repo_list(self):
         '''check the added repos'''
         repolist_actual = RHUIManagerCLI.repo_list(RHUA, True, True).splitlines()
         nose.tools.eq_(sorted(self.yum_repo_ids), repolist_actual)
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager repo list --ids_only --delimeter ,", 254)
 
     def test_15_start_syncing_repo(self):
         '''sync one of the repos'''
         RHUIManagerCLI.repo_sync(RHUA, self.yum_repo_ids[1])
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager repo sync --repo_id myrepo --progress=dot", 254)
 
     def test_16_repo_info(self):
         '''verify that the repo name is part of the information about the specified repo ID'''
@@ -221,6 +251,8 @@ class TestCLI():
         actual_labels = RHUIManagerCLI.client_labels(RHUA)
         nose.tools.ok_(all(repo in actual_labels for repo in self.yum_repo_labels),
                        msg=f"{self.yum_repo_labels} not found in {actual_labels}")
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager client labels --json", 254)
 
     def test_19_generate_certificate(self):
         '''generate an entitlement certificate'''
@@ -231,6 +263,8 @@ class TestCLI():
                                    CLI_CFG[0],
                                    365,
                                    TMPDIR)
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager client cert --auto", 254)
 
     @staticmethod
     def test_20_check_cli_crt_sig():
@@ -265,6 +299,8 @@ class TestCLI():
         conf_rpm = f"{TMPDIR}/{CLI_CFG[0]}-{CLI_CFG[1]}/build/RPMS/noarch/" + \
                    f"{CLI_CFG[0]}-{CLI_CFG[1]}-{CLI_CFG[2]}.noarch.rpm"
         Expect.expect_retval(RHUA, f"test -f {conf_rpm}")
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager client rpm --wizard", 254)
 
     def test_23_ensure_gpgcheck_config(self):
         '''ensure that GPG checking is configured in the client configuration as expected'''
@@ -328,6 +364,11 @@ class TestCLI():
         # the paths are indented, let's get rid of the formatting
         paths_actual = [p.lstrip() for p in paths_actual_raw]
         nose.tools.eq_(sorted(self.yum_repo_paths), sorted(paths_actual))
+        # test an unrecognized option
+        Expect.expect_retval(RHUA,
+                             "rhui-manager client content_source --rpm_name cs --dir / " +
+                             "--rpm_epoch 2",
+                             254)
 
     def test_27_create_acs_config_json(self):
         '''create an alternate content source configuration JSON file'''
@@ -391,6 +432,8 @@ class TestCLI():
                                  RHUA,
                                  ["rhel-foo"],
                                  TMPDIR)
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager client acs_config --directory /", 254)
 
     @staticmethod
     def test_28_upload_expired_cert():
@@ -440,6 +483,11 @@ class TestCLI():
         nose.tools.eq_(difference, {TEST_RPM})
         # also check if the symlink is gone
         Expect.expect_retval(RHUA, symlink_test, 1)
+        # test an unrecognized option
+        Expect.expect_retval(RHUA,
+                             "rhui-manager packages remove " +
+                             "--repo_id z --package a-1-2.noarch.rpm --bruteforce",
+                             254)
 
     def test_31_remove_all_packages(self):
         '''remove all packages from a custom repo'''
@@ -535,6 +583,8 @@ class TestCLI():
                          f"Repo: {repo} .* exported to filesystem")
         # clean up the repo symlink path
         Expect.expect_retval(RHUA, "rm -rf " + repo_path)
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager repo export --repo_id bob --log /tmp/exports", 254)
 
     def test_44_upload_semi_bad_cert(self):
         '''check that a partially invalid certificate can still be accepted'''
@@ -615,6 +665,8 @@ class TestCLI():
         RHUIManagerCLI.repo_add_by_file(RHUA, IMPORT_REPO_FILES["notafile"], trouble="not_a_file")
         # and a file which isn't valid YAML
         RHUIManagerCLI.repo_add_by_file(RHUA, "/etc/issue", trouble="invalid_yaml")
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager repo add_by_file --file repos.yml --sync", 254)
 
     @staticmethod
     def test_48_rhui_scripts():
@@ -644,6 +696,8 @@ class TestCLI():
             if arg != "-h":
                 Expect.ping_pong(RHUA, f"rhui-manager cert {arg}", "upload.*uploads.*info.*display")
             Expect.ping_pong(RHUA, f"rhui-manager cert info {arg}", "info: display")
+        # test an unrecognized option
+        Expect.expect_retval(RHUA, "rhui-manager --signout", 2)
 
     @staticmethod
     def test_50_caller_name():
