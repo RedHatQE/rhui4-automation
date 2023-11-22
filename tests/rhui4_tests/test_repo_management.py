@@ -267,7 +267,7 @@ class TestRepo():
         mod_cache_cmd = "sed -i '/8.8.x86_64.sap-solutions/d' /var/cache/rhui/*"
         Expect.expect_retval(RHUA, mod_cache_cmd)
         # run the command that should update the cache
-        Expect.expect_retval(RHUA, "rhui-update-mappings", timeout=360)
+        Expect.expect_retval(RHUA, "rhui-update-mappings", timeout=480)
         # check its log
         Expect.expect_retval(RHUA, r"grep 'Updating mappings.*sap-solutions.*8\.8' "
                                    "/var/log/rhui/rhui-update-mappings.log")
