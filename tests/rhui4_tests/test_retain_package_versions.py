@@ -23,7 +23,7 @@ class TestCLI():
             doc = yaml.safe_load(configfile)
 
         self.repo_id = doc["yum_repos"][8]["x86_64"]["id"]
-        self.test_package = doc["yum_repos"][8]["x86_64"]["test_package"]
+        self.test_package = doc["package_versions"]["test_package"]
 
     @staticmethod
     def setup_class():
