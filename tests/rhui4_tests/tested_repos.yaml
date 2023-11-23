@@ -27,13 +27,13 @@ yum_repos:
             test_package: "rust-toolset-7-rust-doc"
     8:
         x86_64:
-            name: "Red Hat Enterprise Linux 8 for x86_64 - High Availability (RPMs) from RHUI"
+            name: "Red Hat Enterprise Linux 8 for x86_64 - SAP NetWeaver (RPMs) from RHUI"
             version: "8"
             kind: "Yum"
-            path: "content/dist/rhel8/rhui/8/x86_64/highavailability/os"
-            id: "rhel-8-for-x86_64-highavailability-rhui-rpms-8"
-            label: "rhel-8-for-x86_64-highavailability-rhui-rpms"
-            test_package: "libknet1-compress-bzip2-plugin"
+            path: "content/dist/rhel8/rhui/8/x86_64/sap/os"
+            id: "rhel-8-for-x86_64-sap-netweaver-rhui-rpms-8"
+            label: "rhel-8-for-x86_64-sap-netweaver-rhui-rpms"
+            test_package: "compat-locales-sap-common"
         aarch64:
             name: "Red Hat Enterprise Linux 8 for ARM 64 - Supplementary (RPMs) from RHUI"
             version: "8"
@@ -181,6 +181,8 @@ remote_content:
     rpm: "http://mirror.centos.org/centos/7/fasttrack/x86_64/Packages/firewalld-filesystem-0.6.3-2.el7_7.1.0.1.noarch.rpm"
     ftp: "ftp://ftp.redhat.com/redhat/linux/enterprise/2.1AS/en/os/i386/SRPMS/xsnow-1.40-14.src.rpm"
     html_with_links: "https://repos.fedorapeople.org/pulp/pulp/demo_repos/repo_resync_b/"
+package_versions:
+    test_package: "tuned-profiles-sap"
 repo_versions:
     test_packages:
       - zlib-1.2.11-10.el8.i686

@@ -33,7 +33,7 @@ CLI_CFG = ["test-rhui", "1.0", "0.1"]
 DATADIR = "/tmp/extra_rhui_files"
 KEYFILE = "test_gpg_key"
 TEST_RPM = "rhui-rpm-upload-test-1-1.noarch.rpm"
-TEST_RH_RPM = "awscli"
+TEST_RH_RPM = "sapconf"
 CERTS = {"normal": "rhcert.pem",
          "expired": "rhcert_expired.pem",
          "incompatible": "rhcert_incompatible.pem",
