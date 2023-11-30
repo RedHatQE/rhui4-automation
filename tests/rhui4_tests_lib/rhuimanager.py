@@ -34,14 +34,14 @@ class RHUIManager():
         return match.groups()[0] == 'x', int(match.groups()[1])
 
     @staticmethod
-    def list_lines(connection, prompt='', enter_l=True):
+    def list_lines(connection, prompt='', enter_l=True, timeout=10):
         '''
         list items on screen returning a list of lines seen
         eats prompt!!!
         '''
         if enter_l:
             Expect.enter(connection, "l")
-        match = Expect.match(connection, re.compile("(.*)" + prompt, re.DOTALL))
+        match = Expect.match(connection, re.compile("(.*)" + prompt, re.DOTALL), timeout=timeout)
         return match[0].splitlines()
 
     @staticmethod

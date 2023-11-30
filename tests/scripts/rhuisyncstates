@@ -65,7 +65,7 @@ except TypeError:
 
 RHUIManager.screen(RHUA, "sync")
 Expect.enter(RHUA, "vr")
-raw_lines = RHUIManager.list_lines(RHUA, "Enter value", False)
+raw_lines = RHUIManager.list_lines(RHUA, "Enter value", False, 120)
 Expect.enter(RHUA, "b")
 Expect.enter(RHUA, "q")
 
@@ -91,7 +91,7 @@ else:
 # also check the workflow screen
 RHUIManager.screen(RHUA, "sync")
 Expect.enter(RHUA, "wf")
-raw_lines = RHUIManager.list_lines(RHUA, "Enter value", False)
+raw_lines = RHUIManager.list_lines(RHUA, "Enter value", False, 120)
 Expect.enter(RHUA, "b")
 Expect.enter(RHUA, "q")
 
