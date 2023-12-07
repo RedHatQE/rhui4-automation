@@ -102,6 +102,12 @@ elif ARGS.client_rpm:
             print("No client RPM is configured, exiting.")
             sys.exit(1)
         ARGS.client_rpm = join(RHUI_DIR, base_client_rpm_file_name)
+    elif ARGS.client_rpm == "_bleeding":
+        base_client_rpm_file_name = R4A_CFG.get("main", "bleeding_client_rpm", fallback=None)
+        if not base_client_rpm_file_name:
+            print("No bleeding client RPM is configured, exiting.")
+            sys.exit(1)
+        ARGS.client_rpm = join(RHUI_DIR, base_client_rpm_file_name)
     if not exists(expanduser(ARGS.client_rpm)):
         print(f"{ARGS.client_rpm} is not a file, exiting.")
         sys.exit(1)
