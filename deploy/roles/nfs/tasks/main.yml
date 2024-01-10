@@ -16,6 +16,17 @@
   file: path=/export state=directory
   tags: nfs
 
+- name: create other remote RHUI directories
+  file:
+    path: /rhui/{{ item }}
+    state: directory
+  loop:
+    - certs
+    - conf
+    - logs
+  when: remote_data | default(False)
+  tags: nfs
+
 - name: determine storage volume device name
   shell: lsblk | awk '/100G/ {print $1}'
   register: lsblk

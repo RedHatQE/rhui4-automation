@@ -15,9 +15,22 @@
   register: install_rhui_installer
   tags: rhua
 
-- name: call rhui installer if nfs
-  command: rhui-installer --rhua-hostname=rhua.example.com --remote-fs-server=nfs.example.com:/export --cds-lb-hostname cds.example.com --container-support-enabled True {{ " --proxy-hostname hap01.example.com --proxy-port 3128 --proxy-protocol http" if proxy | default(False) | bool else "" }}
-  when: install_rhui_installer is changed and 'NFS' in groups and groups['NFS']|length > 0
+- name: call rhui-installer
+  command: >
+    rhui-installer
+    --rhua-hostname rhua.example.com
+    --cds-lb-hostname cds.example.com
+    --container-support-enabled True
+    --remote-fs-server nfs.example.com:/export
+    {% if remote_data | default(False) %}
+    --remote-fs-cert-server nfs.example.com:/rhui/certs
+    --remote-fs-conf-server nfs.example.com:/rhui/conf
+    --remote-fs-logs-server nfs.example.com:/rhui/logs
+    {% endif %}
+    {% if proxy | default(False) %}
+    --proxy-hostname hap01.example.com --proxy-port 3128 --proxy-protocol http
+    {% endif %}
+  when: install_rhui_installer is changed
   tags: rhua
 
 - name: check if the installed RHUI version is the latest one
@@ -27,7 +40,7 @@
   tags: rhua,versioncheck
 
 - name: check if the installation playbook has logged its output
-  command: cat /var/log/rhui/rhui-installer/install_logger.log.latest
+  command: cat /var/log/rhui-installer/install_logger.log.latest
   register: installer_log
   failed_when: "'PLAY RECAP' not in installer_log.stdout"
   tags: rhua
