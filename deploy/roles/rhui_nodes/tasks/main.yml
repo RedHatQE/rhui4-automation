@@ -9,11 +9,10 @@
 # - credentials: login data for RHSM and other services, see the tests README
 # - client_rpm: an alternative to the ISO or RHSM; this can be a client configuration RPM that provides e.g. scratch builds of RHUI
 
-- name: make sure the RHUI client RPM is up to date (with the Ansible repo)
+- name: uninstall insights
   package:
-    name: rh-amazon-rhui-client
-    state: latest
-  when: rhui_iso is defined
+    name: insights-client
+    state: absent
   tags: rhui_nodes
 
 - name: unregister from RHSM (the ghost subscription that would interfere with the entitlement cert)
