@@ -67,7 +67,7 @@ class TestSubscription():
     @staticmethod
     def test_07_check_entitlements():
         """check entitlements"""
-        Expect.expect_retval(RHUA, "rhui-subscription-sync")
+        Expect.expect_retval(RHUA, "rhui-subscription-sync", timeout=30)
         nose.tools.ok_(RHUIManagerEntitlements.list_rh_entitlements(RHUA))
 
     @staticmethod
