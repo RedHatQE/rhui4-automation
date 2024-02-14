@@ -673,7 +673,7 @@ class TestCLI():
         '''test argument handling in rhui-* scripts'''
         scripts = ["rhui-export-repos", "rhui-subscription-sync", "rhui-update-mappings"]
         logs = ["/var/log/rhui/rhui-export-repos.log",
-                "/var/log/rhui-subscription-sync.log",
+                "/var/log/rhui/rhui-subscription-sync.log",
                 "/var/log/rhui/rhui-update-mappings.log"]
         bad_config = "/etc/motd"
         bad_sync_config = "/etc/ansible/ansible.cfg"
