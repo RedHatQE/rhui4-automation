@@ -30,6 +30,7 @@ Welcome to the RHUI 4 Test Plan!
    repo_management
    repo_prefix
    retain_package_versions
+   retain_repo_versions
    rhui_4_repos
    rhui_without_rhua
    security

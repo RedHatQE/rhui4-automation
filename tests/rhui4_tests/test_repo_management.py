@@ -14,6 +14,7 @@ from stitches.expect import Expect
 import yaml
 
 from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.pulp_api import PulpAPI
 from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
@@ -173,7 +174,17 @@ class TestRepo():
                                                                            self.yum_repo_version))
         nose.tools.ok_("Yum" in info["type"])
 
-    def test_11_delete_one_repo(self):
+    def test_11_check_retain_repo_versions(self):
+        '''check if retain_repo_versions is used'''
+        configured_number = int(Helpers.get_from_rhui_tools_conf(RHUA,
+                                                                 "rhui",
+                                                                 "retain_repo_versions"))
+        repos = PulpAPI.list_repos(RHUA)
+        used_numbers = [repo["retain_repo_versions"] for repo in repos]
+        nose.tools.ok_(all(number == configured_number for number in used_numbers),
+                       msg=f"failed: {used_numbers}")
+
+    def test_12_delete_one_repo(self):
         '''remove the Red Hat repo'''
         RHUIManagerRepo.delete_repo(RHUA,
                                     [Util.format_repo(self.yum_repo_name, self.yum_repo_version)])
@@ -182,7 +193,7 @@ class TestRepo():
                        msg=f"The repo wasn't removed. Actual repolist: {repo_list}")
 
     @staticmethod
-    def test_12_remove_package():
+    def test_13_remove_package():
         '''check if packages can be removed from a custom repo'''
         before_list = RHUIManagerRepo.check_for_package(RHUA, CUSTOM_REPOS[0])
         RHUIManagerRepo.remove_packages(RHUA, CUSTOM_REPOS[0], [before_list[0]])
@@ -198,14 +209,14 @@ class TestRepo():
         nose.tools.eq_(after_list, [])
 
     @staticmethod
-    def test_13_remove_all_packages():
+    def test_14_remove_all_packages():
         '''check if all packages can be removed from a custom repo'''
         RHUIManagerRepo.remove_all_packages(RHUA, CUSTOM_REPOS[2])
         time.sleep(5)
         after_list = RHUIManagerRepo.check_for_package(RHUA, CUSTOM_REPOS[2])
         nose.tools.eq_(after_list, [])
 
-    def test_14_add_rh_repo_by_product(self):
+    def test_15_add_rh_repo_by_product(self):
         '''add a Red Hat repo by the product that contains it, remove it'''
         RHUIManagerRepo.add_rh_repo_by_product(RHUA, [self.yum_repo_name])
         repo_list = RHUIManagerRepo.list(RHUA)
@@ -214,7 +225,7 @@ class TestRepo():
         RHUIManagerRepo.delete_all_repos(RHUA)
         nose.tools.ok_(not RHUIManagerRepo.list(RHUA))
 
-    def test_15_add_containers(self):
+    def test_16_add_containers(self):
         '''add containers'''
         # use saved credentials; save them in the RHUI configuration first
         # first a RH container
@@ -237,7 +248,7 @@ class TestRepo():
                        msg=f"The containers weren't added. Actual repolist: {repo_list}")
         RHUIManagerCLI.repo_sync_all(RHUA)
 
-    def test_16_display_container(self):
+    def test_17_display_container(self):
         '''check detailed information on the RH container'''
         info = RHUIManagerRepo.check_detailed_information(RHUA,
                                                           self.containers["rh"]["displayname"])
@@ -245,14 +256,14 @@ class TestRepo():
         nose.tools.eq_(info["id"], self.containers["rh"]["id"])
 
     @staticmethod
-    def test_17_delete_containers():
+    def test_18_delete_containers():
         '''delete the containers'''
         Helpers.restore_rhui_tools_conf(RHUA)
         RHUIManagerRepo.delete_all_repos(RHUA)
         nose.tools.ok_(not RHUIManagerRepo.list(RHUA))
 
     @staticmethod
-    def test_18_entitlement_cache():
+    def test_19_entitlement_cache():
         '''check if entitlements are cached and evaluated in the blink of an eye'''
         # for RHBZ#1873956
         # the cache was created by the actions of the previous tests
@@ -260,7 +271,7 @@ class TestRepo():
         Expect.expect_retval(RHUA, "timeout 2 rhui-manager repo unused")
 
     @staticmethod
-    def test_19_entitlement_cache_refresh():
+    def test_20_entitlement_cache_refresh():
         '''check if the cache is refreshed if a new minor version of a repo appears'''
         # for RHUI-396
         # first, remove a couple of lines from the cache
@@ -275,7 +286,7 @@ class TestRepo():
         Expect.expect_retval(RHUA, f"diff -u {CUSTOM_RPMS_DIR}/rhcert.mappings /var/cache/rhui/*")
 
     @staticmethod
-    def test_20_missing_cert_handling():
+    def test_21_missing_cert_handling():
         '''check if rhui-manager can handle the loss of the RH cert'''
         # for RHBZ#1325390
         RHUIManagerEntitlements.upload_rh_certificate(RHUA)
@@ -288,7 +299,7 @@ class TestRepo():
         Expect.enter(RHUA, "q")
 
     @staticmethod
-    def test_21_repo_select_0():
+    def test_22_repo_select_0():
         '''check if no repo is chosen if 0 is entered when adding a repo'''
         # for RHBZ#1305612
         # upload the cert and try entering 0 when the list of repos is displayed

@@ -183,3 +183,10 @@ remote_content:
     html_with_links: "https://repos.fedorapeople.org/pulp/pulp/demo_repos/repo_resync_b/"
 package_versions:
     test_package: "tuned-profiles-sap"
+repo_versions:
+    test_packages:
+      - zlib-1.2.11-10.el8.i686
+      - zlib-1.2.11-13.el8.i686
+      - zlib-1.2.11-16.el8_2.i686
+      - zlib-1.2.11-16.2.el8_3.i686
+      - zlib-1.2.11-17.el8.i686
