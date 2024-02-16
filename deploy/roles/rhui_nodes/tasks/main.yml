@@ -11,7 +11,9 @@
 
 - name: uninstall insights
   package:
-    name: insights-client
+    name:
+      - insights-client
+      - rhc
     state: absent
   tags: rhui_nodes
 

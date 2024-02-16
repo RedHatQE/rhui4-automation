@@ -40,27 +40,23 @@
   when: rhel9_beta_baseurl is defined and "'BaseOS' in rhel9_beta_baseurl" and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 9
   tags: rhel9_beta
 
-- name: upgrade all packages on all machines
-  package: name=* state=latest update_cache=yes
-  when:  upgrade_all_pkg is defined and upgrade_all_pkg | bool
-  tags: upgrade_all_pkg
+- name: update packages
+  package:
+    name: '*'
+    state: latest
+    update_cache: yes
+    update_only: yes
+  when: (upgrade_all_pkg | default(False) | bool) or
+        (rhel8_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 8) or
+        (rhel9_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 9)
+  tags: upgrade_all_pkg,rhel8_beta,rhel9_beta
 
-- name: upgrade to RHEL 8 Beta
-  package: name=* state=latest update_cache=yes
-  when: rhel8_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 8
-  tags: rhel8_beta
+- name: check if rebooting is needed
+  command: needs-restarting -r
+  register: needs_restarting
+  failed_when: needs_restarting.rc not in [0, 1]
 
-- name: upgrade to RHEL 9 Beta
-  package: name=* state=latest update_cache=yes
-  when: rhel9_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 9
-  tags: rhel9_beta
-
-- name: reboot RHEL 8 machines after upgrading to Beta
+- name: reboot after updating, if needed
   reboot:
-  when: rhel8_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 8
-  tags: rhel8_beta
-
-- name: reboot RHEL 9 machines after upgrading to Beta
-  reboot:
-  when: rhel9_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 9
-  tags: rhel9_beta
+  when: needs_restarting.rc == 1
+  tags: upgrade_all_pkg,rhel8_beta,rhel9_beta
