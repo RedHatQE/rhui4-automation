@@ -179,7 +179,7 @@ comps:
         id: "CRB"
 remote_content:
     rpm: "http://mirror.centos.org/centos/7/fasttrack/x86_64/Packages/firewalld-filesystem-0.6.3-2.el7_7.1.0.1.noarch.rpm"
-    ftp: "ftp://ftp.redhat.com/redhat/linux/enterprise/2.1AS/en/os/i386/SRPMS/xsnow-1.40-14.src.rpm"
+    ftp: "ftp://ftp.fi.muni.cz/pub/linux/redhat/linux/enterprise/2.1AS/en/os/i386/SRPMS/xsnow-1.40-14.src.rpm"
     html_with_links: "https://repos.fedorapeople.org/pulp/pulp/demo_repos/repo_resync_b/"
 package_versions:
     test_package: "tuned-profiles-sap"
