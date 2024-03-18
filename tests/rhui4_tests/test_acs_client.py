@@ -94,18 +94,18 @@ class TestACSClient():
         stdin.write(configuration["private_key"])
         stdin.close()
         # create a yum configuration file
-        # first the custom repo
+        # first the RH repo
         yum_repo_data = f"[{self.rh_repo_id}]\n"
         yum_repo_data += f"name={self.rh_repo_id}\n"
-        cutom_repo_paths = [path for path in configuration["paths"] if path.startswith("protected")]
+        cutom_repo_paths = [path for path in configuration["paths"] if path.startswith("content")]
         yum_repo_data += f"baseurl={configuration['base_url']}{cutom_repo_paths[0]}\n"
         yum_repo_data += f"sslcacert={TMPDIR}/ca.crt\n"
         yum_repo_data += f"sslclientcert={TMPDIR}/content.crt\n"
         yum_repo_data += f"sslclientkey={TMPDIR}/content.key\n"
-        # then the RH repo
+        # then the custom repo
         yum_repo_data += f"\n[{self.custom_repo_id}]\n"
         yum_repo_data += f"name={self.custom_repo_id}\n"
-        rh_repo_paths = [path for path in configuration["paths"] if path.startswith("content")]
+        rh_repo_paths = [path for path in configuration["paths"] if path.startswith("protected")]
         yum_repo_data += f"baseurl={configuration['base_url']}{rh_repo_paths[0]}\n"
         yum_repo_data += f"sslcacert={TMPDIR}/ca.crt\n"
         yum_repo_data += f"sslclientcert={TMPDIR}/content.crt\n"
