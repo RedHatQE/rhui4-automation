@@ -118,3 +118,19 @@ class Yummy():
         if not gpgcheck:
             cmd += " --nogpgcheck"
         Expect.expect_retval(connection, cmd, 1 if expect_trouble else 0, timeout)
+
+    @staticmethod
+    def downgrade(connection, packages, gpgcheck=True, timeout=20, expect_trouble=False):
+        """return a list of yum repositories, only enabled by default"""
+        cmd = "yum -y downgrade "
+        cmd += " ".join(packages)
+        if not gpgcheck:
+            cmd += " --nogpgcheck"
+        Expect.expect_retval(connection, cmd, 1 if expect_trouble else 0, timeout)
+
+    @staticmethod
+    def is_up_to_date(connection, packages=None, expect_update=False):
+        """check for updates for the given packages (or any updates); no updates: return True"""
+        cmd = "yum check-update "
+        cmd += " ".join(packages) if packages else ""
+        return connection.recv_exit_status(cmd, timeout=60) == (100 if expect_update else 0)
