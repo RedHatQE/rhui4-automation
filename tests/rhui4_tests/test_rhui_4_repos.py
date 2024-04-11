@@ -3,6 +3,7 @@
 from os.path import basename
 import re
 
+from heapq import merge
 import logging
 import nose
 from stitches.expect import Expect
@@ -17,6 +18,11 @@ RHUA = ConMgr.connect()
 DOC = "https://access.redhat.com/documentation/en-us/red_hat_update_infrastructure/4/html/" \
       "release_notes/index"
 VERSION_STRING = r"4\.[0-9]+ Release Notes"
+
+MAX_RHEL_6_EUS = 7
+MAX_RHEL_7_EUS = 7
+MAX_RHEL_8_EUS = 8
+MAX_RHEL_9_EUS = 2
 
 def _check_rpms():
     '''
@@ -77,21 +83,26 @@ def _check_latest_documented_version(expected_version):
     latest_documented_version = documented_versions[-1]
     nose.tools.eq_(expected_version, latest_documented_version)
 
-def _check_listing(major, min_eus, max_eus):
+def _check_listing(major, min_eus, max_eus, step=1, exceptions=None):
     '''
         helper method to check if the listings file for the given EUS version is complete
         major: RHEL X version to check
         min_eus: expected min RHEL (X.)Y version
         max_eus: expected max RHEL (X.)Y version
+        step: increments
+        exceptions: a list of minor versions outside the increments
         for lists of X.Y versions in EUS, see:
         https://access.redhat.com/support/policy/updates/errata/#Extended_Update_Support
     '''
+    subpath = f"rhel/rhui/server/{major}" if major < 8 else f"rhel{major}/rhui"
     cmd = "wget -q -O - " + \
           "--certificate /tmp/extra_rhui_files/rhcert.pem " + \
           "--ca-certificate /etc/rhsm/ca/redhat-uep.pem " + \
-          "https://cdn.redhat.com/" + \
-          f"content/eus/rhel/rhui/server/{major}/listing"
-    listings_expected = [str(major + i * .1) for i in range(min_eus, max_eus + 1)]
+          f"https://cdn.redhat.com/content/eus/{subpath}/listing"
+    listings_expected = [f"{major}.{minor}" for minor in range(min_eus, max_eus + 1, step)]
+    if exceptions:
+        listings_expected = list(merge(listings_expected,
+                                       [f"{major}.{minor}" for minor in exceptions]))
     _, stdout, _ = RHUA.exec_command(cmd)
     listings_actual = stdout.read().decode().splitlines()
     nose.tools.eq_(listings_expected, listings_actual)
@@ -114,14 +125,28 @@ def test_02_eus_6_repos_check():
         check if all supported RHEL 6 EUS versions are available
     '''
     # RHEL 6.1-6.7
-    _check_listing(6, 1, 7)
+    _check_listing(6, 1, MAX_RHEL_6_EUS)
 
 def test_03_eus_7_repos_check():
     '''
         check if all supported RHEL 7 EUS versions are available
     '''
     # RHEL 7.1-7.7
-    _check_listing(7, 1, 7)
+    _check_listing(7, 1, MAX_RHEL_7_EUS)
+
+def test_04_eus_8_repos_check():
+    '''
+        check if all supported RHEL 8 EUS versions are available
+    '''
+    # RHEL 8.1 and then 8.even numbers
+    _check_listing(8, 2, MAX_RHEL_8_EUS, 2, [1])
+
+def test_05_eus_9_repos_check():
+    '''
+        check if all supported RHEL 9 EUS versions are available
+    '''
+    # RHEL 9.even numbers
+    _check_listing(9, 0, MAX_RHEL_9_EUS, 2)
 
 def teardown():
     '''
