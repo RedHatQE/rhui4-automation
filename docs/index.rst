@@ -26,6 +26,7 @@ Welcome to the RHUI 4 Test Plan!
    gpg
    hap
    hap_cmd
+   installer_updates
    pulp_workers
    repo_management
    repo_prefix
