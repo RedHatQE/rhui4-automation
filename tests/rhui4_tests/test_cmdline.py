@@ -333,7 +333,7 @@ class TestCLI():
             raise RuntimeError("configuration not created, can't test it")
         yum_cfg = ConfigParser()
         yum_cfg.read(YUM_REPO_FILE)
-        nose.tools.ok_(all([yum_cfg.get(r, "proxy") == "_none_" for r in yum_cfg.sections()]))
+        nose.tools.ok_(all(yum_cfg.get(r, "proxy") == "_none_" for r in yum_cfg.sections()))
 
     @staticmethod
     def test_25_custom_repo_used():

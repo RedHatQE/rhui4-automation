@@ -34,7 +34,7 @@ def test_03_check_update():
 
 def test_04_rerun_installer_apply_updates():
     """rerun the RHUI installer and make it apply RHEL updates"""
-    Expect.expect_retval(RHUA, f"rhui-installer --rerun", timeout=600)
+    Expect.expect_retval(RHUA, "rhui-installer --rerun", timeout=600)
 
 def test_05_check_update():
     """check if there is no update for the test package"""
