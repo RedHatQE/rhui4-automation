@@ -72,6 +72,14 @@ class Helpers():
         return credentials
 
     @staticmethod
+    def get_from_answers(connection, option, answers_file="/root/.rhui/answers.yaml"):
+        """get the value of the given option from the answers file"""
+        _, stdout, _ = connection.exec_command(f"cat {answers_file}")
+        answers = yaml.safe_load(stdout)
+        answer = answers["rhua"][option]
+        return answer
+
+    @staticmethod
     def get_from_rhui_tools_conf(connection, section, option):
         """get the value of the given option from the given section in RHUI configuration"""
         # raises standard configparser exceptions on failures

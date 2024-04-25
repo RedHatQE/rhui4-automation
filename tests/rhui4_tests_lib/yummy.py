@@ -134,3 +134,11 @@ class Yummy():
         cmd = "yum check-update "
         cmd += " ".join(packages) if packages else ""
         return connection.recv_exit_status(cmd, timeout=60) == (100 if expect_update else 0)
+
+    @staticmethod
+    def module_list(connection, package):
+        """return information module streams for the package, exactly as presented by dnf"""
+        cmd = f"dnf -q module list {package}"
+        _, stdout, _ = connection.exec_command(cmd)
+        raw_module_list_output = stdout.read().decode()
+        return raw_module_list_output
