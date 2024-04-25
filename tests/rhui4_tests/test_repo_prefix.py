@@ -15,6 +15,7 @@ from stitches.expect import Expect
 import yaml
 
 from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.helpers import ANSWERS
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
@@ -158,7 +159,7 @@ class TestRepoPrefix():
     def test_14_rerun_installer_check_prefix():
         """check if rerunning the installer preserves the prefix setting"""
         # first, change the prefix in the answers file
-        ccmd = "sed 's/client_repo_prefix: .*/client_repo_prefix: foo-/' /root/.rhui/answers.yaml"
+        ccmd = f"sed 's/client_repo_prefix: .*/client_repo_prefix: foo-/' {ANSWERS}"
         Expect.expect_retval(RHUA, ccmd)
         # then rerun the insataller, where answers should yield to rhui-conf
         cmd = "rhui-installer --rerun"

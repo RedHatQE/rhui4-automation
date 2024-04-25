@@ -10,6 +10,9 @@ from stitches.expect import Expect, ExpectFailed
 import nose
 
 RHUI_CFG = "/etc/rhui/rhui-tools.conf"
+RHUI_CFG_BAK = RHUI_CFG + ".bak"
+ANSWERS = "/root/.rhui/answers.yaml"
+ANSWERS_BAK = ANSWERS + ".bak"
 
 class Helpers():
     """actions that may be repeated in specific test cases and do not belong in general utils"""
@@ -72,7 +75,7 @@ class Helpers():
         return credentials
 
     @staticmethod
-    def get_from_answers(connection, option, answers_file="/root/.rhui/answers.yaml"):
+    def get_from_answers(connection, option, answers_file=ANSWERS):
         """get the value of the given option from the answers file"""
         _, stdout, _ = connection.exec_command(f"cat {answers_file}")
         answers = yaml.safe_load(stdout)
@@ -153,9 +156,14 @@ class Helpers():
             rhuicfg.write(stdin)
 
     @staticmethod
+    def backup_answers(connection):
+        """create a backup copy of the RHUI installer answers file"""
+        Expect.expect_retval(connection, f"cp {ANSWERS} {ANSWERS_BAK}")
+
+    @staticmethod
     def backup_rhui_tools_conf(connection):
         """create a backup copy of the RHUI tools configuration file"""
-        Expect.expect_retval(connection, f"mv -f {RHUI_CFG} {RHUI_CFG}.bak")
+        Expect.expect_retval(connection, f"mv -f {RHUI_CFG} {RHUI_CFG_BAK}")
 
     @staticmethod
     def edit_rhui_tools_conf(connection, opt, val, backup=True):
@@ -167,9 +175,14 @@ class Helpers():
         Expect.expect_retval(connection, cmd)
 
     @staticmethod
+    def restore_answers(connection):
+        """restore the backup copy of the RHUI installer answers file"""
+        Expect.expect_retval(connection, f"mv -f {ANSWERS_BAK} {ANSWERS}")
+
+    @staticmethod
     def restore_rhui_tools_conf(connection):
         """restore the backup copy of the RHUI tools configuration file"""
-        Expect.expect_retval(connection, f"mv -f {RHUI_CFG}.bak {RHUI_CFG}")
+        Expect.expect_retval(connection, f"mv -f {RHUI_CFG_BAK} {RHUI_CFG}")
 
     @staticmethod
     def is_registered(connection):

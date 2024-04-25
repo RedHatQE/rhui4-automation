@@ -23,6 +23,7 @@ import nose
 from stitches.expect import Expect
 
 from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.helpers import ANSWERS
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
@@ -198,7 +199,7 @@ def test_99_cleanup():
                          f"{BACKUPDIR}/{ORIG_CERTS_SUBDIR} "
                          f"{BACKUPDIR}/{ORIG_KEYS_SUBDIR}")
     # the user supplied certificate options must be cleared in the answers file now
-    cmd = r"sed -i 's/\(user_supplied_[^:]*\).*/\1: null/' /root/.rhui/answers.yaml"
+    cmd = fr"sed -i 's/\(user_supplied_[^:]*\).*/\1: null/' {ANSWERS}"
     Expect.expect_retval(RHUA, cmd)
     RHUIManagerCLIInstance.delete(RHUA, "cds", [CDS_HOSTNAME], force=True)
     RHUIManagerCLIInstance.delete(RHUA, "haproxy", [HAPROXY_HOSTNAME], force=True)
