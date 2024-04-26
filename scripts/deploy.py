@@ -47,6 +47,9 @@ PRS.add_argument("--proxy",
 PRS.add_argument("--remote-data",
                  help="keep certs, configuration and log files on a remote share",
                  action="store_true")
+PRS.add_argument("--new-psql",
+                 help="let the installer install the new PostgreSQL version",
+                 action="store_true")
 PRS.add_argument("--extra-files",
                  help="ZIP file with extra files",
                  default=join(RHUI_DIR, "extra_files.zip"),
@@ -144,6 +147,9 @@ if ARGS.ansible_engine:
 
 if ARGS.proxy:
     EVARS += " proxy=True"
+
+if ARGS.new_psql:
+    EVARS += " new_psql=True"
 
 if ARGS.remote_data:
     EVARS += " remote_data=True"
