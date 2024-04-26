@@ -4,8 +4,8 @@ from os.path import basename
 
 import nose
 
+from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.yummy import Yummy
 
 RHUA = ConMgr.connect()
@@ -51,7 +51,7 @@ def test_01_postgresql():
     package = "postgresql"
     answers_option = f"{package}_version"
     # Was this RHUI installed with the old/original version? If so, skip this test.
-    installed_package_version = Helpers.get_from_answers(RHUA, answers_option)
+    installed_package_version = Config.get_from_answers(RHUA, answers_option)
     if installed_package_version == OLD_PSQL_VERSION:
         raise nose.exc.SkipTest(f"This RHUI was installed with the old {package} version.")
     _check_package(RHUA, package)

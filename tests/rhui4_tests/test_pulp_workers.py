@@ -6,8 +6,8 @@ import logging
 import nose
 from stitches.expect import Expect
 
+from rhui4_tests_lib.cfg import Config, ANSWERS_BAK
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.helpers import Helpers, ANSWERS_BAK
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -36,7 +36,7 @@ def setup():
 
 def test_01_prep():
     """back up the answers file"""
-    Helpers.backup_answers(RHUA)
+    Config.backup_answers(RHUA)
 
 def test_02_change_pulp_worker_count():
     """change the number of Pulp workers"""
@@ -60,13 +60,13 @@ def test_04_check_rhui_manager_status():
 
 def test_05_revert_pulp_worker_count():
     """revert the number of Pulp workers"""
-    orig_count = Helpers.get_from_answers(RHUA, "pulp_workers", ANSWERS_BAK)
+    orig_count = Config.get_from_answers(RHUA, "pulp_workers", ANSWERS_BAK)
     _change_worker_count(orig_count)
 
 def test_06_check_pulp_worker_count():
     """check if the number of Pulp workers has been reverted"""
     current_count = _get_current_pulp_worker_count()
-    orig_count = Helpers.get_from_answers(RHUA, "pulp_workers", ANSWERS_BAK)
+    orig_count = Config.get_from_answers(RHUA, "pulp_workers", ANSWERS_BAK)
     nose.tools.eq_(current_count, orig_count)
 
 def test_07_wrong_count_parameter():
@@ -76,7 +76,7 @@ def test_07_wrong_count_parameter():
 
 def test_99_cleanup():
     """clean up: remove the answers file backup"""
-    Helpers.restore_answers(RHUA)
+    Config.restore_answers(RHUA)
 
 def teardown():
     """announce the end of the test run"""

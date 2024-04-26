@@ -5,6 +5,7 @@ import argparse
 from stitches.expect import ExpectFailed
 import yaml
 
+from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.subscription import RHSMRHUI
@@ -27,7 +28,7 @@ CONNECTION = ConMgr.connect()
 # (the same repo IDs in RHSM and AWS would confuse the Amazon ID plug-in, which would barf)
 Util.remove_amazon_rhui_conf_rpm(CONNECTION)
 # get credentials
-USERNAME, PASSWORD = Helpers.get_credentials(CONNECTION)
+USERNAME, PASSWORD = Config.get_credentials(CONNECTION)
 if Helpers.is_registered(CONNECTION) and not ARGS.force:
     print("It is already registered and --force was not used, skipping.")
 try:

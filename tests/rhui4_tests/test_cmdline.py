@@ -14,6 +14,7 @@ import nose
 from stitches.expect import Expect
 import yaml
 
+from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr, USER_NAME
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI, \
@@ -421,7 +422,7 @@ class TestCLI():
         orig_ent_key = stdout.read().decode()
         nose.tools.eq_(configuration["private_key"], orig_ent_key)
         # load the default SSL CA cert and compare it
-        default_ca_path = Helpers.get_from_rhui_tools_conf(RHUA, "security", "ssl_ca_crt")
+        default_ca_path = Config.get_from_rhui_tools_conf(RHUA, "security", "ssl_ca_crt")
         _, stdout, _ = RHUA.exec_command(f"cat {default_ca_path}")
         default_ca_cert = stdout.read().decode()
         nose.tools.eq_(configuration["ca_cert"], default_ca_cert)

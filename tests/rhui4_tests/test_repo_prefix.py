@@ -14,12 +14,11 @@ import nose
 from stitches.expect import Expect
 import yaml
 
+from rhui4_tests_lib.cfg import Config, ANSWERS
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.helpers import ANSWERS
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
-from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.util import Util
 from rhui4_tests_lib.yummy import Yummy
 
@@ -78,7 +77,7 @@ class TestRepoPrefix():
     @staticmethod
     def test_03_set_custom_prefix():
         """set a custom prefix (by editing the RHUI config file)"""
-        Helpers.edit_rhui_tools_conf(RHUA, "client_repo_prefix", PREFIXES[0])
+        Config.edit_rhui_tools_conf(RHUA, "client_repo_prefix", PREFIXES[0])
 
     def test_04_create_cli_config_rpm(self):
         """create the 1st client configuration RPM"""
@@ -115,7 +114,7 @@ class TestRepoPrefix():
     @staticmethod
     def test_08_check_prefix():
         """check if the installer changed the prefix in the configuration"""
-        current_prefix = Helpers.get_from_rhui_tools_conf(RHUA, "rhui", "client_repo_prefix")
+        current_prefix = Config.get_from_rhui_tools_conf(RHUA, "rhui", "client_repo_prefix")
         nose.tools.eq_(current_prefix, PREFIXES[1])
 
     def test_09_create_cli_config_rpm(self):
@@ -152,7 +151,7 @@ class TestRepoPrefix():
     @staticmethod
     def test_13_check_prefix():
         """check if the installer unset the prefix in the configuration"""
-        current_prefix = Helpers.get_from_rhui_tools_conf(RHUA, "rhui", "client_repo_prefix")
+        current_prefix = Config.get_from_rhui_tools_conf(RHUA, "rhui", "client_repo_prefix")
         nose.tools.eq_(current_prefix, "")
 
     @staticmethod
@@ -164,7 +163,7 @@ class TestRepoPrefix():
         # then rerun the insataller, where answers should yield to rhui-conf
         cmd = "rhui-installer --rerun"
         Expect.expect_retval(RHUA, cmd, timeout=600)
-        current_prefix = Helpers.get_from_rhui_tools_conf(RHUA, "rhui", "client_repo_prefix")
+        current_prefix = Config.get_from_rhui_tools_conf(RHUA, "rhui", "client_repo_prefix")
         nose.tools.eq_(current_prefix, "")
 
     def test_15_create_cli_config_rpm(self):
@@ -203,7 +202,7 @@ class TestRepoPrefix():
         # remove client build artifacts
         Expect.expect_retval(RHUA, f"rm -rf {WORKDIR}*")
         # restore the RHUI configuration file (with the default prefix)
-        Helpers.restore_rhui_tools_conf(RHUA)
+        Config.restore_rhui_tools_conf(RHUA)
         # uninstall HAProxy & CDS, forget their keys
         if not getenv("RHUISKIPSETUP"):
             RHUIManager.remove_rh_certs(RHUA)

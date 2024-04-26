@@ -22,8 +22,8 @@ import logging
 import nose
 from stitches.expect import Expect
 
+from rhui4_tests_lib.cfg import ANSWERS
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.helpers import ANSWERS
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance

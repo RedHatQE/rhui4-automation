@@ -16,8 +16,8 @@ import nose
 from stitches.expect import Expect, ExpectFailed
 import yaml
 
+from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_client import RHUIManagerClient
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
@@ -87,7 +87,7 @@ class TestClient():
         """add containers"""
         # first, add a container from RH
         # get credentials and enter them when prompted
-        credentials = Helpers.get_credentials(RHUA)
+        credentials = Config.get_credentials(RHUA)
         RHUIManagerRepo.add_container(RHUA,
                                       self.container_name,
                                       self.container_id,
@@ -95,13 +95,13 @@ class TestClient():
                                       [""] + credentials)
         # second, add a container from Quay
         # get Quay credentials
-        credentials = Helpers.get_credentials(RHUA, "quay")
-        quay_url = Helpers.get_registry_url("quay")
+        credentials = Config.get_credentials(RHUA, "quay")
+        quay_url = Config.get_registry_url("quay")
         RHUIManagerRepo.add_container(RHUA,
                                       self.container_quay["name"],
                                       credentials=[quay_url] + credentials)
         # third, add a container from GitLab
-        gitlab_url = Helpers.get_registry_url("gitlab")
+        gitlab_url = Config.get_registry_url("gitlab")
         RHUIManagerRepo.add_container(RHUA,
                                       self.container_gitlab["name"],
                                       credentials=[gitlab_url])

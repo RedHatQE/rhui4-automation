@@ -11,6 +11,7 @@ from stitches.expect import Expect
 import urllib3
 import yaml
 
+from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_client import RHUIManagerClient, \
@@ -20,7 +21,6 @@ from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
 from rhui4_tests_lib.rhuimanager_repo import RHUIManagerRepo, \
                                              ContainerSupportDisabledError as RepoError
 from rhui4_tests_lib.rhuimanager_sync import RHUIManagerSync
-from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.util import Util
 from rhui4_tests_lib.yummy import Yummy
 
@@ -182,7 +182,7 @@ class TestRHUIWithoutRHUA():
     def test_15_get_available_content(self):
         """check if the repo is available now"""
         actual_repos = Yummy.repolist(CLI)
-        prefix = Helpers.get_from_rhui_tools_conf(RHUA, "rhui", "client_repo_prefix")
+        prefix = Config.get_from_rhui_tools_conf(RHUA, "rhui", "client_repo_prefix")
         nose.tools.eq_(actual_repos, [prefix + self.yum_repo_label])
         Yummy.install(CLI, [self.test_package])
 

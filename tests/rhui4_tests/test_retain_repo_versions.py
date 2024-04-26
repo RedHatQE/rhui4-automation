@@ -8,11 +8,11 @@ import nose
 import yaml
 from stitches.expect import Expect
 
+from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.pulp_api import PulpAPI
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
-from rhui4_tests_lib.helpers import Helpers
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -28,9 +28,9 @@ class TestCLI():
         self.test_packages = doc["repo_versions"]["test_packages"]
         self.repo_id = "test-versions"
         self.tmpdir = join("/tmp", self.repo_id)
-        self.configured_number = int(Helpers.get_from_rhui_tools_conf(RHUA,
-                                                                      "rhui",
-                                                                      "retain_repo_versions"))
+        self.configured_number = int(Config.get_from_rhui_tools_conf(RHUA,
+                                                                     "rhui",
+                                                                     "retain_repo_versions"))
 
     @staticmethod
     def setup_class():

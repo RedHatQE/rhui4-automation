@@ -6,10 +6,10 @@ from os.path import basename
 import nose
 import yaml
 
+from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
-from rhui4_tests_lib.helpers import Helpers
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -43,7 +43,7 @@ class TestCLI():
     @staticmethod
     def test_03_set_config_1():
         '''set retain package versions to 1'''
-        Helpers.edit_rhui_tools_conf(RHUA, "retain_package_versions", "1")
+        Config.edit_rhui_tools_conf(RHUA, "retain_package_versions", "1")
 
     def test_04_add_repo(self):
         '''add a Red Hat repo'''
@@ -63,7 +63,7 @@ class TestCLI():
     @staticmethod
     def test_07_set_config_2():
         '''set retain package versions to 2'''
-        Helpers.edit_rhui_tools_conf(RHUA, "retain_package_versions", "2", False)
+        Config.edit_rhui_tools_conf(RHUA, "retain_package_versions", "2", False)
 
     def test_08_add_repo(self):
         '''add a Red Hat repo'''
@@ -80,7 +80,7 @@ class TestCLI():
         '''clean up'''
         RHUIManagerCLI.repo_delete(RHUA, self.repo_id)
         RHUIManager.remove_rh_certs(RHUA)
-        Helpers.restore_rhui_tools_conf(RHUA)
+        Config.restore_rhui_tools_conf(RHUA)
 
     @staticmethod
     def teardown_class():

@@ -13,9 +13,9 @@ import nose
 from stitches.expect import Expect
 import yaml
 
+from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.pulp_api import PulpAPI
-from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
 from rhui4_tests_lib.rhuimanager_entitlement import RHUIManagerEntitlements
@@ -176,9 +176,9 @@ class TestRepo():
 
     def test_11_check_retain_repo_versions(self):
         '''check if retain_repo_versions is used'''
-        configured_number = int(Helpers.get_from_rhui_tools_conf(RHUA,
-                                                                 "rhui",
-                                                                 "retain_repo_versions"))
+        configured_number = int(Config.get_from_rhui_tools_conf(RHUA,
+                                                                "rhui",
+                                                                "retain_repo_versions"))
         repos = PulpAPI.list_repos(RHUA)
         used_numbers = [repo["retain_repo_versions"] for repo in repos]
         nose.tools.ok_(all(number == configured_number for number in used_numbers),
@@ -229,18 +229,18 @@ class TestRepo():
         '''add containers'''
         # use saved credentials; save them in the RHUI configuration first
         # first a RH container
-        Helpers.set_registry_credentials(RHUA)
+        Config.set_registry_credentials(RHUA)
         RHUIManagerRepo.add_container(RHUA,
                                       self.containers["rh"]["name"],
                                       self.containers["rh"]["id"],
                                       self.containers["rh"]["displayname"])
         # then a Quay container
         # use the installer to change the configuration this time
-        Helpers.set_registry_credentials(RHUA, "quay", backup=False, use_installer=True)
+        Config.set_registry_credentials(RHUA, "quay", backup=False, use_installer=True)
         RHUIManagerRepo.add_container(RHUA, self.containers["alt"]["quay"]["name"])
         # and finaly a Gitlab container
-        url = Helpers.get_registry_url("gitlab")
-        Helpers.set_registry_credentials(RHUA, "gitlab", [url], backup=False)
+        url = Config.get_registry_url("gitlab")
+        Config.set_registry_credentials(RHUA, "gitlab", [url], backup=False)
         RHUIManagerRepo.add_container(RHUA, self.containers["alt"]["gitlab"]["name"])
         # check all of that
         repo_list = RHUIManagerRepo.list(RHUA)
@@ -258,7 +258,7 @@ class TestRepo():
     @staticmethod
     def test_18_delete_containers():
         '''delete the containers'''
-        Helpers.restore_rhui_tools_conf(RHUA)
+        Config.restore_rhui_tools_conf(RHUA)
         RHUIManagerRepo.delete_all_repos(RHUA)
         nose.tools.ok_(not RHUIManagerRepo.list(RHUA))
 

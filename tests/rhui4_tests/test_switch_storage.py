@@ -6,8 +6,8 @@ import logging
 import nose
 from stitches.expect import Expect
 
+from rhui4_tests_lib.cfg import Config, ANSWERS_BAK
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.helpers import Helpers, ANSWERS_BAK
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
 
@@ -62,13 +62,13 @@ def test_01_add_cds():
 
 def test_02_prep():
     """back up the answers file"""
-    Helpers.backup_answers(RHUA)
+    Config.backup_answers(RHUA)
 
 def test_03_rerun_installer():
     """rerun the installer with a different remote FS server"""
     # the FS server is supposed to be on the RHUA, so let's use the RHUA hostname
     # get the actual FS server hostname from the answers file
-    current_fs_server = Helpers.get_from_answers(RHUA, "remote_fs_server")
+    current_fs_server = Config.get_from_answers(RHUA, "remote_fs_server")
     fs_hostname = current_fs_server.split(":")[0]
     new_fs_server = current_fs_server.replace(fs_hostname, RHUA_HOSTNAME)
     # first, check if the installer refuses to rerun without the force flag
@@ -115,9 +115,9 @@ def test_99_cleanup():
     """clean up: delete the CDS and rerun the installer with the original remote FS"""
     RHUIManagerCLIInstance.delete(RHUA, "cds", [CDS_HOSTNAME], force=True)
     # get the original FS server hostname from the backed up answers file
-    original_fs_server = Helpers.get_from_answers(RHUA, "remote_fs_server", ANSWERS_BAK)
+    original_fs_server = Config.get_from_answers(RHUA, "remote_fs_server", ANSWERS_BAK)
     fs_hostname = original_fs_server.split(":")[0]
-    original_fs_options = Helpers.get_from_answers(RHUA, "rhua_mount_options", ANSWERS_BAK)
+    original_fs_options = Config.get_from_answers(RHUA, "rhua_mount_options", ANSWERS_BAK)
     installer_cmd = f"rhui-installer --rerun " \
                     f"--remote-fs-server {original_fs_server} " \
                     f"--rhua-mount-options {original_fs_options}" \
@@ -126,7 +126,7 @@ def test_99_cleanup():
     # did it work?
     _check_rhui_mountpoint(RHUA, fs_hostname, original_fs_options)
     # finish the cleanup
-    Helpers.restore_answers(RHUA)
+    Config.restore_answers(RHUA)
     ConMgr.remove_ssh_keys(RHUA)
 
 def teardown():
