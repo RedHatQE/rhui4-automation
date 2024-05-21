@@ -23,9 +23,11 @@ Inbound rules:
 
 ### Requirements
 
-* yaml config file with 2 credentials - default path is `/etc/rhui_ec2.yaml` [(example)](#input-configuration-file)
-* up-to-date lists of AMIs in `*mapping.json` files - the files should be up to date in Git, but you can regenerate them locally with the `scripts/get_amis_list.py` script
-* the following modules for your Python version: boto, paramiko; install them using your distribution's package manager, or using pip
+* Python 3.x on your system. If you want to use Ansible to control the systems created by this script, you should only use it to launch RHEL 7 and newer versions.
+* AWS credentials in `~/.aws/credentials`, created by running `aws configure`
+* A YAML config file with VPC information - default path is `/etc/rhui_ec2.yaml` [(example)](#input-configuration-file)
+* Up-to-date lists of AMIs in `*mapping.json` files - the files should be up to date in Git, but you can regenerate them locally with the `scripts/get_amis_list.py` script
+* Boto3 for your Python version; install it using your distribution's package manager, e.g. `dnf install python3-boto3`
 * SSH configuration (in `~/.ssh/config`) with the user name and private key for EC2 machines, for example:
 
 ```
@@ -53,7 +55,7 @@ Default configuration:
 
   * **--name [name]** - common name for the instances in the stack (as in $user_$fstype_$name_$role); also affects the `hosts` file name (unless overridden). `default = rhui`
   * **--cds [number]** - number of CDS machines, `default = 1`
-  * **--cli5/6/7/8/9 [number]** - number of CLI machines, `default = 0`, use `-1` to get machines for all architectures (one machine per architecture)
+  * **--cli6/7/8/9 [number]** - number of CLI machines, `default = 0`, use `-1` to get machines for all architectures (one machine per architecture)
   * **--cli-all** - get client machines for all RHEL versions
   * **--cli7/8/9-arch [arch]** - CLI machines' architectures (comma-separated list), `default = x86_64 for all of them`, `cli`_N_ set to `-1` will populate the list with all architectures automatically, so this parameter is unnecessary then
   * **--test** - if specified, TEST machine running RHEL 8, `default = 0`
@@ -62,21 +64,6 @@ Default configuration:
   * **--novpc** - use EC2 Classic, not VPC; possibly useful if you're short on Elastic IPs
 
 Run the script with `-h` or `--help` to get a list of all parameters.
-
-Note that RHEL-5 AMIs are not available in all regions;
-see the [RHEL 5 mapping file](RHEL5mapping.json).
-Attempts to launch a RHEL-5 client in a region that does not have a RHEL-5 AMI will fail.
-
-Moreover, with Ansible 2.4 and newer, it is no longer possible to manage machines with Python older
-than 2.6. RHEL 5 has Python 2.4. To avoid failures, the hosts configuration file will be created
-with the RHEL-5 client hostname and other data commented out so that it is all visible to you but
-ignored by `ansible-playbook`. Other than that, you are free to use the launched RHEL-5 client any
-way you want, just be sure to log in as root directly.
-
-Ditto for RHEL 6 and its Python 2.6, which Ansible no longer supports.
-
-Note that RHEL-8 AMIs are missing the unversioned `python` command. This does not affect
-the deployment because the _platform Python_ is automatically set in the case of RHEL 8 hosts.
 
 If you specify a non-x86\_64 client architecture, a suitable instance type will be selected
 automatically. You cannot use EC2 Classic with some instance types,
@@ -111,10 +98,9 @@ If there is a separate NFS machine, an extra 100 GB volume is attached to this m
 
 #### Input configuration file
 
-Create `/etc/rhui_ec2.yaml` from the following template. Consider making the file accessible to you only if you're on a multi-user system.
+Create `/etc/rhui_ec2.yaml` from the following template.
 
 ```
-ec2: {ec2-key: AAAAAAAAAAAAAAAAAAAA, ec2-secret-key: B0B0B0B0B0B0B0B0B0B0a1a1a1a1a1a1a1a1a1a1}
 ssh:
   ap-northeast-1: [rhatter-ec2-overrides, /home/rhatter/.ssh/rhatter-ec2-overrides.pem]
 vpc:
@@ -122,7 +108,6 @@ vpc:
 
 ```
 
-Change `ec2-key` and `ec2-secret-key` values to your keys.
 Change the VPC and subnet IDs and add them for any other regions you might use.
 
 Note: in this example, a special key pair name and private key file path are specified
