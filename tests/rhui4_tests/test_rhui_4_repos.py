@@ -22,7 +22,7 @@ VERSION_STRING = r"4\.[0-9]+ Release Notes"
 MAX_RHEL_6_EUS = 7
 MAX_RHEL_7_EUS = 7
 MAX_RHEL_8_EUS = 8
-MAX_RHEL_9_EUS = 2
+MAX_RHEL_9_EUS = 4
 
 def _check_rpms():
     '''
