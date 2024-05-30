@@ -11,6 +11,8 @@ RHUI_CFG_BAK = RHUI_CFG + BACKUP_EXT
 ANSWERS = "/root/.rhui/answers.yaml"
 ANSWERS_BAK = ANSWERS + BACKUP_EXT
 
+RHUI_ROOT = "/var/lib/rhui/remote_share"
+
 class Config():
     """reading from and writing to RHUI configuration files"""
     @staticmethod

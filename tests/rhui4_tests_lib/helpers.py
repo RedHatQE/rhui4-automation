@@ -7,7 +7,7 @@ from stitches.expect import Expect, ExpectFailed
 import nose
 import yaml
 
-from rhui4_tests_lib.cfg import Config
+from rhui4_tests_lib.cfg import Config, RHUI_ROOT
 
 class Helpers():
     """actions that may be repeated in specific test cases and do not belong in general utils"""
@@ -159,3 +159,12 @@ class Helpers():
                 pass
             else:
                 raise RuntimeError("Could not copy the mappings.") from None
+
+    @staticmethod
+    def get_artifacts(connection):
+        """return a list of all artifacts"""
+        basedir = f"{RHUI_ROOT}/pulp3/artifact/"
+        _, stdout, _ = connection.exec_command(f"find {basedir} -type f")
+        artifacts_full_paths = stdout.read().decode().splitlines()
+        artifacts = [artifact.replace(basedir, "") for artifact in artifacts_full_paths]
+        return artifacts

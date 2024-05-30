@@ -366,6 +366,14 @@ class RHUIManagerCLI():
         '''
         Expect.expect_retval(connection, f"rhui-manager repo export --repo_id {repo_id}")
 
+
+    @staticmethod
+    def repo_orphan_cleanup(connection):
+        '''
+        schedule a task to clean up orphaned artifacts
+        '''
+        Expect.expect_retval(connection, "rhui-manager repo orphan_cleanup")
+
     @staticmethod
     def packages_list(connection, repo_id):
         '''

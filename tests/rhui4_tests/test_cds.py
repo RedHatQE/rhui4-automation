@@ -9,6 +9,7 @@ import logging
 import nose
 from stitches.expect import Expect
 
+from rhui4_tests_lib.cfg import RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
@@ -96,12 +97,11 @@ def test_10_check_cleanup():
         check if nginx was stopped and the remote file system unmounted on all CDSs
     '''
     service = "nginx"
-    mdir = "/var/lib/rhui/remote_share"
     dirty_hosts = {}
     errors = []
 
     dirty_hosts["nginx"] = [cds.hostname for cds in CDS if Helpers.check_service(cds, service)]
-    dirty_hosts["mount"] = [cds.hostname for cds in CDS if Helpers.check_mountpoint(cds, mdir)]
+    dirty_hosts["mount"] = [cds.hostname for cds in CDS if Helpers.check_mountpoint(cds, RHUI_ROOT)]
 
     if dirty_hosts["nginx"]:
         errors.append("nginx is still running on {dirty_hosts['nginx']}")

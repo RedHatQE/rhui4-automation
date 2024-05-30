@@ -7,7 +7,7 @@ import logging
 import nose
 from stitches.expect import Expect
 
-from rhui4_tests_lib.cfg import Config, RHUI_CFG, RHUI_CFG_BAK
+from rhui4_tests_lib.cfg import Config, RHUI_CFG, RHUI_CFG_BAK, RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
@@ -260,12 +260,11 @@ def test_20_check_cleanup():
     '''
     # for RHBZ#1640002
     service = "nginx"
-    mdir = "/var/lib/rhui/remote_share"
     dirty_hosts = {}
     errors = []
 
     dirty_hosts["nginx"] = [cds.hostname for cds in CDS if Helpers.check_service(cds, service)]
-    dirty_hosts["mount"] = [cds.hostname for cds in CDS if Helpers.check_mountpoint(cds, mdir)]
+    dirty_hosts["mount"] = [cds.hostname for cds in CDS if Helpers.check_mountpoint(cds, RHUI_ROOT)]
 
     if dirty_hosts["nginx"]:
         errors.append("nginx is still running on {dirty_hosts['nginx']}")

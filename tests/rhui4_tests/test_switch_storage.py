@@ -6,7 +6,7 @@ import logging
 import nose
 from stitches.expect import Expect
 
-from rhui4_tests_lib.cfg import Config, ANSWERS_BAK
+from rhui4_tests_lib.cfg import Config, ANSWERS_BAK, RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
@@ -20,7 +20,6 @@ RHUA = ConMgr.connect()
 CDS = ConMgr.connect(CDS_HOSTNAME)
 
 NEW_FS_OPTIONS = "timeo=100"
-REMOTE_SHARE = "/var/lib/rhui/remote_share"
 FORCE_FLAG = " --remote-fs-force-change"
 
 def _check_rhui_mountpoint(connection, fs_server, options=""):
@@ -28,7 +27,7 @@ def _check_rhui_mountpoint(connection, fs_server, options=""):
     for mount_info_file in ["/proc/mounts", "/etc/fstab"]:
         _, stdout, _ = connection.exec_command(f"cat {mount_info_file}")
         mounts = stdout.read().decode().splitlines()
-        matches = [line for line in mounts if REMOTE_SHARE in line]
+        matches = [line for line in mounts if RHUI_ROOT in line]
         # there must be only one such share
         nose.tools.eq_(len(matches), 1,
                        msg=f"unexpected matches in {mount_info_file}: {matches}")

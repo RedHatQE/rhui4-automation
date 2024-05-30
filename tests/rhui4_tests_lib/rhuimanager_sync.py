@@ -7,6 +7,7 @@ import nose
 
 from stitches.expect import Expect, CTRL_C
 
+from rhui4_tests_lib.cfg import RHUI_ROOT
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_repo import RHUIManagerRepo
 from rhui4_tests_lib.util import Util
@@ -81,6 +82,6 @@ class RHUIManagerSync():
         RHUIManager.quit(connection)
         for repo in repolist:
             relpath = RHUIManagerRepo.check_detailed_information(connection, repo)["relativepath"]
-            content_dir = "/var/lib/rhui/remote_share/symlinks/pulp/content"
+            content_dir = f"{RHUI_ROOT}/symlinks/pulp/content"
             repodata = f"{content_dir}/{relpath}/repodata/repomd.xml"
             Expect.expect_retval(connection, f"test -f {repodata}")
