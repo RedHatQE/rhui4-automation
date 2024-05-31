@@ -31,6 +31,8 @@ class TestCLI():
         self.configured_number = int(Config.get_from_rhui_tools_conf(RHUA,
                                                                      "rhui",
                                                                      "retain_repo_versions"))
+        self.limit_single = self.configured_number - 1
+        self.limit_all = self.configured_number - 3
 
     @staticmethod
     def setup_class():
@@ -65,7 +67,7 @@ class TestCLI():
             time.sleep(7)
 
     def test_06_check_versions(self):
-        '''check if the current number of repo version did not exceed the limit and 0 is gone'''
+        '''check if the current number of repo versions did not exceed the limit and 0 is gone'''
         versions = PulpAPI.list_repo_versions(RHUA, self.repo_id)
         # the number of versions should match the setting
         nose.tools.eq_(len(versions), self.configured_number)
@@ -77,7 +79,43 @@ class TestCLI():
         entry = f"Deleting repository version <Repository: {self.repo_id}; Version: 0>"
         Expect.expect_retval(RHUA, f"grep '{entry}' /var/log/messages")
 
-    def test_08_cleanup(self):
+    def test_08_set_retain_versions_single(self):
+        '''set the number of versions to a custom value for a single repo'''
+        RHUIManagerCLI.repo_set_retain_versions(RHUA, self.limit_single, repo_id=self.repo_id)
+        time.sleep(5)
+
+    def test_09_check_versions(self):
+        '''check if the new number of repo versions was set'''
+        versions = PulpAPI.list_repo_versions(RHUA, self.repo_id)
+        # the number of versions should match the setting
+        nose.tools.eq_(len(versions), self.limit_single)
+        # the last version number should not be 1 anymore
+        nose.tools.assert_not_equal(versions[-1]["number"], 1)
+
+    def test_10_check_version_1_gone(self):
+        '''also check if the deletion of the oldest version was logged'''
+        entry = f"Deleting and squashing version 1 of repository '{self.repo_id}'"
+        Expect.expect_retval(RHUA, f"grep \"{entry}\" /var/log/messages")
+
+    def test_11_set_retain_versions_all(self):
+        '''set the number of versions to a custom value for all repos'''
+        RHUIManagerCLI.repo_set_retain_versions(RHUA, self.limit_all, True)
+        time.sleep(5)
+
+    def test_12_check_versions(self):
+        '''check if the new number of repo versions was set'''
+        versions = PulpAPI.list_repo_versions(RHUA, self.repo_id)
+        # the number of versions should match the setting
+        nose.tools.eq_(len(versions), self.limit_all)
+        # the last version number should not be 3 anymore
+        nose.tools.assert_not_equal(versions[-1]["number"], 3)
+
+    def test_13_check_version_3_gone(self):
+        '''also check if the deletion of older versions was logged'''
+        entry = f"Deleting and squashing version 3 of repository '{self.repo_id}'"
+        Expect.expect_retval(RHUA, f"grep \"{entry}\" /var/log/messages")
+
+    def test_14_cleanup(self):
         '''clean up'''
         RHUIManagerCLI.repo_delete(RHUA, self.repo_id)
         Expect.expect_retval(RHUA, "rm -rf " + self.tmpdir)

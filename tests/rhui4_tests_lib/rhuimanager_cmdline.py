@@ -366,6 +366,17 @@ class RHUIManagerCLI():
         '''
         Expect.expect_retval(connection, f"rhui-manager repo export --repo_id {repo_id}")
 
+    @staticmethod
+    def repo_set_retain_versions(connection, versions, all_repos=False, repo_id=""):
+        '''
+        change the number of repo versions to keep, deleting any older versions
+        '''
+        opts = f"--versions {versions}"
+        if all_repos:
+            opts += " --all"
+        elif repo_id:
+            opts += f" --repo_id {repo_id}"
+        Expect.expect_retval(connection, f"rhui-manager repo set_retain_versions {opts}")
 
     @staticmethod
     def repo_orphan_cleanup(connection):
