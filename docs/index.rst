@@ -27,6 +27,8 @@ Welcome to the RHUI 4 Test Plan!
    hap
    hap_cmd
    installer_updates
+   instance_updates
+   instance_updates_cmd
    pulp_workers
    repo_management
    repo_prefix
