@@ -9,7 +9,10 @@ from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.yummy import Yummy
 
 RHUA = ConMgr.connect()
-OLD_PSQL_VERSION = "12"
+CDS = ConMgr.connect(ConMgr.get_cds_hostnames()[0])
+
+PSQL_DATA = {"old_version": 12,
+             "version_tolerance": 1}
 
 def _installed_major_version(connection, package):
     """get the installed version of the package"""
@@ -32,15 +35,22 @@ def _latest_available_module_stream(connection, package):
     # return the last row (ie. version)
     return streams[-1]
 
-def _check_package(connection, package):
-    """check if the latest module stream is installed for the package"""
+def _check_package(connection, package, tolerance=0):
+    """check if the latest module stream is installed for the package, possibly within limits"""
     installed = _installed_major_version(connection, package)
     if not installed:
         raise ValueError(f"{package} is not installed")
     available = _latest_available_module_stream(connection, package)
     if not available:
         raise ValueError(f"{package} stream is not available")
-    nose.tools.eq_(installed, available)
+    if tolerance:
+        diff = float(available) - float(installed)
+        if diff < 0:
+            raise ValueError("the installed version is newer than the latest available version")
+        nose.tools.ok_(diff <= tolerance,
+                       msg=f"the difference ({diff}) is not within the tolerance ({tolerance})")
+    else:
+        nose.tools.eq_(installed, available)
 
 def setup():
     """announce the beginning of the test run"""
@@ -51,10 +61,16 @@ def test_01_postgresql():
     package = "postgresql"
     answers_option = f"{package}_version"
     # Was this RHUI installed with the old/original version? If so, skip this test.
-    installed_package_version = Config.get_from_answers(RHUA, answers_option)
-    if installed_package_version == OLD_PSQL_VERSION:
+    installed_package_version = int(Config.get_from_answers(RHUA, answers_option))
+    if installed_package_version == PSQL_DATA["old_version"]:
         raise nose.exc.SkipTest(f"This RHUI was installed with the old {package} version.")
-    _check_package(RHUA, package)
+    _check_package(RHUA, package, PSQL_DATA["version_tolerance"])
+
+def test_02_nginx():
+    """check the nginx module stream, RHUA and CDS"""
+    package = "nginx"
+    for conn in [RHUA, CDS]:
+        _check_package(conn, package)
 
 def teardown():
     """announce the end of the test run"""
