@@ -15,8 +15,8 @@ import nose
 from stitches.expect import Expect
 import yaml
 
+from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
@@ -109,7 +109,7 @@ class TestRhuiManagerStatus():
     @staticmethod
     def test_08_check_expiration():
         """change the expiration threshold and expect another bad status"""
-        Helpers.edit_rhui_tools_conf(RHUA, "expiration_warning", "36525")
+        Config.edit_rhui_tools_conf(RHUA, "expiration_warning", "36525")
         expected_exit_code = REPO_SYNC_ERROR + CERT_WARN
         Expect.expect_retval(RHUA, CMD, expected_exit_code, TIMEOUT)
 
@@ -174,7 +174,7 @@ class TestRhuiManagerStatus():
         # for RHBZ#2174633
         Expect.expect_retval(HAPROXY, "systemctl start haproxy")
         RHUIManagerCLI.repo_delete(RHUA, self.bad_repo)
-        Helpers.restore_rhui_tools_conf(RHUA)
+        Config.restore_rhui_tools_conf(RHUA)
         Expect.expect_retval(CDS, f"mv -f /tmp/{basename(SSL_CERT)} {SSL_CERT}")
         Expect.expect_retval(RHUA, "systemctl stop pulpcore-worker@2")
         expected_exit_code = SERVICE_ERROR

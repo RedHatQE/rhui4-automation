@@ -367,6 +367,25 @@ class RHUIManagerCLI():
         Expect.expect_retval(connection, f"rhui-manager repo export --repo_id {repo_id}")
 
     @staticmethod
+    def repo_set_retain_versions(connection, versions, all_repos=False, repo_id=""):
+        '''
+        change the number of repo versions to keep, deleting any older versions
+        '''
+        opts = f"--versions {versions}"
+        if all_repos:
+            opts += " --all"
+        elif repo_id:
+            opts += f" --repo_id {repo_id}"
+        Expect.expect_retval(connection, f"rhui-manager repo set_retain_versions {opts}")
+
+    @staticmethod
+    def repo_orphan_cleanup(connection):
+        '''
+        schedule a task to clean up orphaned artifacts
+        '''
+        Expect.expect_retval(connection, "rhui-manager repo orphan_cleanup")
+
+    @staticmethod
     def packages_list(connection, repo_id):
         '''
         return a list of packages present in the repo

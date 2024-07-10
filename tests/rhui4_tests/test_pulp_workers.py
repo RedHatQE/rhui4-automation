@@ -5,8 +5,8 @@ from os.path import basename
 import logging
 import nose
 from stitches.expect import Expect
-import yaml
 
+from rhui4_tests_lib.cfg import Config, ANSWERS_BAK
 from rhui4_tests_lib.conmgr import ConMgr
 
 logging.basicConfig(level=logging.DEBUG)
@@ -15,8 +15,6 @@ RHUA_HOSTNAME = ConMgr.get_rhua_hostname()
 
 RHUA = ConMgr.connect()
 
-ANSWERS = "/root/.rhui/answers.yaml"
-ANSWERS_BAK = ANSWERS + ".backup_test"
 CUSTOM_WORKER_COUNT = 2
 UNIT_NAME = "pulpcore-worker"
 
@@ -32,20 +30,13 @@ def _get_current_pulp_worker_count():
     raw_lines = stdout.read().decode().splitlines()
     return len(raw_lines)
 
-def _get_orig_pulp_worker_count():
-    """get the number of Pulp workers"""
-    _, stdout, _ = RHUA.exec_command(f"cat {ANSWERS_BAK}")
-    answers = yaml.safe_load(stdout)
-    saved_worker_count = answers["rhua"]["pulp_workers"]
-    return saved_worker_count
-
 def setup():
     """announce the beginning of the test run"""
     print(f"*** Running {basename(__file__)}: ***")
 
 def test_01_prep():
     """back up the answers file"""
-    Expect.expect_retval(RHUA, f"cp {ANSWERS} {ANSWERS_BAK}")
+    Config.backup_answers(RHUA)
 
 def test_02_change_pulp_worker_count():
     """change the number of Pulp workers"""
@@ -69,13 +60,13 @@ def test_04_check_rhui_manager_status():
 
 def test_05_revert_pulp_worker_count():
     """revert the number of Pulp workers"""
-    orig_count = _get_orig_pulp_worker_count()
+    orig_count = Config.get_from_answers(RHUA, "pulp_workers", ANSWERS_BAK)
     _change_worker_count(orig_count)
 
 def test_06_check_pulp_worker_count():
     """check if the number of Pulp workers has been reverted"""
     current_count = _get_current_pulp_worker_count()
-    orig_count = _get_orig_pulp_worker_count()
+    orig_count = Config.get_from_answers(RHUA, "pulp_workers", ANSWERS_BAK)
     nose.tools.eq_(current_count, orig_count)
 
 def test_07_wrong_count_parameter():
@@ -85,7 +76,7 @@ def test_07_wrong_count_parameter():
 
 def test_99_cleanup():
     """clean up: remove the answers file backup"""
-    Expect.expect_retval(RHUA, f"rm -f {ANSWERS_BAK}")
+    Config.restore_answers(RHUA)
 
 def teardown():
     """announce the end of the test run"""

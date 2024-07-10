@@ -5,6 +5,7 @@ import re
 from stitches.expect import Expect
 
 from rhui4_tests_lib.helpers import Helpers
+from rhui4_tests_lib.cfg import Config
 
 class RHSMRHUI():
     """Subscription management for RHUI"""
@@ -18,7 +19,7 @@ class RHSMRHUI():
         if fail_if_registered and Helpers.is_registered(connection):
             raise RuntimeError("The system is already registered.")
         if not username or not password:
-            username, password = Helpers.get_credentials(connection)
+            username, password = Config.get_credentials(connection)
         Expect.expect_retval(connection,
                              "subscription-manager register --force --type rhui " +
                              f"--username {username} --password {password}",

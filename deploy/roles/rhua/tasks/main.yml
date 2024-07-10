@@ -30,6 +30,9 @@
     {% if proxy | default(False) %}
     --proxy-hostname hap01.example.com --proxy-port 3128 --proxy-protocol http
     {% endif %}
+    {% if new_psql | default(False) %}
+    --postgresql-version {{ latest_postgresql }}
+    {% endif %}
   when: install_rhui_installer is changed
   tags: rhua
 

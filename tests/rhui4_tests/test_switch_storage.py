@@ -5,8 +5,8 @@ from os.path import basename
 import logging
 import nose
 from stitches.expect import Expect
-import yaml
 
+from rhui4_tests_lib.cfg import Config, ANSWERS_BAK, RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
@@ -19,10 +19,7 @@ CDS_HOSTNAME = ConMgr.get_cds_hostnames()[0]
 RHUA = ConMgr.connect()
 CDS = ConMgr.connect(CDS_HOSTNAME)
 
-ANSWERS = "/root/.rhui/answers.yaml"
-ANSWERS_BAK = ANSWERS + ".backup_test"
 NEW_FS_OPTIONS = "timeo=100"
-REMOTE_SHARE = "/var/lib/rhui/remote_share"
 FORCE_FLAG = " --remote-fs-force-change"
 
 def _check_rhui_mountpoint(connection, fs_server, options=""):
@@ -30,7 +27,7 @@ def _check_rhui_mountpoint(connection, fs_server, options=""):
     for mount_info_file in ["/proc/mounts", "/etc/fstab"]:
         _, stdout, _ = connection.exec_command(f"cat {mount_info_file}")
         mounts = stdout.read().decode().splitlines()
-        matches = [line for line in mounts if REMOTE_SHARE in line]
+        matches = [line for line in mounts if RHUI_ROOT in line]
         # there must be only one such share
         nose.tools.eq_(len(matches), 1,
                        msg=f"unexpected matches in {mount_info_file}: {matches}")
@@ -64,15 +61,13 @@ def test_01_add_cds():
 
 def test_02_prep():
     """back up the answers file"""
-    Expect.expect_retval(RHUA, f"cp {ANSWERS} {ANSWERS_BAK}")
+    Config.backup_answers(RHUA)
 
 def test_03_rerun_installer():
     """rerun the installer with a different remote FS server"""
     # the FS server is supposed to be on the RHUA, so let's use the RHUA hostname
     # get the actual FS server hostname from the answers file
-    _, stdout, _ = RHUA.exec_command(f"cat {ANSWERS}")
-    answers = yaml.safe_load(stdout)
-    current_fs_server = answers["rhua"]["remote_fs_server"]
+    current_fs_server = Config.get_from_answers(RHUA, "remote_fs_server")
     fs_hostname = current_fs_server.split(":")[0]
     new_fs_server = current_fs_server.replace(fs_hostname, RHUA_HOSTNAME)
     # first, check if the installer refuses to rerun without the force flag
@@ -119,11 +114,9 @@ def test_99_cleanup():
     """clean up: delete the CDS and rerun the installer with the original remote FS"""
     RHUIManagerCLIInstance.delete(RHUA, "cds", [CDS_HOSTNAME], force=True)
     # get the original FS server hostname from the backed up answers file
-    _, stdout, _ = RHUA.exec_command(f"cat {ANSWERS_BAK}")
-    answers = yaml.safe_load(stdout)
-    original_fs_server = answers["rhua"]["remote_fs_server"]
+    original_fs_server = Config.get_from_answers(RHUA, "remote_fs_server", ANSWERS_BAK)
     fs_hostname = original_fs_server.split(":")[0]
-    original_fs_options = answers["rhua"]["rhua_mount_options"]
+    original_fs_options = Config.get_from_answers(RHUA, "rhua_mount_options", ANSWERS_BAK)
     installer_cmd = f"rhui-installer --rerun " \
                     f"--remote-fs-server {original_fs_server} " \
                     f"--rhua-mount-options {original_fs_options}" \
@@ -132,7 +125,7 @@ def test_99_cleanup():
     # did it work?
     _check_rhui_mountpoint(RHUA, fs_hostname, original_fs_options)
     # finish the cleanup
-    Expect.expect_retval(RHUA, f"rm -f {ANSWERS_BAK}")
+    Config.restore_answers(RHUA)
     ConMgr.remove_ssh_keys(RHUA)
 
 def teardown():

@@ -5,7 +5,7 @@ import time
 
 from stitches.expect import CTRL_C, Expect
 
-from rhui4_tests_lib.helpers import Helpers
+from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.util import Util
 
@@ -159,7 +159,7 @@ class RHUIManagerRepo():
         '''
         add a new Red Hat container
         '''
-        default_registry = Helpers.get_registry_url("default", connection)
+        default_registry = Config.get_registry_url("default", connection)
         # if the credentials parameter is supplied, it's supposed to be a list containing:
         #   0 - registry hostname if not using the default one
         #   1 - username (if required; the default registry requires the RH (CCSP) login)

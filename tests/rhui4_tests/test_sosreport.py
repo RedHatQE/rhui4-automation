@@ -9,8 +9,9 @@ from tempfile import mkdtemp
 
 from stitches.expect import Expect
 
+from rhui4_tests_lib.cfg import ANSWERS, RHUI_CFG, RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.helpers import Helpers, RHUI_CFG
+from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
 from rhui4_tests_lib.sos import Sos
@@ -24,7 +25,7 @@ SOSREPORT_LOCATION_CDS = join(TMPDIR, "sosreport_location_cds")
 CONNECTION_RHUA = RHUA = ConMgr.connect()
 CONNECTION_CDS = ConMgr.connect(ConMgr.get_cds_hostnames()[0])
 
-WANTED_FILES_RHUA = ["/root/.rhui/answers.yaml",
+WANTED_FILES_RHUA = [ANSWERS,
                      "/root/.rhui/rhui.log",
                      RHUI_CFG,
                      "/etc/pulp/settings.py",
@@ -38,7 +39,7 @@ WANTED_FILES_CDS = ["/etc/nginx/nginx.conf",
 
 CMDS_RHUA = ["rhui-manager status",
              "rhui-manager cert info"]
-CMDS_CDS = ["ls -lR /var/lib/rhui/remote_share"]
+CMDS_CDS = [f"ls -lR {RHUI_ROOT}"]
 WANTED_FILES_RHUA.extend([Helpers.encode_sos_command(cmd) for cmd in CMDS_RHUA])
 WANTED_FILES_CDS.extend([Helpers.encode_sos_command(cmd) for cmd in CMDS_CDS])
 

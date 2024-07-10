@@ -5,6 +5,7 @@ import time
 from stitches.expect import Expect
 import xmltodict
 
+from rhui4_tests_lib.cfg import RHUI_ROOT
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
 
 class Yummy():
@@ -16,7 +17,7 @@ class Yummy():
         # export the repo to make sure the symlinks exist
         RHUIManagerCLI.repo_export(connection, repo)
         time.sleep(3)
-        base_path = "/var/lib/rhui/remote_share/symlinks/pulp/content"
+        base_path = f"{RHUI_ROOT}/symlinks/pulp/content"
         relative_path = RHUIManagerCLI.repo_info(connection, repo)["relativepath"]
         repodata_file = f"{base_path}/{relative_path}/repodata/repomd.xml"
         _, stdout, _ = connection.exec_command(f"cat {repodata_file}")
@@ -134,3 +135,11 @@ class Yummy():
         cmd = "yum check-update "
         cmd += " ".join(packages) if packages else ""
         return connection.recv_exit_status(cmd, timeout=60) == (100 if expect_update else 0)
+
+    @staticmethod
+    def module_list(connection, package):
+        """return information module streams for the package, exactly as presented by dnf"""
+        cmd = f"dnf -q module list {package}"
+        _, stdout, _ = connection.exec_command(cmd)
+        raw_module_list_output = stdout.read().decode()
+        return raw_module_list_output

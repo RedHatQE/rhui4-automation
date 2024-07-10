@@ -14,6 +14,7 @@ import nose
 from stitches.expect import Expect
 import yaml
 
+from rhui4_tests_lib.cfg import Config, RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr, USER_NAME
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI, \
@@ -421,7 +422,7 @@ class TestCLI():
         orig_ent_key = stdout.read().decode()
         nose.tools.eq_(configuration["private_key"], orig_ent_key)
         # load the default SSL CA cert and compare it
-        default_ca_path = Helpers.get_from_rhui_tools_conf(RHUA, "security", "ssl_ca_crt")
+        default_ca_path = Config.get_from_rhui_tools_conf(RHUA, "security", "ssl_ca_crt")
         _, stdout, _ = RHUA.exec_command(f"cat {default_ca_path}")
         default_ca_cert = stdout.read().decode()
         nose.tools.eq_(configuration["ca_cert"], default_ca_cert)
@@ -463,7 +464,7 @@ class TestCLI():
         RHUIManagerCLI.repo_export(RHUA, CUSTOM_REPOS[0])
         time.sleep(5)
         # make sure the symlink for the packages to be removed exists
-        symlink_test = "test -L /var/lib/rhui/remote_share/symlinks/pulp/content/" \
+        symlink_test = f"test -L {RHUI_ROOT}/symlinks/pulp/content/" \
                        f"unprotected/{CUSTOM_REPOS[0]}/Packages/{TEST_RPM[0].lower()}/{TEST_RPM}"
         Expect.expect_retval(RHUA, symlink_test)
         # get a list of repo packages
@@ -496,7 +497,7 @@ class TestCLI():
         time.sleep(5)
         # make sure the symlink for one of the packages to be removed exists
         rpm = basename(self.remote_content["rpm"])
-        symlink_test = "test -L /var/lib/rhui/remote_share/symlinks/pulp/content/" \
+        symlink_test = f"test -L {RHUI_ROOT}/symlinks/pulp/content/" \
                        f"protected/huh-{CUSTOM_REPOS[1]}/Packages/{rpm[0].lower()}/{rpm}"
         Expect.expect_retval(RHUA, symlink_test)
         # get a list of repo packages
@@ -510,7 +511,7 @@ class TestCLI():
         # the package list for the repo should be empty now
         nose.tools.eq_(after_list, [])
         # also check if the symlinks are gone
-        symlink_test = "[[ $(find /var/lib/rhui/remote_share/symlinks/pulp/content/" \
+        symlink_test = f"[[ $(find {RHUI_ROOT}/symlinks/pulp/content/" \
                        f"protected/huh-{CUSTOM_REPOS[1]}/Packages -type l | wc -l) == 0 ]]"
         Expect.expect_retval(RHUA, symlink_test)
 
@@ -568,7 +569,7 @@ class TestCLI():
         test_package = random.choice(package_list)
         # construct the full path to the symlink
         # remember the subpath so it can be deleted in the end (to clean up)
-        path = "/var/lib/rhui/remote_share/symlinks/pulp/content/"
+        path = f"{RHUI_ROOT}/symlinks/pulp/content/"
         path += self.yum_repo_paths[1]
         repo_path = path
         path += "/Packages/"
@@ -727,6 +728,19 @@ class TestCLI():
         Expect.expect_retval(RHUA, cmd, 248)
         RHUIManagerCLI.repo_delete(RHUA, self.yum_repo_ids[1])
         RHUIManager.remove_rh_certs(RHUA)
+
+    @staticmethod
+    def test_54_orphan_cleanup():
+        '''check if rhui-manager can have orphans removed'''
+        # first, check if there are any artifacts
+        artifacts = Helpers.get_artifacts(RHUA)
+        nose.tools.ok_(artifacts)
+        # have them removed
+        RHUIManagerCLI.repo_orphan_cleanup(RHUA)
+        time.sleep(10)
+        # check if there are none
+        artifacts = Helpers.get_artifacts(RHUA)
+        nose.tools.ok_(not artifacts)
 
     @staticmethod
     def test_99_cleanup():

@@ -30,7 +30,7 @@ class RHUIManagerCLIInstance():
             hostname="", ssh_user=SUDO_USER_NAME, keyfile_path=SUDO_USER_KEY,
             ssl_crt="", ssl_key="",
             haproxy_config_file="",
-            force=False, unsafe=False):
+            force=False, unsafe=False, no_update=False):
         '''
         Add a CDS or HAProxy node.
         If hostname is empty, ConMgr will be used to determine the default one for the node type
@@ -57,10 +57,12 @@ class RHUIManagerCLIInstance():
             cmd += " --force"
         if unsafe:
             cmd += " --unsafe"
-        return connection.recv_exit_status(cmd, timeout=300) == 0
+        if no_update:
+            cmd += " --no_update"
+        return connection.recv_exit_status(cmd, timeout=600) == 0
 
     @staticmethod
-    def reinstall(connection, node_type, hostname="", all_nodes=False):
+    def reinstall(connection, node_type, hostname="", all_nodes=False, no_update=False):
         '''
         Reinstall a CDS or HAProxy node. One hostname or all tracked nodes.
         Return True if the command exited with 0, and False otherwise.
@@ -72,7 +74,9 @@ class RHUIManagerCLIInstance():
             cmd = f"rhui-manager {node_type} reinstall --hostname {hostname}"
         else:
             raise ValueError("Either a hostname or '--all' must be used.")
-        return connection.recv_exit_status(cmd, timeout=240) == 0
+        if no_update:
+            cmd += " --no_update"
+        return connection.recv_exit_status(cmd, timeout=540) == 0
 
     @staticmethod
     def delete(connection, node_type, hostnames="", force=False):

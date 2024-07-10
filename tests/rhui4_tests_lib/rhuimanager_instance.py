@@ -36,7 +36,8 @@ class RHUIManagerInstance():
                      hostname="", user_name=SUDO_USER_NAME, ssh_key_path=SUDO_USER_KEY,
                      ssl_crt="", ssl_key="",
                      haproxy_config_file="",
-                     update=False):
+                     update=False,
+                     no_update=False):
         '''
         Register (add) a new CDS or HAProxy instance
         @param hostname instance, or the default value for the screen type as ConMgr knows it
@@ -45,6 +46,7 @@ class RHUIManagerInstance():
         @param ssl_crt (optional) absolute path to the SSL certificate to deploy (CDS only)
         @param ssl_key (optional) absolute path to the SSL key to deploy (CDS only)
         @param update Bool; update the cds or hap if it is already tracked or raise an exception
+        @param no_update Bool; do not let rhui-manager update RPMs on the instance
         '''
         if not hostname:
             if screen == "cds":
@@ -92,15 +94,19 @@ class RHUIManagerInstance():
         Expect.enter(connection, ssh_key_path)
         state = Expect.expect_list(connection, [
             (re.compile(".*Cannot find file, please enter a valid path.*", re.DOTALL), 1),
-            (re.compile(".*Checking SSH authentication on instance.*", re.DOTALL), 2),
-            (re.compile(".*Optional absolute path to user supplied SSL key file:.*", re.DOTALL), 3),
-            (re.compile(".*Optional absolute path to user supplied HAProxy config file:.*", re.DOTALL), 4)
+            (re.compile(".*Update instance.*", re.DOTALL), 2)
         ])
         if state == 1:
             # don't know how to continue with invalid path: raise an exception
             Expect.enter(connection, CTRL_C)
             Expect.enter(connection, "q")
             raise InvalidSshKeyPath(ssh_key_path)
+        Expect.enter(connection, "n" if no_update else "y")
+        state = Expect.expect_list(connection, [
+            (re.compile(".*Checking SSH authentication on instance.*", re.DOTALL), 2),
+            (re.compile(".*Optional absolute path to user supplied SSL key file:.*", re.DOTALL), 3),
+            (re.compile(".*Optional absolute path to user supplied HAProxy config.*", re.DOTALL), 4)
+        ])
         if state == 3:
             # the SSL key is only asked for when adding a CDS
             Expect.enter(connection, ssl_key)
@@ -120,7 +126,7 @@ class RHUIManagerInstance():
             time.sleep(7)
             Expect.enter(connection, "yes")
         # installation and configuration through Ansible happens here, let it take its time
-        RHUIManager.quit(connection, "The .*was successfully configured.", 180)
+        RHUIManager.quit(connection, "The .*was successfully configured.", 480)
 
 
     @staticmethod
@@ -166,3 +172,19 @@ class RHUIManagerInstance():
         ret = Instance.parse(lines)
         Expect.enter(connection, 'q')
         return [cds for _, cds in ret]
+
+    @staticmethod
+    def reinstall(connection, screen, no_update=False):
+        '''
+        reinstall the CDS or HAProxy instances; only one (the first)
+        '''
+        tracked_instances = RHUIManagerInstance.list(connection, screen)
+        if not tracked_instances:
+            raise NoSuchInstance()
+        RHUIManager.screen(connection, screen)
+        Expect.enter(connection, "r")
+        Expect.expect(connection, "Enter value .*:")
+        Expect.enter(connection, "1")
+        Expect.expect(connection, "Update instance.*")
+        Expect.enter(connection, "n" if no_update else "y")
+        RHUIManager.quit(connection, "", 480)

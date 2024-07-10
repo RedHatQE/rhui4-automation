@@ -7,8 +7,9 @@ import logging
 import nose
 from stitches.expect import Expect
 
+from rhui4_tests_lib.cfg import Config, RHUI_CFG, RHUI_CFG_BAK, RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.helpers import Helpers, RHUI_CFG
+from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
 from rhui4_tests_lib.rhuimanager import RHUIManager
 
@@ -101,13 +102,13 @@ def test_07_reinstall_all():
     '''
     # first, modify the RHUI configuration file on all CDSes
     for cds_conn in CDS:
-        Helpers.edit_rhui_tools_conf(cds_conn, "unprotected_repo_prefix", "huh")
+        Config.edit_rhui_tools_conf(cds_conn, "unprotected_repo_prefix", "huh")
     # run the reinstallation
     status = RHUIManagerCLIInstance.reinstall(RHUA, "cds", all_nodes=True)
     nose.tools.ok_(status, msg=f"unexpected 'all CDS' reinstallation status: {status}")
     # check if the RHUI configuration file was reset after the reinstallation
     # meaning, the backup copy made while modifying the configuration matches the main file
-    verification_cmd = f"diff -u {RHUI_CFG} {RHUI_CFG}.bak"
+    verification_cmd = f"diff -u {RHUI_CFG} {RHUI_CFG_BAK}"
     for cds_conn in CDS:
         Expect.expect_retval(cds_conn, verification_cmd)
 
@@ -259,12 +260,11 @@ def test_20_check_cleanup():
     '''
     # for RHBZ#1640002
     service = "nginx"
-    mdir = "/var/lib/rhui/remote_share"
     dirty_hosts = {}
     errors = []
 
     dirty_hosts["nginx"] = [cds.hostname for cds in CDS if Helpers.check_service(cds, service)]
-    dirty_hosts["mount"] = [cds.hostname for cds in CDS if Helpers.check_mountpoint(cds, mdir)]
+    dirty_hosts["mount"] = [cds.hostname for cds in CDS if Helpers.check_mountpoint(cds, RHUI_ROOT)]
 
     if dirty_hosts["nginx"]:
         errors.append("nginx is still running on {dirty_hosts['nginx']}")

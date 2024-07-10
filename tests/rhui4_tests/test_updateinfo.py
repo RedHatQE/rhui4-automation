@@ -15,7 +15,6 @@ from stitches.expect import Expect
 import yaml
 
 from rhui4_tests_lib.conmgr import ConMgr
-from rhui4_tests_lib.pulp_api import PulpAPI
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_client import RHUIManagerClient
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
@@ -216,7 +215,7 @@ class TestClient():
         RHUIManagerRepo.delete_all_repos(RHUA)
         Expect.expect_retval(RHUA, f"rm -rf /tmp/{self.test['repo_id']}*")
         # delete the errata from Pulp
-        PulpAPI.delete_orphans(RHUA)
+        RHUIManagerCLI.repo_orphan_cleanup(RHUA)
         if not getenv("RHUISKIPSETUP"):
             RHUIManagerInstance.delete_all(RHUA, "loadbalancers")
             RHUIManagerInstance.delete_all(RHUA, "cds")
