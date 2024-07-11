@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 HOSTNAMES = {"RHUA": ConMgr.get_rhua_hostname(),
              "CDS": ConMgr.get_cds_hostnames()[0],
-             "HAProxy": ConMgr.get_cds_lb_hostname()}
+             "HAProxy": ConMgr.get_lb_hostname()}
 PORTS = { "https": 443 }
 PROTOCOL_TEST_CMD = "echo | openssl s_client -%s -connect %s:%s"
 # these are in fact the s_client options for protocols, just without the dash

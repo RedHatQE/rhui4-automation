@@ -19,7 +19,7 @@
   command: >
     rhui-installer
     --rhua-hostname rhua.example.com
-    --cds-lb-hostname cds.example.com
+    --cds-lb-hostname lb.example.com
     --container-support-enabled True
     --remote-fs-server nfs.example.com:/export
     {% if remote_data | default(False) %}

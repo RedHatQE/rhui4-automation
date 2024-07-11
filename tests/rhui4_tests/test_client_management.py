@@ -247,7 +247,7 @@ class TestClient():
         # try HEADing the repodata file for the already added repo
         # the HTTP request must not complete (not even with HTTP 403);
         # it is supposed to raise an SSLError instead
-        cds_lb = ConMgr.get_cds_lb_hostname()
+        cds_lb = ConMgr.get_lb_hostname()
         nose.tools.ok_(not requests.head(f"https://{cds_lb}/pulp/content/" +
                                          f"{self.yum_repo_path}/repodata/repomd.xml",
                                          timeout=10,

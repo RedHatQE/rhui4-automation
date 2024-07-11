@@ -15,7 +15,7 @@ from rhui4_tests_lib.util import Util
 
 logging.basicConfig(level=logging.DEBUG)
 
-HA_HOSTNAME = ConMgr.get_cds_lb_hostname()
+HA_HOSTNAME = ConMgr.get_lb_hostname()
 
 RHUA = ConMgr.connect()
 HAPROXY = ConMgr.connect(HA_HOSTNAME)
@@ -73,7 +73,7 @@ def test_07_delete_nonexisting_hap():
                              RHUIManagerInstance.delete,
                              RHUA,
                              "loadbalancers",
-                             [HA_HOSTNAME.replace("cds", "cdsfoo")])
+                             ["foo" + HA_HOSTNAME])
 
 def test_08_delete_hap():
     '''
@@ -100,7 +100,10 @@ def test_11_add_hap_uppercase():
         add (and delete) an HAProxy Load-balancer with uppercase characters
     '''
     # for RHBZ#1572623
-    host_up = HA_HOSTNAME.replace("hap", "HAP")
+    chunks = HA_HOSTNAME.split(".")
+    chunks[0] = chunks[0].upper()
+    host_up = ".".join(chunks)
+    nose.tools.assert_not_equal(HA_HOSTNAME, host_up)
     RHUIManagerInstance.add_instance(RHUA, "loadbalancers", host_up)
     hap_list = RHUIManagerInstance.list(RHUA, "loadbalancers")
     nose.tools.assert_not_equal(hap_list, [])

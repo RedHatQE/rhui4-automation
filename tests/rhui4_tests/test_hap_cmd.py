@@ -15,7 +15,7 @@ from rhui4_tests_lib.util import Util
 
 logging.basicConfig(level=logging.DEBUG)
 
-HA_HOSTNAME = ConMgr.get_cds_lb_hostname()
+HA_HOSTNAME = ConMgr.get_lb_hostname()
 
 RHUA = ConMgr.connect()
 HAPROXY = ConMgr.connect(HA_HOSTNAME)
@@ -197,7 +197,10 @@ def test_18_add_hap_changed_case():
     add and delete an HAProxy Load-balancer with uppercase characters, should work
     '''
     # for RHBZ#1572623
-    hap_up = HA_HOSTNAME.replace("cds", "CDS")
+    chunks = HA_HOSTNAME.split(".")
+    chunks[0] = chunks[0].upper()
+    hap_up = ".".join(chunks)
+    nose.tools.assert_not_equal(HA_HOSTNAME, hap_up)
     status = RHUIManagerCLIInstance.add(RHUA, "haproxy", hap_up, unsafe=True)
     nose.tools.ok_(status, msg=f"unexpected addition status: {status}")
     hap_list = RHUIManagerCLIInstance.list(RHUA, "haproxy")

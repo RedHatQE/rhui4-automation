@@ -375,7 +375,7 @@ class TestCLI():
         '''create an alternate content source configuration JSON file'''
         # for RHBZ#2001087
         ssl_ca_file = f"{DATADIR}/custom_certs/ssl.crt"
-        lb_hostname = ConMgr.get_cds_lb_hostname()
+        lb_hostname = ConMgr.get_lb_hostname()
         # create the configuration: using labels to generate a new cert, valid for 1 day, custom CA
         RHUIManagerCLI.client_acs_config(RHUA,
                                          self.yum_repo_labels + [CUSTOM_REPOS[2], 1],

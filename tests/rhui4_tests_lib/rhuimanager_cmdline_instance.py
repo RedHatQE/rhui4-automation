@@ -44,7 +44,7 @@ class RHUIManagerCLIInstance():
             if node_type == "cds":
                 hostname = ConMgr.get_cds_hostnames()[0]
             elif node_type == "haproxy":
-                hostname = ConMgr.get_cds_lb_hostname()
+                hostname = ConMgr.get_lb_hostname()
         cmd = f"rhui-manager {node_type} add " + \
               f"--hostname {hostname} --ssh_user {ssh_user} --keyfile_path {keyfile_path}"
         if ssl_crt:
@@ -90,7 +90,7 @@ class RHUIManagerCLIInstance():
             if node_type == "cds":
                 hostnames = ConMgr.get_cds_hostnames()
             elif node_type == "haproxy":
-                hostnames = [ConMgr.get_cds_lb_hostname()]
+                hostnames = [ConMgr.get_lb_hostname()]
         cmd = f"rhui-manager {node_type} delete --hostnames {','.join(hostnames)}"
         if force:
             cmd += " --force"

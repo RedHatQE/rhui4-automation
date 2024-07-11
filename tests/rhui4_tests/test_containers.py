@@ -35,7 +35,7 @@ RHUA = ConMgr.connect()
 # This allows for multiple client machines in one stack.
 CLI = ConMgr.connect(getenv("RHUICLI", ConMgr.get_cli_hostnames()[0]))
 
-HA_HOSTNAME = ConMgr.get_cds_lb_hostname()
+HA_HOSTNAME = ConMgr.get_lb_hostname()
 
 CONF_RPM_NAME = "containers-rhui"
 CONF_RPM_VERSION = "1"

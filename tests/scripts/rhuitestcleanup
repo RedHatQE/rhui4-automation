@@ -11,7 +11,7 @@ from rhui4_tests_lib.util import Util
 
 RHUA = ConMgr.connect()
 CDS_HOSTNAMES = ConMgr.get_cds_hostnames()
-HA_HOSTNAME = ConMgr.get_cds_lb_hostname()
+HA_HOSTNAME = ConMgr.get_lb_hostname()
 CLI_HOSTNAMES = ConMgr.get_cli_hostnames()
 
 print("Removing entitlement certificates.")

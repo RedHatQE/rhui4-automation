@@ -32,7 +32,7 @@ CERT_ERROR = 64
 SERVICE_ERROR = 128
 
 RHUA = ConMgr.connect()
-HA_HOSTNAME = ConMgr.get_cds_lb_hostname()
+HA_HOSTNAME = ConMgr.get_lb_hostname()
 HAPROXY = ConMgr.connect(HA_HOSTNAME)
 CDS_HOSTNAME = ConMgr.get_cds_hostnames()[0]
 CDS = ConMgr.connect(CDS_HOSTNAME)

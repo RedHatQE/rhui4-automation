@@ -43,7 +43,7 @@
 {% endif %}
 
 {% if 'HAPROXY' in groups %}
-{{ hostvars[groups['HAPROXY'][0]]['ansible_eth0']['ipv4']['address'] }} cds cds.example.com
+{{ hostvars[groups['HAPROXY'][0]]['ansible_eth0']['ipv4']['address'] }} lb lb.example.com
 {% endif %}
 
 {% if 'CLI' in groups %}

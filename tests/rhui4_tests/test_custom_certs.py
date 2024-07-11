@@ -33,7 +33,7 @@ logging.basicConfig(level=logging.DEBUG)
 RHUA = ConMgr.connect()
 CDS_HOSTNAME = ConMgr.get_cds_hostnames()[0]
 CDS = ConMgr.connect(CDS_HOSTNAME)
-HAPROXY_HOSTNAME = ConMgr.get_cds_lb_hostname()
+HAPROXY_HOSTNAME = ConMgr.get_lb_hostname()
 
 CUSTOM_CERTS_DIR = "/tmp/extra_rhui_files/custom_certs"
 ORIG_CERTS_BASEDIR = "/etc/pki/rhui"

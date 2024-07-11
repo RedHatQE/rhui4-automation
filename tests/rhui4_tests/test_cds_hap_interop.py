@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG)
 CDS_HOSTNAMES = ConMgr.get_cds_hostnames()
 CDS2_EXISTS = len(CDS_HOSTNAMES) > 1
 
-HA_HOSTNAME = ConMgr.get_cds_lb_hostname()
+HA_HOSTNAME = ConMgr.get_lb_hostname()
 
 RHUA = ConMgr.connect()
 CDS = ConMgr.connect(CDS_HOSTNAMES[0])

@@ -52,7 +52,7 @@ class RHUIManagerInstance():
             if screen == "cds":
                 hostname = ConMgr.get_cds_hostnames()[0]
             elif screen == "loadbalancers":
-                hostname = ConMgr.get_cds_lb_hostname()
+                hostname = ConMgr.get_lb_hostname()
             else:
                 raise ValueError("hostname not given and screen invalid")
         # first check if the RHUA knows the host's SSH key, because if so, rhui-manager

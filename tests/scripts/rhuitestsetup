@@ -32,7 +32,7 @@ ARGS = PRS.parse_args()
 
 RHUA = ConMgr.connect()
 CDS_HOSTNAMES = ConMgr.get_cds_hostnames()
-HA_HOSTNAME = ConMgr.get_cds_lb_hostname()
+HA_HOSTNAME = ConMgr.get_lb_hostname()
 
 print("Logging in to RHUI.")
 RHUIManager.initial_run(RHUA)

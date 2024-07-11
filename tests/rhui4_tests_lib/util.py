@@ -183,7 +183,7 @@ class Util():
         package_escaped = re.escape(package)
         Expect.ping_pong(connection,
                          "yumdownloader --url " + package_escaped,
-                         f"https://{ConMgr.get_cds_lb_hostname()}" +
+                         f"https://{ConMgr.get_lb_hostname()}" +
                          f"/pulp/content/{path}.*{package_escaped}")
 
     @staticmethod

@@ -7,7 +7,7 @@ from stitches.connection import Connection
 from stitches.expect import Expect
 
 SHORT_HOSTNAMES = {"RHUA": "rhua",
-                   "CDS_LB": "cds",
+                   "LB": "lb",
                    "CDS": "cds",
                    "HAProxy": "hap",
                    "client": "cli"}
@@ -39,9 +39,9 @@ class ConMgr():
         return f"{SHORT_HOSTNAMES['RHUA']}.{DOMAIN}"
 
     @staticmethod
-    def get_cds_lb_hostname():
+    def get_lb_hostname():
         """return the hostname of the CDS Load Balancer node"""
-        return f"{SHORT_HOSTNAMES['CDS_LB']}.{DOMAIN}"
+        return f"{SHORT_HOSTNAMES['LB']}.{DOMAIN}"
 
     @staticmethod
     def get_cds_hostnames(fake=True):
