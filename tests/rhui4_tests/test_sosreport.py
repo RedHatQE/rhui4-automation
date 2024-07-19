@@ -29,7 +29,7 @@ WANTED_FILES_RHUA = [ANSWERS,
                      "/root/.rhui/rhui.log",
                      RHUI_CFG,
                      "/etc/pulp/settings.py",
-#                     "/var/log/rhui-installer/install_logger.log.latest",
+                     "/var/log/rhui-installer/install_logger.log.latest",
                      "/var/log/rhui/rhua_ansible.log",
                      "/var/log/rhui/rhui-subscription-sync.log"]
 WANTED_FILES_CDS = ["/etc/nginx/nginx.conf",
