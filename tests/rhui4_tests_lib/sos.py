@@ -10,11 +10,18 @@ class Sos():
     def run(connection):
         """run the sosreport command"""
         # now run sosreport with only the relevant plug-ins enabled, return the tarball location
-        _, stdout, _ = connection.exec_command("sos report -o nginx,pulpcore,rhui --batch | " +
-                                               "grep -A1 '^Your sosreport' | " +
-                                               "tail -1")
-        location = stdout.read().decode().strip()
-        return location
+        _, stdout, _ = connection.exec_command("sos report -o nginx,pulpcore,rhui --batch")
+        lines = stdout.read().decode().splitlines()
+        # return the line below the one which indicates that the following line contains the path
+        see_path = False
+        for line in lines:
+            if see_path:
+                return line.strip()
+            if line.startswith("Your sosreport"):
+                # process the line in the next iteration
+                see_path = True
+        # the in unlikely event that the output doesn't look as expected, return None
+        return None
 
     @staticmethod
     def check_files_in_archive(connection, filelist, archive):
