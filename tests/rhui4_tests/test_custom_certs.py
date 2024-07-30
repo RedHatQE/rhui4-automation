@@ -54,15 +54,16 @@ def _check_crt_key():
         _, stdout, _ = RHUA.exec_command(f"md5sum {CUSTOM_CERTS_DIR}/{FILES['cds_ssl']}.{ext}")
         expected_sum = stdout.read().decode().split()[0]
 
-        _, stdout, _ = CDS.exec_command(f"md5sum /etc/pki/rhui/certs/{CDS_HOSTNAME}.{ext}")
+        crt_file = f"{ORIG_CERTS_BASEDIR}/{ORIG_CERTS_SUBDIR}/cds_ssl.{ext}"
+        _, stdout, _ = CDS.exec_command(f"md5sum {crt_file}")
         actual_sum = stdout.read().decode().split()[0]
         nose.tools.eq_(expected_sum, actual_sum)
 
 def _delete_crt_key():
     """delete the cert and the key from the CDS"""
     for ext in ["crt", "key"]:
-        Expect.expect_retval(CDS,
-                             f"rm -f /etc/pki/rhui/certs/{CDS_HOSTNAME}.{ext}")
+        crt_file = f"{ORIG_CERTS_BASEDIR}/{ORIG_CERTS_SUBDIR}/cds_ssl.{ext}"
+        Expect.expect_retval(CDS, f"rm -f {crt_file}")
 
 def _check_instance_add_error():
     """check the error message after adding an instance incorrectly"""

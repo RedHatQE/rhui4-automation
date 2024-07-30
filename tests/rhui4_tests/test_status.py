@@ -43,7 +43,7 @@ TIMEOUT = 60
 MACH_READ_CMD = "rhui-manager status --repo_json"
 MACH_READ_FILE = "/tmp/repo_status.json"
 
-SSL_CERT = f"/etc/pki/rhui/certs/{CDS_HOSTNAME}.crt"
+SSL_CERT = "/etc/pki/rhui/certs/cds_ssl.crt"
 
 class TestRhuiManagerStatus():
     """class for the rhui-manager status tests """
