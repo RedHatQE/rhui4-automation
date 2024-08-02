@@ -46,3 +46,14 @@ class PulpAPI():
         _, stdout, _ = connection.exec_command(cmd)
         data = json.load(stdout)
         return data["results"]
+
+    @staticmethod
+    def get_remote(connection, repo):
+        """ return information about the remote by its repo name """
+        remotes_href = f"/pulp/api/v3/remotes/rpm/rpm/?name={repo}"
+        cmd = _get_api_base_cmd(connection) + remotes_href
+        _, stdout, _ = connection.exec_command(cmd)
+        data = json.load(stdout)
+        if data["results"]:
+            return data["results"][0]
+        raise RuntimeError(f"{repo} does not exist")

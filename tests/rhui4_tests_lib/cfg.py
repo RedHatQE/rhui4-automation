@@ -115,6 +115,37 @@ class Config():
             rhuicfg.write(stdin)
 
     @staticmethod
+    def set_rhui_tools_conf(connection, section, option, value, backup=True):
+        """set a configuration option in the RHUI tools configuration file"""
+        rhuicfg = ConfigParser()
+        _, stdout, _ = connection.exec_command(f"cat {RHUI_CFG}")
+        rhuicfg.read_file(stdout)
+        rhuicfg.set(section, option, value)
+        # back up the original config file (unless prevented)
+        if backup:
+            Config.backup_rhui_tools_conf(connection)
+        # save (rewrite) the configuration file
+        stdin, _, _ = connection.exec_command(f"cat > {RHUI_CFG}")
+        rhuicfg.write(stdin)
+
+    @staticmethod
+    def set_sync_policy(connection, policy_name, policy_type, backup=True):
+        """set a sync policy to one of the available types"""
+        # validate the input
+        valid_names = {"default", "rpm", "source", "debug"}
+        if policy_name not in valid_names:
+            raise ValueError(f"Unsupported name: '{policy_name}'. Use one of: {valid_names}.")
+        valid_types = {"immediate", "on_demand"}
+        if policy_type not in valid_types:
+            raise ValueError(f"Unsupported type: '{policy_type}'. Use one of: {valid_types}.")
+        # set it
+        Config.set_rhui_tools_conf(connection,
+                                   "rhui",
+                                   f"{policy_name}_sync_policy",
+                                   policy_type,
+                                   backup)
+
+    @staticmethod
     def backup_answers(connection):
         """create a backup copy of the RHUI installer answers file"""
         Expect.expect_retval(connection, f"cp {ANSWERS} {ANSWERS_BAK}")

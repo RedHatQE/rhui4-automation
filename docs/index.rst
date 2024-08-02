@@ -42,6 +42,7 @@ Welcome to the RHUI 4 Test Plan!
    subscription
    switch_storage
    sync_management
+   sync_policies
    updateinfo
    user_management
    versions

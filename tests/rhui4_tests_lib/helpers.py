@@ -168,3 +168,8 @@ class Helpers():
         artifacts_full_paths = stdout.read().decode().splitlines()
         artifacts = [artifact.replace(basedir, "") for artifact in artifacts_full_paths]
         return artifacts
+
+    @staticmethod
+    def clear_symlinks(connection):
+        """clear the symlinks to artifacts"""
+        Expect.expect_retval(connection, f"rm -rf {RHUI_ROOT}/symlinks/pulp")
