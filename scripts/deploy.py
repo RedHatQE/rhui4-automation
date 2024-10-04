@@ -32,6 +32,9 @@ PRS.add_argument("--rhsm",
 PRS.add_argument("--client-rpm",
                  help="RHUI client RPM (another source of RHUI packages); '_' = load from config",
                  metavar="file")
+PRS.add_argument("--container-client-rpm",
+                 help="Container client RPM (another container registry); '_' = load from config",
+                 metavar="file")
 PRS.add_argument("--upgrade",
                  help="upgrade all packages before running the deployment",
                  action="store_true")
@@ -125,6 +128,19 @@ else:
     print("No way to install RHUI packages was specified.")
     sys.exit(1)
 
+if ARGS.container_client_rpm:
+    if ARGS.container_client_rpm == "_":
+        base_container_client_rpm_file_name = R4A_CFG.get("main",
+                                                          "container_client_rpm",
+                                                          fallback=None)
+        if not base_container_client_rpm_file_name:
+            print("No container client RPM is configured, exiting.")
+            sys.exit(1)
+        ARGS.container_client_rpm = join(RHUI_DIR, base_container_client_rpm_file_name)
+    if not exists(expanduser(ARGS.container_client_rpm)):
+        print(f"{ARGS.container_client_rpm} is not a file, exiting.")
+        sys.exit(1)
+
 # start building the command
 CMD = f"ansible-playbook -i {ARGS.inventory} deploy/site.yml --extra-vars '"
 
@@ -135,6 +151,9 @@ elif ARGS.rhsm:
     EVARS = ""
 elif ARGS.iso:
     EVARS = f"rhui_iso={ARGS.iso}"
+
+if ARGS.container_client_rpm:
+    EVARS +=f" container_client_rpm={ARGS.container_client_rpm}"
 
 if ARGS.upgrade:
     EVARS += " upgrade_all_pkg=True"

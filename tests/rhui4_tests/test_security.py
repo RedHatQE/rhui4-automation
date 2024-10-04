@@ -9,6 +9,7 @@ import nose
 import requests
 import urllib3
 
+from rhui4_tests_lib.cfg import RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
@@ -30,7 +31,7 @@ RHUA = ConMgr.connect()
 CDS = ConMgr.connect(HOSTNAMES["CDS"])
 HAPROXY = ConMgr.connect(HOSTNAMES["HAProxy"])
 
-SSL_CERT = "/etc/pki/rhui/certs/cds_ssl.crt"
+SSL_CERT = f"{RHUI_ROOT}/cds-config/ssl/{HOSTNAMES['HAProxy']}.crt"
 
 def _check_protocols(hostname, port):
     """helper method to try various protocols on hostname:port"""

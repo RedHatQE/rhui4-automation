@@ -22,7 +22,7 @@ import logging
 import nose
 from stitches.expect import Expect
 
-from rhui4_tests_lib.cfg import ANSWERS
+from rhui4_tests_lib.cfg import ANSWERS, RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance
@@ -36,6 +36,7 @@ CDS = ConMgr.connect(CDS_HOSTNAME)
 HAPROXY_HOSTNAME = ConMgr.get_lb_hostname()
 
 CUSTOM_CERTS_DIR = "/tmp/extra_rhui_files/custom_certs"
+ORIG_SSL_CERTS_BASEDIR = f"{RHUI_ROOT}/cds-config/ssl"
 ORIG_CERTS_BASEDIR = "/etc/pki/rhui"
 ORIG_CERTS_SUBDIR = "certs"
 ORIG_KEYS_SUBDIR = "private"
@@ -54,7 +55,7 @@ def _check_crt_key():
         _, stdout, _ = RHUA.exec_command(f"md5sum {CUSTOM_CERTS_DIR}/{FILES['cds_ssl']}.{ext}")
         expected_sum = stdout.read().decode().split()[0]
 
-        crt_file = f"{ORIG_CERTS_BASEDIR}/{ORIG_CERTS_SUBDIR}/cds_ssl.{ext}"
+        crt_file = f"{ORIG_SSL_CERTS_BASEDIR}/{HAPROXY_HOSTNAME}.{ext}"
         _, stdout, _ = CDS.exec_command(f"md5sum {crt_file}")
         actual_sum = stdout.read().decode().split()[0]
         nose.tools.eq_(expected_sum, actual_sum)
@@ -62,7 +63,7 @@ def _check_crt_key():
 def _delete_crt_key():
     """delete the cert and the key from the CDS"""
     for ext in ["crt", "key"]:
-        crt_file = f"{ORIG_CERTS_BASEDIR}/{ORIG_CERTS_SUBDIR}/cds_ssl.{ext}"
+        crt_file = f"{ORIG_SSL_CERTS_BASEDIR}/{HAPROXY_HOSTNAME}.{ext}"
         Expect.expect_retval(CDS, f"rm -f {crt_file}")
 
 def _check_instance_add_error():

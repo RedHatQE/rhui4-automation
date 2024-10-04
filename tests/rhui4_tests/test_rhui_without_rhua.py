@@ -13,6 +13,7 @@ import yaml
 
 from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_client import RHUIManagerClient, \
                                                ContainerSupportDisabledError as CliError

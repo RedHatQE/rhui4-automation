@@ -5,6 +5,8 @@ import yaml
 
 from stitches.expect import Expect
 
+from rhui4_tests_lib.incontainers import RhuiinContainers
+
 BACKUP_EXT = ".bak"
 RHUI_CFG = "/etc/rhui/rhui-tools.conf"
 RHUI_CFG_BAK = RHUI_CFG + BACKUP_EXT
@@ -12,6 +14,7 @@ ANSWERS = "/root/.rhui/answers.yaml"
 ANSWERS_BAK = ANSWERS + BACKUP_EXT
 
 RHUI_ROOT = "/var/lib/rhui/remote_share"
+LEGACY_CA_DIR = "/etc/pki/rhui/legacy"
 
 class Config():
     """reading from and writing to RHUI configuration files"""
@@ -156,9 +159,10 @@ class Config():
         Expect.expect_retval(connection, f"mv -f {RHUI_CFG} {RHUI_CFG_BAK}")
 
     @staticmethod
-    def edit_rhui_tools_conf(connection, opt, val, backup=True):
+    def edit_rhui_tools_conf(connection, opt, val, backup=True, container=False):
         """set an option in the RHUI tools configuration file to the given value"""
-        cmd = "sed -i"
+        # the 'container' parameter only makes sense when editing the file on a CDS
+        cmd = RhuiinContainers.exec_cmd("cds", "sed -i") if container else "sed -i"
         if backup:
             cmd = f"{cmd}{BACKUP_EXT}"
         cmd = f"{cmd} 's/^{opt}.*/{opt}: {val}/' {RHUI_CFG}"
@@ -170,6 +174,7 @@ class Config():
         Expect.expect_retval(connection, f"mv -f {ANSWERS_BAK} {ANSWERS}")
 
     @staticmethod
-    def restore_rhui_tools_conf(connection):
+    def restore_rhui_tools_conf(connection, container=False):
         """restore the backup copy of the RHUI tools configuration file"""
-        Expect.expect_retval(connection, f"mv -f {RHUI_CFG_BAK} {RHUI_CFG}")
+        cmd = RhuiinContainers.exec_cmd("cds", "mv") if container else "mv"
+        Expect.expect_retval(connection, f"{cmd} -f {RHUI_CFG_BAK} {RHUI_CFG}")

@@ -1,8 +1,25 @@
 ---
 # file: roles/cds/tasks/main.yml
 # cds steps
+# - container_client_rpm: an RPM providint access to an alternative container registry hosting RHUI images (e.g. CDS images)
 - name: set hostname
   hostname: name="cds0{{ item.0 + 1 }}.example.com"
   with_indexed_items: "{{ groups['CDS'] }}"
   when: "'CDS' in groups and item.1 == inventory_hostname"
+  tags: cds
+
+- name: upload the supplied container client RPM
+  copy:
+    src: "{{ container_client_rpm }}"
+    dest: /tmp
+  register: uploaded_container_client_rpm
+  when: container_client_rpm is defined
+  tags: cds
+
+- name: install the supplied container client RPM
+  package:
+    name: "{{ uploaded_container_client_rpm.dest }}"
+    state: present
+    disable_gpg_check: yes
+  when: container_client_rpm is defined
   tags: cds

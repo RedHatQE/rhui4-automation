@@ -1,5 +1,10 @@
 """Tests for changing the RHUI remote share"""
 
+# To test remote shares on containerized CDS nodes, run:
+# export RHUICONTCDS=1
+# in your shell before running this script.
+
+from os import getenv
 from os.path import basename
 
 import logging
@@ -8,6 +13,7 @@ from stitches.expect import Expect
 
 from rhui4_tests_lib.cfg import Config, ANSWERS_BAK, RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.incontainers import RhuiinContainers
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
 
@@ -22,10 +28,16 @@ CDS = ConMgr.connect(CDS_HOSTNAME)
 NEW_FS_OPTIONS = "timeo=100"
 FORCE_FLAG = " --remote-fs-force-change"
 
-def _check_rhui_mountpoint(connection, fs_server, options=""):
+USE_CONTAINER = getenv("RHUICONTCDS") is not None
+
+def _check_rhui_mountpoint(connection, fs_server, options="", container=False):
     """check the RHUI mountpoint"""
-    for mount_info_file in ["/proc/mounts", "/etc/fstab"]:
-        _, stdout, _ = connection.exec_command(f"cat {mount_info_file}")
+    cat = RhuiinContainers.exec_cmd("cds", "cat") if container else "cat"
+    mount_info_files = ["/proc/mounts"]
+    if not container:
+        mount_info_files.append("/etc/fstab")
+    for mount_info_file in mount_info_files:
+        _, stdout, _ = connection.exec_command(f"{cat} {mount_info_file}")
         mounts = stdout.read().decode().splitlines()
         matches = [line for line in mounts if RHUI_ROOT in line]
         # there must be only one such share
@@ -54,7 +66,7 @@ def setup():
 def test_01_add_cds():
     """add a CDS"""
     RHUIManager.initial_run(RHUA)
-    RHUIManagerCLIInstance.add(RHUA, "cds", CDS_HOSTNAME, unsafe=True)
+    RHUIManagerCLIInstance.add(RHUA, "cds", CDS_HOSTNAME, container=USE_CONTAINER, unsafe=True)
     # check that
     cds_list = RHUIManagerCLIInstance.list(RHUA, "cds")
     nose.tools.ok_(cds_list)
@@ -87,7 +99,7 @@ def test_05_reinstall_cds():
 
 def test_06_check_cds_mountpoint():
     """check if the new remote share is now used on the CDS"""
-    _check_rhui_mountpoint(CDS, RHUA_HOSTNAME)
+    _check_rhui_mountpoint(CDS, RHUA_HOSTNAME, container=USE_CONTAINER)
 
 def test_07_rerun_installer():
     """rerun the installer with different mount options"""
@@ -108,7 +120,7 @@ def test_09_reinstall_cds():
 
 def test_10_check_cds_mountpoint():
     """check if the new options are now used on the CDS"""
-    _check_rhui_mountpoint(CDS, RHUA_HOSTNAME, NEW_FS_OPTIONS)
+    _check_rhui_mountpoint(CDS, RHUA_HOSTNAME, NEW_FS_OPTIONS, USE_CONTAINER)
 
 def test_99_cleanup():
     """clean up: delete the CDS and rerun the installer with the original remote FS"""
