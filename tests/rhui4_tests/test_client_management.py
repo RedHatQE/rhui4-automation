@@ -23,6 +23,7 @@ from stitches.expect import Expect
 import urllib3
 import yaml
 
+from rhui4_tests_lib.cfg import LEGACY_CA_DIR
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
@@ -315,7 +316,7 @@ class TestClient():
         # re-fetch repodata on the client to trigger the OID validator on the CDS
         Expect.expect_retval(CLI, "yum clean all ; yum -v repolist enabled")
         Expect.expect_retval(CDS,
-                             f"egrep 'Found file /etc/pki/rhui/legacy/{LEGACY_CA_FILE}' " +
+                             f"egrep 'Found file {LEGACY_CA_DIR}/{LEGACY_CA_FILE}' " +
                              "/var/log/nginx/gunicorn-auth.log")
 
     def test_99_cleanup(self):
@@ -331,7 +332,7 @@ class TestClient():
         Expect.expect_retval(RHUA, "rm -rf /root/test_cli_rpm-3.0/")
         Util.remove_rpm(CLI, [self.test_package, "test_cli_rpm", test_rpm_name])
         rmtree(TMPDIR)
-        Helpers.del_legacy_ca(CDS, LEGACY_CA_FILE)
+        Helpers.del_legacy_ca(CDS)
         if not getenv("RHUISKIPSETUP"):
             RHUIManagerInstance.delete_all(RHUA, "loadbalancers")
             RHUIManagerInstance.delete_all(RHUA, "cds")

@@ -7,7 +7,8 @@ from stitches.expect import Expect, ExpectFailed
 import nose
 import yaml
 
-from rhui4_tests_lib.cfg import Config, RHUI_ROOT
+from rhui4_tests_lib.cfg import Config, LEGACY_CA_DIR, RHUI_ROOT
+from rhui4_tests_lib.incontainers import RhuiinContainers
 
 class Helpers():
     """actions that may be repeated in specific test cases and do not belong in general utils"""
@@ -109,25 +110,43 @@ class Helpers():
     def add_legacy_ca(connection, local_ca_file):
         """configure a CDS to accept a legacy CA"""
         # this method takes the path to the local CA file and configures that CA on a CDS
-        ca_dir = "/etc/pki/rhui/legacy"
-        ca_file = join(ca_dir, basename(local_ca_file))
-        Expect.expect_retval(connection, f"mkdir -p {ca_dir}")
-        connection.sftp.put(local_ca_file, ca_file)
-        Config.edit_rhui_tools_conf(connection, "log_level", "DEBUG")
-        Expect.expect_retval(connection, "rhui-services-restart")
+        ca_basename = basename(local_ca_file)
+        connection.sftp.put(local_ca_file, f"/tmp/{ca_basename}")
+        if RhuiinContainers.is_containerized(connection):
+            Expect.expect_retval(connection,
+                                 RhuiinContainers.exec_cmd("cds", f"mkdir -p {LEGACY_CA_DIR}"))
+            Expect.expect_retval(connection,
+                                 RhuiinContainers.copy(f"/tmp/{ca_basename}", "cds", LEGACY_CA_DIR))
+            Expect.expect_retval(connection, f"rm -f /tmp/{ca_basename}")
+            Config.edit_rhui_tools_conf(connection, "log_level", "DEBUG", True)
+            Expect.expect_retval(connection,
+                                 RhuiinContainers.exec_cmd("cds", "rhui-services-restart"))
+        else:
+            Expect.expect_retval(connection, f"mkdir -p {LEGACY_CA_DIR}")
+            Expect.expect_retval(connection, f"mv /tmp/{ca_basename} {LEGACY_CA_DIR}")
+            Config.edit_rhui_tools_conf(connection, "log_level", "DEBUG")
+            Expect.expect_retval(connection, "rhui-services-restart")
 
     @staticmethod
-    def del_legacy_ca(connection, ca_file_name):
-        """unconfigure a legacy CA"""
-        # this method takes just the base file name (something.crt) in the legacy CA dir on a CDS
-        # and unconfigures that CA
-        ca_dir = "/etc/pki/rhui/legacy"
-        ca_file = join(ca_dir, ca_file_name)
-        Expect.expect_retval(connection, f"rm {ca_file}")
-        Expect.expect_retval(connection, f"rmdir {ca_dir} || :")
-        Config.restore_rhui_tools_conf(connection)
-        Expect.expect_retval(connection, "logrotate -f /etc/logrotate.d/nginx")
-        Expect.expect_retval(connection, "rhui-services-restart")
+    def del_legacy_ca(connection):
+        """unconfigure legacy CA certificates"""
+        # this method purges the legacy CA dir on a CDS
+        if RhuiinContainers.is_containerized(connection):
+            Expect.expect_retval(connection,
+                                 RhuiinContainers.exec_cmd("cds", f"rm -rf {LEGACY_CA_DIR}"))
+            Config.restore_rhui_tools_conf(connection, True)
+            Expect.expect_retval(connection,
+                                 RhuiinContainers.exec_cmd("cds", "yum -y install logrotate"))
+            Expect.expect_retval(connection,
+                                 RhuiinContainers.exec_cmd("cds",
+                                                           "logrotate -f /etc/logrotate.d/nginx"))
+            Expect.expect_retval(connection,
+                                 RhuiinContainers.exec_cmd("cds", "rhui-services-restart"))
+        else:
+            Expect.expect_retval(connection, f"rm -rf {LEGACY_CA_DIR}")
+            Config.restore_rhui_tools_conf(connection)
+            Expect.expect_retval(connection, "logrotate -f /etc/logrotate.d/nginx")
+            Expect.expect_retval(connection, "rhui-services-restart")
 
     @staticmethod
     def get_repos_from_yaml(connection, yaml_file):
@@ -168,3 +187,8 @@ class Helpers():
         artifacts_full_paths = stdout.read().decode().splitlines()
         artifacts = [artifact.replace(basedir, "") for artifact in artifacts_full_paths]
         return artifacts
+
+    @staticmethod
+    def clear_symlinks(connection):
+        """clear the symlinks to artifacts"""
+        Expect.expect_retval(connection, f"rm -rf {RHUI_ROOT}/symlinks/pulp")

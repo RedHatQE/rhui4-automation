@@ -33,6 +33,7 @@ argparser.add_argument('--cli9-arch', help='RHEL 9 clients\' architectures (comm
 argparser.add_argument('--cli-all', help='launch one client per RHEL version and available architecture, RHEL 6+ by default; numbers can still be overridden)', action='store_const', const=True, default=False)
 argparser.add_argument('--cli-only', help='launch only client machines', action='store_const', const=True, default=False)
 argparser.add_argument('--cds', help='number of CDSes instances', type=int, default=1)
+argparser.add_argument('--cds-diversity', help='use newer RHEL major versions if using multiple CDS nodes', action='store_const', const=True, default=False)
 argparser.add_argument('--dns', help='DNS', action='store_const', const=True, default=False)
 argparser.add_argument('--nfs', help='NFS', action='store_const', const=True, default=False)
 argparser.add_argument('--haproxy', help='number of HAProxies', type=int, default=1)
@@ -270,8 +271,13 @@ elif fs_type:
 
 # cdses
 for i in range(1, args.cds + 1):
+    # use RHEL 8 and 9 alternately
+    if args.cds_diversity:
+        cds_os = "RHEL8" if i % 2 else "RHEL9"
+    else:
+        cds_os = "RHEL8"
     json_dict['Resources']["cds%i" % i] = \
-        {u'Properties': {u'ImageId': {u'Fn::FindInMap': [rhui_os, {u'Ref': u'AWS::Region'}, u'AMI']},
+        {u'Properties': {u'ImageId': {u'Fn::FindInMap': [cds_os, {u'Ref': u'AWS::Region'}, u'AMI']},
                                u'InstanceType': instance_types["x86_64"],
                                u'KeyName': {u'Ref': u'KeyName'},
                                u'SecurityGroups': [{u'Ref': u'RHUIsecuritygroup'}],

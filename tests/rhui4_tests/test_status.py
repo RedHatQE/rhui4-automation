@@ -15,7 +15,7 @@ import nose
 from stitches.expect import Expect
 import yaml
 
-from rhui4_tests_lib.cfg import Config
+from rhui4_tests_lib.cfg import Config, RHUI_ROOT
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_cmdline import RHUIManagerCLI
@@ -43,7 +43,7 @@ TIMEOUT = 60
 MACH_READ_CMD = "rhui-manager status --repo_json"
 MACH_READ_FILE = "/tmp/repo_status.json"
 
-SSL_CERT = f"/etc/pki/rhui/certs/{CDS_HOSTNAME}.crt"
+SSL_CERT = f"{RHUI_ROOT}/cds-config/ssl/{HA_HOSTNAME}.crt"
 
 class TestRhuiManagerStatus():
     """class for the rhui-manager status tests """

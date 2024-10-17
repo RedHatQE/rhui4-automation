@@ -13,6 +13,7 @@ import yaml
 
 from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
+from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_client import RHUIManagerClient, \
                                                ContainerSupportDisabledError as CliError
@@ -166,7 +167,7 @@ class TestRHUIWithoutRHUA():
     def test_13_get_unavailable_content(self):
         """check if the repo returns 404 at this point"""
         # make sure the symlinks weren't pre-created
-        Expect.expect_retval(RHUA, "rm -rf /export/symlinks/pulp/content/content/")
+        Helpers.clear_symlinks(RHUA)
         Expect.expect_retval(CLI, "yum clean all")
         _, stdout, _ = CLI.exec_command("yum -v repolist 2>&1")
         output = stdout.read().decode()

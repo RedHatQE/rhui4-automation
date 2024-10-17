@@ -59,6 +59,17 @@ yum_repos:
             id: "rhel-9-for-aarch64-supplementary-rhui-rpms-9"
             label: "rhel-9-for-aarch64-supplementary-rhui-rpms"
             test_package: "zhongyi-song-fonts"
+sync_policy_repos:
+    8:
+        regular: rhel-8-for-x86_64-sap-netweaver-rhui-rpms-8
+        debug: rhel-8-for-x86_64-sap-netweaver-rhui-debug-rpms-8
+        source: rhel-8-for-x86_64-sap-netweaver-rhui-source-rpms-8
+        test_package: compat-locales-sap
+    9:
+        regular: rhel-9-for-x86_64-sap-netweaver-rhui-rpms-9
+        debug: rhel-9-for-x86_64-sap-netweaver-rhui-debug-rpms-9
+        source: rhel-9-for-x86_64-sap-netweaver-rhui-source-rpms-9
+        test_package: compat-locales-sap
 product:
     name: "Red Hat Enterprise Linux 8 for x86_64 - SAP Solutions - Extended Update Support from RHUI (RPMs)"
     ids:

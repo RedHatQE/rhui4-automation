@@ -8,7 +8,7 @@ import sys
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
 from rhui4_tests_lib.rhuimanager_entitlement import RHUIManagerEntitlements
-from rhui4_tests_lib.rhuimanager_instance import RHUIManagerInstance, InstanceAlreadyExistsError
+from rhui4_tests_lib.rhuimanager_cmdline_instance import RHUIManagerCLIInstance
 
 PRS = argparse.ArgumentParser(description="Execute common setup tasks.",
                               formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -27,6 +27,12 @@ PRS.add_argument("--custom-ssl",
                  action="store_true")
 PRS.add_argument("--ssl-like-cds-one",
                  help="expect one already added CDS and add the rest with the same SSL crt and key",
+                 action="store_true")
+PRS.add_argument("--containerized-cds",
+                 help="add a containerized CDS rather than the native type",
+                 action="store_true")
+PRS.add_argument("--cds-only",
+                 help="add only a CDS, no load balancer",
                  action="store_true")
 ARGS = PRS.parse_args()
 
@@ -72,19 +78,28 @@ elif ARGS.custom_ssl:
 else:
     SSL_CRT = SSL_KEY = ""
 
-print(f"Adding CDS nodes ({CDS_HOSTNAMES}).")
+print(f"Adding {'containerized ' if ARGS.containerized_cds else ''}CDS nodes ({CDS_HOSTNAMES}).")
+existing_instances = RHUIManagerCLIInstance.list(RHUA, "cds")
 for cds in CDS_HOSTNAMES:
-    try:
-        RHUIManagerInstance.add_instance(RHUA, "cds", cds, ssl_crt=SSL_CRT, ssl_key=SSL_KEY)
-        print(cds + " added.")
-    except InstanceAlreadyExistsError:
-        print(cds + " already added, never mind.")
+    if cds in existing_instances:
+        print(f"{cds} already added, never mind.")
+        continue
+    status = RHUIManagerCLIInstance.add(RHUA,
+                                        "cds",
+                                        cds,
+                                        container=ARGS.containerized_cds,
+                                        ssl_crt=SSL_CRT,
+                                        ssl_key=SSL_KEY,
+                                        unsafe=True)
+    print(f"{cds} {'' if status else 'failed to be '}added.")
 
-print(f"Adding the HAProxy load balancer ({HA_HOSTNAME}).")
-try:
-    RHUIManagerInstance.add_instance(RHUA, "loadbalancers")
-    print(HA_HOSTNAME + " added.")
-except InstanceAlreadyExistsError:
-    print(HA_HOSTNAME + " already added, never mind.")
+if not ARGS.cds_only:
+    print(f"Adding the HAProxy load balancer ({HA_HOSTNAME}).")
+    existing_instances = RHUIManagerCLIInstance.list(RHUA, "haproxy")
+    if HA_HOSTNAME in existing_instances:
+        print(f"{HA_HOSTNAME} already added, never mind.")
+    else:
+        status = RHUIManagerCLIInstance.add(RHUA, "haproxy", HA_HOSTNAME, unsafe=True)
+        print(f"{HA_HOSTNAME} {'' if status else 'failed to be '}added.")
 
 print("To make client tests skip these steps, run: export RHUISKIPSETUP=1")

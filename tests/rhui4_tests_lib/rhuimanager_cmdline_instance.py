@@ -1,6 +1,7 @@
 ''' Methods to manage other RHUI nodes '''
 
 from rhui4_tests_lib.conmgr import ConMgr, SUDO_USER_NAME, SUDO_USER_KEY
+from rhui4_tests_lib.incontainers import RhuiinContainers
 
 def _validate_node_type(text):
     '''
@@ -28,11 +29,12 @@ class RHUIManagerCLIInstance():
     @staticmethod
     def add(connection, node_type,
             hostname="", ssh_user=SUDO_USER_NAME, keyfile_path=SUDO_USER_KEY,
+            container=False, container_registry="", container_image="",
             ssl_crt="", ssl_key="",
             haproxy_config_file="",
             force=False, unsafe=False, no_update=False):
         '''
-        Add a CDS or HAProxy node.
+        Add a CDS or HAProxy node. Deploy on the VM itself, or as a container on the VM.
         If hostname is empty, ConMgr will be used to determine the default one for the node type
         Return True if the command exited with 0, and False otherwise.
         Note to the caller: Trust no one! Check for yourself if the node has really been added.
@@ -45,8 +47,16 @@ class RHUIManagerCLIInstance():
                 hostname = ConMgr.get_cds_hostnames()[0]
             elif node_type == "haproxy":
                 hostname = ConMgr.get_lb_hostname()
-        cmd = f"rhui-manager {node_type} add " + \
+        arg = "add_container" if container else "add"
+        cmd = f"rhui-manager {node_type} {arg} " + \
               f"--hostname {hostname} --ssh_user {ssh_user} --keyfile_path {keyfile_path}"
+        if container:
+            # remove this comment and the line below when the CDS image is published
+            container_registry = RhuiinContainers.get_instance_registry(connection)
+            if container_registry:
+                cmd += f" --container_registry {container_registry}"
+            if container_image:
+                cmd += f" --container_image {container_image}"
         if ssl_crt:
             cmd += f" --user_supplied_ssl_crt {ssl_crt}"
         if ssl_key:

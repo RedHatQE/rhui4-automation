@@ -16,9 +16,11 @@ Welcome to the RHUI 4 Test Plan!
    cds_cmd
    cds_hap_interop
    client_management
+   client_of_containerized_rhui
    cmdline
    compliance
    comps
+   containerized_cds_cmd
    containers
    custom_certs
    entitlements
@@ -42,6 +44,7 @@ Welcome to the RHUI 4 Test Plan!
    subscription
    switch_storage
    sync_management
+   sync_policies
    updateinfo
    user_management
    versions
