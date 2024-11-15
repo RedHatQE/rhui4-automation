@@ -61,10 +61,8 @@ def _check_crt_key():
         nose.tools.eq_(expected_sum, actual_sum)
 
 def _delete_crt_key():
-    """delete the cert and the key from the CDS"""
-    for ext in ["crt", "key"]:
-        crt_file = f"{ORIG_SSL_CERTS_BASEDIR}/{HAPROXY_HOSTNAME}.{ext}"
-        Expect.expect_retval(CDS, f"rm -f {crt_file}")
+    """delete the cert and the key from the storage"""
+    Expect.expect_retval(RHUA, f"rm -f {ORIG_SSL_CERTS_BASEDIR}/*")
 
 def _check_instance_add_error():
     """check the error message after adding an instance incorrectly"""
