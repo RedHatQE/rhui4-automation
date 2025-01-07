@@ -109,6 +109,7 @@
       - nc
       - jq
     state: present
+    use: "{{ ansible_facts['pkg_mgr'] }}"
   delegate_to: "{{ item }}"
   with_items: "{{ groups['RHUA']|default([]) + groups['CDS']|default([]) + groups['HAPROXY']|default([]) }}"
   tags: tests
