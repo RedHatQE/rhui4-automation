@@ -192,3 +192,4 @@ class Helpers():
     def clear_symlinks(connection):
         """clear the symlinks to artifacts"""
         Expect.expect_retval(connection, f"rm -rf {RHUI_ROOT}/symlinks/pulp")
+        time.sleep(7)
