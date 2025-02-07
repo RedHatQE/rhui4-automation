@@ -39,7 +39,7 @@ WANTED_FILES_CDS = ["/etc/nginx/nginx.conf",
 
 CMDS_RHUA = ["rhui-manager status",
              "rhui-manager cert info"]
-CMDS_CDS = [f"ls -lR {RHUI_ROOT}"]
+CMDS_CDS = [f"ls -alZR {RHUI_ROOT}"]
 WANTED_FILES_RHUA.extend([Helpers.encode_sos_command(cmd) for cmd in CMDS_RHUA])
 WANTED_FILES_CDS.extend([Helpers.encode_sos_command(cmd) for cmd in CMDS_CDS])
 

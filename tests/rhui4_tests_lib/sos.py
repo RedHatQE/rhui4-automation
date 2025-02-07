@@ -17,7 +17,7 @@ class Sos():
         for line in lines:
             if see_path:
                 return line.strip()
-            if line.startswith("Your sosreport"):
+            if line.startswith("Your sos"):
                 # process the line in the next iteration
                 see_path = True
         # the in unlikely event that the output doesn't look as expected, return None
