@@ -10,6 +10,7 @@ from rhui4_tests_lib.incontainers import RhuiinContainers
 BACKUP_EXT = ".bak"
 RHUI_CFG = "/etc/rhui/rhui-tools.conf"
 RHUI_CFG_BAK = RHUI_CFG + BACKUP_EXT
+RHUI_CFG_CUSTOM = "/root/.rhui/rhui-tools-custom.conf"
 ANSWERS = "/root/.rhui/answers.yaml"
 ANSWERS_BAK = ANSWERS + BACKUP_EXT
 
@@ -45,11 +46,12 @@ class Config():
         return answer
 
     @staticmethod
-    def get_from_rhui_tools_conf(connection, section, option):
+    def get_from_rhui_tools_conf(connection, section, option, use_custom_cfg=False):
         """get the value of the given option from the given section in RHUI configuration"""
         # raises standard configparser exceptions on failures
+        cfgfile = RHUI_CFG_CUSTOM if use_custom_cfg else RHUI_CFG
         rhuicfg = ConfigParser()
-        _, stdout, _ = connection.exec_command(f"cat {RHUI_CFG}")
+        _, stdout, _ = connection.exec_command(f"cat {cfgfile}")
         rhuicfg.read_file(stdout)
         return rhuicfg.get(section, option)
 
@@ -118,21 +120,26 @@ class Config():
             rhuicfg.write(stdin)
 
     @staticmethod
-    def set_rhui_tools_conf(connection, section, option, value, backup=True):
+    def set_rhui_tools_conf(connection, section, option, value, backup=True, use_custom_cfg=False):
         """set a configuration option in the RHUI tools configuration file"""
+        cfgfile = RHUI_CFG_CUSTOM if use_custom_cfg else RHUI_CFG
         rhuicfg = ConfigParser()
-        _, stdout, _ = connection.exec_command(f"cat {RHUI_CFG}")
+        _, stdout, _ = connection.exec_command(f"cat {cfgfile}")
         rhuicfg.read_file(stdout)
+        if section not in rhuicfg.sections():
+            rhuicfg.add_section(section)
         rhuicfg.set(section, option, value)
         # back up the original config file (unless prevented)
-        if backup:
+        # only the global config file should be backed up;
+        # the local file should be just rewritten, and deleted in the end
+        if backup and not use_custom_cfg:
             Config.backup_rhui_tools_conf(connection)
         # save (rewrite) the configuration file
-        stdin, _, _ = connection.exec_command(f"cat > {RHUI_CFG}")
+        stdin, _, _ = connection.exec_command(f"cat > {cfgfile}")
         rhuicfg.write(stdin)
 
     @staticmethod
-    def set_sync_policy(connection, policy_name, policy_type, backup=True):
+    def set_sync_policy(connection, policy_name, policy_type, backup=True, use_custom_cfg=False):
         """set a sync policy to one of the available types"""
         # validate the input
         valid_names = {"default", "rpm", "source", "debug"}
@@ -146,7 +153,8 @@ class Config():
                                    "rhui",
                                    f"{policy_name}_sync_policy",
                                    policy_type,
-                                   backup)
+                                   backup,
+                                   use_custom_cfg=use_custom_cfg)
 
     @staticmethod
     def backup_answers(connection):
@@ -178,3 +186,8 @@ class Config():
         """restore the backup copy of the RHUI tools configuration file"""
         cmd = RhuiinContainers.exec_cmd("cds", "mv") if container else "mv"
         Expect.expect_retval(connection, f"{cmd} -f {RHUI_CFG_BAK} {RHUI_CFG}")
+
+    @staticmethod
+    def remove_custom_rhui_tools_conf(connection):
+        """delete the custom RHUI tools configuration file"""
+        Expect.expect_retval(connection, f"rm -f {RHUI_CFG_CUSTOM}")

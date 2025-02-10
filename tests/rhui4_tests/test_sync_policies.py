@@ -99,7 +99,8 @@ class TestSyncPolicies():
     @staticmethod
     def test_05_set_non_default_policy():
         """set the non-default sync policy as the default and trigger repo synchronizations"""
-        Config.set_sync_policy(RHUA, "default", POLICIES["nondefault"])
+        # use the custom configuration file now
+        Config.set_sync_policy(RHUA, "default", POLICIES["nondefault"], use_custom_cfg=True)
         RHUIManagerCLI.repo_sync_all(RHUA)
 
     def test_06_check_regular_repo_non_default(self):
@@ -125,9 +126,10 @@ class TestSyncPolicies():
         for repo in [self.regular_repo, self.debug_repo, self.source_repo]:
             RHUIManagerCLI.repo_delete(RHUA, repo)
         # reset the default policy to the default value first
-        Config.set_sync_policy(RHUA, "default", POLICIES["default"], False)
-        # then the individual types
-        Config.set_sync_policy(RHUA, "rpm", POLICIES["nondefault"], False)
+        # by nuking the custom config file
+        Config.remove_custom_rhui_tools_conf(RHUA)
+        # then set policy for the individual types (in the global config file)
+        Config.set_sync_policy(RHUA, "rpm", POLICIES["nondefault"])
         Config.set_sync_policy(RHUA, "source", POLICIES["nondefault"], False)
         Config.set_sync_policy(RHUA, "debug", POLICIES["nondefault"], False)
         # add the regular, debug, and source repos again
