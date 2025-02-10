@@ -24,6 +24,13 @@ def test_01_ec2():
     """check if the string EC2 is not used in the RHUI source code"""
     _check_rhui_rpms(RHUA, "ec2", False)
 
+def test_02_deprecation_warnings():
+    """check for deprecation warnings from the installer playbook"""
+    Expect.expect_retval(RHUA,
+                         "grep -i 'DEPRECATION WARNING' "
+                         "/var/log/rhui-installer/install_logger.log.*",
+                         1)
+
 def teardown():
     """announce the end of the test run"""
     print(f"*** Finished running {basename(__file__)}. ***")
