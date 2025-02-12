@@ -193,7 +193,7 @@ def test_14_autoheal():
     RHUIManagerInstance.add_instance(RHUA, "cds", cds)
 
     # get the PIDs of gunicorn processes
-    _, stdout, _ = CDS[0].exec_command("pidof -x gunicorn")
+    _, stdout, _ = CDS[0].exec_command("pgrep -f gunicorn")
     old_pids = sorted(list(map(int, stdout.read().decode().split())))
 
     # make sure there actually are some PIDs
@@ -201,14 +201,16 @@ def test_14_autoheal():
 
     # kill them all
     Expect.expect_retval(CDS[0], "killall gunicorn")
+    # wait a little bit
+    time.sleep(2)
 
     # check if there are no gunicorn processed now
-    _, stdout, _ = CDS[0].exec_command("pidof -x gunicorn")
+    _, stdout, _ = CDS[0].exec_command("pgrep -f gunicorn")
     nose.tools.assert_false(stdout.read().decode())
 
     # wait a bit and get new PIDs
     time.sleep(7)
-    _, stdout, _ = CDS[0].exec_command("pidof -x gunicorn")
+    _, stdout, _ = CDS[0].exec_command("pgrep -f gunicorn")
     new_pids = sorted(list(map(int, stdout.read().decode().split())))
 
     # delete the CDS to clean up

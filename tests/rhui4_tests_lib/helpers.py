@@ -77,7 +77,7 @@ class Helpers():
                                 "haproxy"
                                ]
                    }
-        test_packages = {"rhua": "rhui-tools", "cds": "python3-gunicorn", "haproxy": "haproxy"}
+        test_packages = {"rhua": "rhui-tools", "cds": "python3.11-gunicorn", "haproxy": "haproxy"}
         query = f"rpm -q {' '.join(test_packages.values())} | grep -v 'not installed'"
         _, stdout, _ = connection.exec_command(query)
         whats_installed = stdout.read().decode()
