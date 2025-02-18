@@ -72,7 +72,6 @@
     username: "{{ lookup('ini', 'username section=rh file=' + credentials) }}"
     password: "{{ lookup('ini', 'password section=rh file=' + credentials) }}"
     consumer_type: rhui
-    pool: '^Red Hat Update Infrastructure'
   when: rhui_iso is undefined and credentials is defined and client_rpm is undefined
   tags: rhui_nodes
 

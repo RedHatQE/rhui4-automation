@@ -3,17 +3,12 @@
 
 import argparse
 from stitches.expect import ExpectFailed
-import yaml
 
 from rhui4_tests_lib.cfg import Config
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.helpers import Helpers
 from rhui4_tests_lib.subscription import RHSMRHUI
 from rhui4_tests_lib.util import Util
-
-with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
-    CFG = yaml.safe_load(configfile)
-    SUBSCRIPTION = CFG["subscriptions"]["RHUI"]
 
 PRS = argparse.ArgumentParser(description="Register the RHUA with RHSM.",
                               formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -33,7 +28,6 @@ if Helpers.is_registered(CONNECTION) and not ARGS.force:
     print("It is already registered and --force was not used, skipping.")
 try:
     RHSMRHUI.register_system(CONNECTION, USERNAME, PASSWORD)
-    RHSMRHUI.attach_subscription(CONNECTION, SUBSCRIPTION)
     RHSMRHUI.enable_rhui_repo(CONNECTION)
     print("Registered.")
 except ExpectFailed as err:

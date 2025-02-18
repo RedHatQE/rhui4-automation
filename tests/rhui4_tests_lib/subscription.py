@@ -27,7 +27,7 @@ class RHSMRHUI():
 
     @staticmethod
     def attach_subscription(connection, sub):
-        """attach a supported subscription"""
+        """attach a supported subscription (deprecated by SCA)"""
         # 'sub' can be anything that sub-man can search by,
         # but typically it's the subscription name or the SKU
         # (or a substring with one or more wildcards)
