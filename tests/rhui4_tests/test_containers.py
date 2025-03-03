@@ -53,6 +53,8 @@ class TestClient():
         with open("/etc/rhui4_tests/tested_repos.yaml", encoding="utf-8") as configfile:
             doc = yaml.safe_load(configfile)
 
+        self.arch = Util.get_arch(CLI)
+
         self.container_name = doc["container_cli"]["name"]
         self.container_id = self.container_name
         self.container_displayname = doc["container_cli"]["displayname"]
@@ -162,9 +164,11 @@ class TestClient():
 
     def test_11_pull_images(self):
         """pull the container images"""
-        for container in [self.container_id,
-                          Util.safe_pulp_repo_name(self.container_quay["name"]),
-                          Util.safe_pulp_repo_name(self.container_gitlab["name"])]:
+        to_pull = [self.container_id, Util.safe_pulp_repo_name(self.container_quay["name"])]
+        # the image from Gitlab is now only available for x86_64
+        if self.arch == "x86_64":
+            to_pull.append(Util.safe_pulp_repo_name(self.container_gitlab["name"]))
+        for container in to_pull:
             cmd = f"podman pull {container}"
             # in some cases the container is synced but pulling fails mysteriously
             # if that happens, try again in a minute
@@ -183,9 +187,12 @@ class TestClient():
         image_table = stdout.read().decode().splitlines()
         # get just the names (the "repository" column in the image table)
         actual_names = [row.split()[0] for row in image_table]
+        expected_names = [f"{HA_HOSTNAME}/{name}" for name in \
+                          [self.container_id, quay_repo_name]]
+        if self.arch == "x86_64":
+            expected_names.append(f"{HA_HOSTNAME}/{gitlab_repo_name}")
         nose.tools.eq_(sorted(actual_names),
-                       sorted([f"{HA_HOSTNAME}/{name}" for name in \
-                               [self.container_id, quay_repo_name, gitlab_repo_name]]))
+                       sorted(expected_names))
 
     def test_13_run_command(self):
         """run a test command (uname) in the RH container"""
@@ -195,9 +202,10 @@ class TestClient():
         """remove the containers from the client and the RHUA, uninstall HAProxy and CDS"""
         ancestor = f"{HA_HOSTNAME}/{self.container_id}:latest"
         Expect.expect_retval(CLI, f"podman rm -f $(podman ps -a -f ancestor={ancestor} -q)")
-        for container in [self.container_id,
-                          Util.safe_pulp_repo_name(self.container_quay["name"]),
-                          Util.safe_pulp_repo_name(self.container_gitlab["name"])]:
+        to_remove = [self.container_id, Util.safe_pulp_repo_name(self.container_quay["name"])]
+        if self.arch == "x86_64":
+            to_remove.append(Util.safe_pulp_repo_name(self.container_gitlab["name"]))
+        for container in to_remove:
             Expect.expect_retval(CLI, f"podman rmi {container}")
         Expect.expect_retval(RHUA, f"rm -rf /tmp/{CONF_RPM_NAME}*")
         RHUIManagerRepo.delete_all_repos(RHUA)
