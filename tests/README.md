@@ -34,6 +34,7 @@ You need a ZIP file with the following files in the root of the archive:
 * `rhcert_expired.pem` — This must be an expired Red Hat content certificate.
 * `rhcert_incompatible.pem` — This must be a Red Hat content certificate containing one or more entitlements that are not compatible with RHUI (containing a non-RHUI repository path) and no compatible entitlement at all.
 * `rhcert_partially_invalid.pem` — This must be a Red Hat content certificate containing one or more entitlements that are not compatible with RHUI (containing a non-RHUI repository path) but also at least one compatible entitlement.
+* `entcert_longlife.crt` — This must be an entitlement certificate that expires far in the future, in 25 years or later.
 * `rhui-rpm-upload-test-1-1.noarch.rpm` — This package will be uploaded to a custom repository.
 * `rhui-rpm-upload-trial-1-1.noarch.rpm` — This package will also be uploaded to a custom repository. It must be signed with the RHUI QE GPG key.
 * `rhui-rpm-upload-tryout-1-1.noarch.rpm` — This package will also be uploaded to a custom repository. It must be signed with a key different from RHUI QE.
