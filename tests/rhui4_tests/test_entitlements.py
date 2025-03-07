@@ -4,6 +4,7 @@ from os.path import basename
 
 import logging
 import nose
+from stitches.expect import Expect
 
 from rhui4_tests_lib.conmgr import ConMgr
 from rhui4_tests_lib.rhuimanager import RHUIManager
@@ -171,6 +172,16 @@ class TestEntitlement():
                                  RHUA,
                                  cert)
 
+
+    @staticmethod
+    def test_17_check_longlife_cert():
+        '''
+           check if a certificate that won't expire until a few decades later can be used
+        '''
+        cert = "/tmp/extra_rhui_files/entcert_longlife.crt"
+        cmd = "python3.11 -c \"from rhsm import certificate;" \
+                             f"certificate.create_from_file('{cert}')\""
+        Expect.expect_retval(RHUA, cmd)
 
     @staticmethod
     def teardown_class():
