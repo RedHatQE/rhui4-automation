@@ -28,7 +28,7 @@ class RHUIManagerClient():
         Expect.expect(connection, "Local directory in which to save the generated certificate.*:")
         Expect.enter(connection, dirname)
         Expect.expect(connection, "Number of days the certificate should be valid.*:")
-        Expect.enter(connection, validity_days)
+        Expect.enter(connection, str(validity_days))
         RHUIManager.proceed_without_check(connection)
         RHUIManager.quit(connection, timeout=60)
 

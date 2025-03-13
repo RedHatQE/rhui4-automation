@@ -147,7 +147,8 @@ class TestClient():
         RHUIManagerClient.generate_ent_cert(RHUA,
                                             [CUSTOM_REPO, self.yum_repo_name],
                                             "test_ent_cli",
-                                            "/root/")
+                                            "/root/",
+                                            35*365)
         Expect.expect_retval(RHUA, "test -f /root/test_ent_cli.crt")
         Expect.expect_retval(RHUA, "test -f /root/test_ent_cli.key")
 
