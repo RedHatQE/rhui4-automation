@@ -10,6 +10,7 @@
     - common
 
 - import_playbook: dns.yml
+  when: dns | default(False) | bool
 - import_playbook: filesystem.yml
 - import_playbook: rhua.yml
 - import_playbook: haproxy.yml

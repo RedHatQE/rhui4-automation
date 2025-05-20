@@ -30,6 +30,8 @@ argparser.add_argument('--cli8', help='number of RHEL8 clients', type=int, defau
 argparser.add_argument('--cli8-arch', help='RHEL 8 clients\' architectures (comma-separated list)', default='x86_64', metavar='ARCH')
 argparser.add_argument('--cli9', help='number of RHEL9 clients', type=int, default=0)
 argparser.add_argument('--cli9-arch', help='RHEL 9 clients\' architectures (comma-separated list)', default='x86_64', metavar='ARCH')
+argparser.add_argument('--cli10', help='number of RHEL10 clients', type=int, default=0)
+argparser.add_argument('--cli10-arch', help='RHEL 10 clients\' architectures (comma-separated list)', default='x86_64', metavar='ARCH')
 argparser.add_argument('--cli-all', help='launch one client per RHEL version and available architecture, RHEL 6+ by default; numbers can still be overridden)', action='store_const', const=True, default=False)
 argparser.add_argument('--cli-only', help='launch only client machines', action='store_const', const=True, default=False)
 argparser.add_argument('--cds', help='number of CDSes instances', type=int, default=1)
@@ -56,8 +58,10 @@ argparser.add_argument('--ami-6-override', help='RHEL 6 AMI ID to override the m
 argparser.add_argument('--ami-7-override', help='RHEL 7 AMI ID to override the mapping', metavar='ID')
 argparser.add_argument('--ami-8-override', help='RHEL 8 AMI ID to override the mapping', metavar='ID')
 argparser.add_argument('--ami-9-override', help='RHEL 9 AMI ID to override the mapping', metavar='ID')
+argparser.add_argument('--ami-10-override', help='RHEL 10 AMI ID to override the mapping', metavar='ID')
 argparser.add_argument('--ami-8-arm64-override', help='RHEL 8 ARM64 AMI ID to override the mapping', metavar='ID')
 argparser.add_argument('--ami-9-arm64-override', help='RHEL 9 ARM64 AMI ID to override the mapping', metavar='ID')
+argparser.add_argument('--ami-10-arm64-override', help='RHEL 10 ARM64 AMI ID to override the mapping', metavar='ID')
 argparser.add_argument('--ansible-ssh-extra-args', help='Extra arguments for SSH connections established by Ansible', metavar='ARGS')
 argparser.add_argument('--key-pair-name', help='the name of the key pair in the given AWS region, if your local user name differs and SSH configuraion is undefined in the yaml config file')
 
@@ -79,6 +83,7 @@ if args.cli_all:
     args.cli7 = args.cli7 or -1
     args.cli8 = args.cli8 or -1
     args.cli9 = args.cli9 or -1
+    args.cli10 = args.cli10 or -1
 
 if args.cli_only:
     args.cds = args.haproxy = 0
@@ -97,9 +102,11 @@ try:
     if "ssh" in valid_config.keys() and REGION in valid_config["ssh"].keys():
         (ssh_key_name, ssh_key) = valid_config["ssh"][REGION]
     else:
-        ssh_key = False
+        ssh_key = ""
         ssh_key_name = args.key_pair_name or os.getlogin()
     ec2_name = re.search("[a-zA-Z]+", ssh_key_name).group(0)
+    if args.key_pair_name:
+        ssh_key = "~/.ssh/id_rsa_" + ec2_name
     if not args.novpc:
         (vpcid, subnetid) = (args.vpcid, args.subnetid) if args.vpcid else valid_config["vpc"][REGION]
 
@@ -124,6 +131,9 @@ if args.cli8 == -1:
 if args.cli9 == -1:
     args.cli9 = len(instance_types)
     args.cli9_arch = ",".join(instance_types.keys())
+if args.cli10 == -1:
+    args.cli10 = len(instance_types)
+    args.cli10_arch = ",".join(instance_types.keys())
 
 if args.rhua:
     logging.info("The --rhua parameter is deprecated. " +
@@ -143,6 +153,8 @@ if args.cli8 > 0:
     json_dict['Description'] += ", %s RHEL8 client" % args.cli8 + ("s" if args.cli8 > 1 else "")
 if args.cli9 > 0:
     json_dict['Description'] += ", %s RHEL9 client" % args.cli9 + ("s" if args.cli9 > 1 else "")
+if args.cli10 > 0:
+    json_dict['Description'] += ", %s RHEL10 client" % args.cli10 + ("s" if args.cli10 > 1 else "")
 if args.test:
     json_dict['Description'] += ", TEST machine"
 if args.dns:
@@ -159,7 +171,8 @@ if fs_type_f == "rhua":
 json_dict['Mappings'] = {u'RHEL6': {args.region: {}},
                          u'RHEL7': {args.region: {}},
                          u'RHEL8': {args.region: {}},
-                         u'RHEL9': {args.region: {}}}
+                         u'RHEL9': {args.region: {}},
+                         u'RHEL10': {args.region: {}}}
 
 try:
     if args.ami_6_override:
@@ -189,6 +202,13 @@ try:
         with open("RHEL9mapping.json") as mjson:
             rhel9mapping = json.load(mjson)
             json_dict['Mappings']['RHEL9'] = rhel9mapping
+
+    if args.ami_10_override:
+        json_dict['Mappings']['RHEL10'][args.region]['AMI'] = args.ami_10_override
+    else:
+        with open("RHEL10mapping.json") as mjson:
+            rhel10mapping = json.load(mjson)
+            json_dict['Mappings']['RHEL10'] = rhel10mapping
 
 except Exception as e:
     sys.stderr.write("Got '%s' error \n" % e)
@@ -287,8 +307,8 @@ for i in range(1, args.cds + 1):
                u'Type': u'AWS::EC2::Instance'}
 
 # clients
-os_dict = {6: "RHEL6", 7: "RHEL7", 8: "RHEL8", 9: "RHEL9"}
-for i in (6, 7, 8, 9):
+os_dict = {6: "RHEL6", 7: "RHEL7", 8: "RHEL8", 9: "RHEL9", 10: "RHEL10"}
+for i in (6, 7, 8, 9, 10):
     num_cli_ver = args.__getattribute__("cli%i" % i)
     if num_cli_ver:
         os = os_dict[i]
@@ -316,6 +336,8 @@ for i in (6, 7, 8, 9):
                     image_id = args.ami_8_arm64_override
                 elif i == 9 and args.ami_9_arm64_override:
                     image_id = args.ami_9_arm64_override
+                elif i == 10 and args.ami_10_arm64_override:
+                    image_id = args.ami_10_arm64_override
                 else:
                     with open("RHEL%smapping_%s.json" % (i, cli_arch)) as mjson:
                        image_ids =  json.load(mjson)
@@ -535,7 +557,7 @@ try:
                         f.write(' ansible_ssh_extra_args="%s"' % args.ansible_ssh_extra_args)
                     f.write('\n')
         # cli
-        if args.cli6 or args.cli7 or args.cli8 or args.cli9:
+        if args.cli6 or args.cli7 or args.cli8 or args.cli9 or args.cli10:
             f.write('\n[CLI]\n')
             for role, hostname in hostnames.items():
                 if role.startswith("cli"):

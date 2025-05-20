@@ -78,6 +78,9 @@ PRS.add_argument("--rhel8b",
 PRS.add_argument("--rhel9b",
                  help="RHEL 9 Beta baseurl or compose",
                  metavar="URL/compose")
+PRS.add_argument("--dns",
+                 help="configure the DNS server. Warning: do not use if you have a RHEL 10 client.",
+                 action="store_true")
 PRS.add_argument("--tags",
                  help="run only tasks tagged this way",
                  metavar="tags")
@@ -222,6 +225,9 @@ if ARGS.patch:
 
 if ARGS.branch:
     EVARS += " branch=" + ARGS.branch
+
+if ARGS.dns:
+    EVARS += " dns=True"
 
 if ARGS.extra_vars:
     EVARS += " " + ARGS.extra_vars

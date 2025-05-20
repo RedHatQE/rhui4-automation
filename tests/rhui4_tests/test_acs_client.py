@@ -123,16 +123,14 @@ class TestACSClient():
         nose.tools.eq_(actual_repos, sorted([self.rh_repo_id, self.custom_repo_id]))
 
     def test_06_check_test_package(self):
-        """check if the client can install a test package"""
-        Yummy.install(CLI, [self.test_package])
+        """check if the client can download a test package"""
+        Yummy.download(CLI, [self.test_package], TMPDIR)
 
     def test_99_cleanup(self):
         """clean up"""
-        # uninstall the test package
-        Util.remove_rpm(CLI, [self.test_package])
         # remove the yum configuration from the client
         Expect.expect_retval(CLI, "rm -f /etc/yum.repos.d/acs.repo")
-        # remove the certs from the client
+        # remove the certs and the downloaded test package from the client
         Expect.expect_retval(CLI, f"rm -rf {TMPDIR}")
         # remove the ACS artifacts from the RHUA
         Expect.expect_retval(RHUA, f"rm -rf {TMPDIR}")
