@@ -17,13 +17,19 @@ class Helpers():
         """override DNS by setting a fake IP address in /etc/hosts and stopping bind"""
         tweak_hosts_cmd = fr"sed -i.bak 's/^[^ ]*\(.*i{hostname}\)$/256.0.0.0\1/' /etc/hosts"
         Expect.expect_retval(connection, tweak_hosts_cmd)
-        Expect.expect_retval(connection, "service named stop")
+        Expect.expect_retval(connection,
+                            "if [ -f /usr/lib/systemd/system/named.service ]; then" +
+                            "  systemctl stop named; " +
+                            "fi")
 
     @staticmethod
     def unbreak_hostname(connection):
         """undo the changes made by break_hostname"""
         Expect.expect_retval(connection, "mv -f /etc/hosts.bak /etc/hosts")
-        Expect.expect_retval(connection, "service named start")
+        Expect.expect_retval(connection,
+                            "if [ -f /usr/lib/systemd/system/named.service ]; then" +
+                            "  systemctl stop named; " +
+                            "fi")
 
     @staticmethod
     def cds_in_haproxy_cfg(connection, cds):

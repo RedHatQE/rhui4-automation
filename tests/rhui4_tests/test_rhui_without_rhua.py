@@ -172,7 +172,7 @@ class TestRHUIWithoutRHUA():
         _, stdout, _ = CLI.exec_command("yum -v repolist 2>&1")
         output = stdout.read().decode()
         nose.tools.ok_("404" in output, msg=f"Unexpected output: {output}")
-        Yummy.install(CLI, [self.test_package], expect_trouble=True)
+        Yummy.download(CLI, [self.test_package], expect_trouble=True)
 
     def test_14_export_repo(self):
         """export the repo"""
@@ -185,7 +185,7 @@ class TestRHUIWithoutRHUA():
         actual_repos = Yummy.repolist(CLI)
         prefix = Config.get_from_rhui_tools_conf(RHUA, "rhui", "client_repo_prefix")
         nose.tools.eq_(actual_repos, [prefix + self.yum_repo_label])
-        Yummy.install(CLI, [self.test_package])
+        Yummy.download(CLI, [self.test_package], TMPDIR)
 
     def test_99_cleanup(self):
         """clean up"""
@@ -194,7 +194,8 @@ class TestRHUIWithoutRHUA():
         RHUIManagerInstance.delete_all(RHUA, "cds")
         RHUIManagerInstance.delete_all(RHUA, "loadbalancers")
         RHUIManager.remove_rh_certs(RHUA)
-        Util.remove_rpm(CLI, [RPM_NAME, self.test_package])
+        Util.remove_rpm(CLI, [RPM_NAME])
+        Expect.expect_retval(CLI, f"rm -rf {TMPDIR}")
         Expect.expect_retval(RHUA, f"rm -rf {TMPDIR}")
 
     @staticmethod

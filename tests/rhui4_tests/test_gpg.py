@@ -32,7 +32,7 @@ RHUA = ConMgr.connect()
 CLI = ConMgr.connect(getenv("RHUICLI", ConMgr.get_cli_hostnames()[0]))
 
 REPO = "custom_gpg"
-SIG = "9f6e93a2"
+SIG = "94cce14f"
 SIGNED_PACKAGE = "rhui-rpm-upload-trial"
 UNSIGNED_PACKAGE = "rhui-rpm-upload-test"
 SIGNED_PACKAGE_SIG2 = "rhui-rpm-upload-tryout"
@@ -121,9 +121,6 @@ def test_09_install_conf_rpm():
     Util.install_pkg_from_rhua(RHUA,
                                CLI,
                                f"/tmp/{REPO}-2.0/build/RPMS/noarch/{REPO}-2.0-1.noarch.rpm")
-    # to be able to import the GPG key on RHEL > 8, the LEGACY crypto policy must be set
-    if Util.get_rhel_version(CLI)["major"] > 8:
-        Expect.expect_retval(CLI, "update-crypto-policies --set LEGACY")
 
 def test_10_install_signed_pkg():
     '''
@@ -172,8 +169,6 @@ def test_99_cleanup():
         cache = f"/var/cache/yum/x86_64/{rhel}Server/rhui-custom-{REPO}/"
     else:
         cache = f"/var/cache/dnf/rhui-custom-{REPO}*/"
-    if rhel > 8:
-        Expect.expect_retval(CLI, "update-crypto-policies --set DEFAULT")
     Expect.expect_retval(CLI, "rm -rf " + cache)
     RHUIManagerRepo.delete_all_repos(RHUA)
     Expect.expect_retval(RHUA, f"rm -rf /tmp/{REPO}*")

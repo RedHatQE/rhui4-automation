@@ -59,6 +59,23 @@ yum_repos:
             id: "rhel-9-for-aarch64-supplementary-rhui-rpms-9"
             label: "rhel-9-for-aarch64-supplementary-rhui-rpms"
             test_package: "zhongyi-song-fonts"
+    10:
+        x86_64:
+            name: "Red Hat Enterprise Linux 10 for x86_64 - Supplementary (RPMs) from RHUI"
+            version: "10"
+            kind: "Yum"
+            path: "content/dist/rhel10/rhui/10/x86_64/supplementary/os"
+            id: "rhel-10-for-x86_64-supplementary-rhui-rpms-10"
+            label: "rhel-10-for-x86_64-supplementary-rhui-rpms"
+            test_package: "java-21-ibm-semeru-certified-jdk-devel"
+        aarch64:
+            name: "Red Hat Enterprise Linux 10 for ARM 64 - Supplementary (RPMs) from RHUI"
+            version: "10"
+            kind: "Yum"
+            path: "content/dist/rhel10/rhui/10/aarch64/supplementary/os"
+            id: "rhel-10-for-aarch64-supplementary-rhui-rpms-10"
+            label: "rhel-10-for-aarch64-supplementary-rhui-rpms"
+            test_package: "java-21-ibm-semeru-certified-jdk-devel"
 sync_policy_repos:
     8:
         regular: rhel-8-for-x86_64-sap-netweaver-rhui-rpms-8
@@ -70,6 +87,11 @@ sync_policy_repos:
         debug: rhel-9-for-x86_64-sap-netweaver-rhui-debug-rpms-9
         source: rhel-9-for-x86_64-sap-netweaver-rhui-source-rpms-9
         test_package: compat-locales-sap
+    10:
+        regular: rhel-10-for-x86_64-sap-netweaver-rhui-rpms-10
+        debug: rhel-10-for-x86_64-sap-netweaver-rhui-debug-rpms-10
+        source: rhel-10-for-x86_64-sap-netweaver-rhui-source-rpms-10
+        test_package: vhostmd
 product:
     name: "Red Hat Enterprise Linux 8 for x86_64 - SAP Solutions - Extended Update Support from RHUI (RPMs)"
     ids:
@@ -156,6 +178,21 @@ updateinfo:
             old_version: "2.0-1.fc14"
             errata: "RHEA-2013:9999"
     9:
+        x86_64:
+            repo_name: "Zoo (from Pulp Demo Repos)"
+            repo_id: "pulp-test_zoo"
+            gpg_key: "nokey"
+            test_package: "bear"
+            old_version: "4.0-1"
+            errata: "RHEA-2012:0001"
+        aarch64:
+            repo_name: "Zoo (from Pulp Demo Repos)"
+            repo_id: "pulp-test_zoo"
+            gpg_key: "nokey"
+            test_package: "bear"
+            old_version: "4.0-1"
+            errata: "RHEA-2012:0001"
+    10:
         x86_64:
             repo_name: "Zoo (from Pulp Demo Repos)"
             repo_id: "pulp-test_zoo"

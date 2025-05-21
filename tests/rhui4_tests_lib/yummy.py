@@ -143,3 +143,12 @@ class Yummy():
         _, stdout, _ = connection.exec_command(cmd)
         raw_module_list_output = stdout.read().decode()
         return raw_module_list_output
+
+    @staticmethod
+    def download(connection, packages, downloaddir="", timeout=20, expect_trouble=False):
+        """download packages"""
+        cmd = "yumdownloader "
+        cmd += " ".join(packages)
+        if downloaddir:
+            cmd += " --downloaddir " + downloaddir
+        Expect.expect_retval(connection, cmd, 1 if expect_trouble else 0, timeout)

@@ -11,5 +11,6 @@
 - import_tasks: ntp.yml
 - import_tasks: hosts.yml
 - import_tasks: dns_override.yml
+  when: dns | default(False) | bool
 - import_tasks: cloud-init.yml
 - import_tasks: vim.yml

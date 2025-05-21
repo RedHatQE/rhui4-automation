@@ -30,23 +30,17 @@ if not args.rhel:
     argparser.print_help()
     sys.exit(1)
 
-if args.rhel.startswith("RHEL-9"):
-    MAPPING = "RHEL9mapping.json"
-elif args.rhel.startswith("RHEL-8"):
-    MAPPING = "RHEL8mapping.json"
-elif args.rhel.startswith("RHEL-7"):
-    MAPPING = "RHEL7mapping.json"
-elif args.rhel.startswith("RHEL-6"):
-    MAPPING = "RHEL6mapping.json"
-elif args.rhel.startswith("RHEL-5"):
-    MAPPING = "RHEL5mapping.json"
+if args.rhel.startswith("RHEL-"):
+    RHEL_VERSION = args.rhel.split(".")[0].replace("-", "")
+    try:
+        AMI_ARCH = args.rhel.split("-")[3]
+    except IndexError:
+        print("The AMI description may be malformed or this script may need updating.")
+        sys.exit(1)
+    MAPPING = f"{RHEL_VERSION}mapping{'_' + AMI_ARCH if AMI_ARCH != 'x86_64' else ''}.json"
 else:
     sys.stderr.write("Wrong parameters")
     sys.exit(1)
-
-ami_properties = args.rhel.split("-")
-if ami_properties[3] != "x86_64":
-    MAPPING = MAPPING.replace(".", f"_{ami_properties[3]}.")
 
 CMD = "aws ec2 describe-regions " \
       "--all-regions " \

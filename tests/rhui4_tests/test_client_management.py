@@ -232,11 +232,11 @@ class TestClient():
 
     def test_13_inst_rpm_rh_repo(self):
         '''
-           install an RPM from the RH repo
+           download an RPM from the RH repo
         '''
         if getenv("RHUIPREP"):
             raise nose.SkipTest("Only the setup was requested.")
-        Yummy.install(CLI, [self.test_package])
+        Yummy.download(CLI, [self.test_package])
         # but make sure the RPM is taken from the RHUI
         Util.check_package_url(CLI, self.test_package, self.yum_repo_path)
 
@@ -331,7 +331,7 @@ class TestClient():
         nose.tools.assert_equal(RHUIManagerRepo.list(RHUA), [])
         Expect.expect_retval(RHUA, "rm -f /root/test_ent_cli*")
         Expect.expect_retval(RHUA, "rm -rf /root/test_cli_rpm-3.0/")
-        Util.remove_rpm(CLI, [self.test_package, "test_cli_rpm", test_rpm_name])
+        Util.remove_rpm(CLI, ["test_cli_rpm", test_rpm_name])
         rmtree(TMPDIR)
         Helpers.del_legacy_ca(CDS)
         if not getenv("RHUISKIPSETUP"):
