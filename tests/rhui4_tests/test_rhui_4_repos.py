@@ -22,7 +22,8 @@ VERSION_STRING = r"4\.[0-9]+ Release Notes"
 MAX_RHEL_6_EUS = 7
 MAX_RHEL_7_EUS = 7
 MAX_RHEL_8_EUS = 8
-MAX_RHEL_9_EUS = 4
+MAX_RHEL_9_EUS = 6
+MAX_RHEL_10_EUS = 0
 
 def _check_rpms():
     '''
@@ -147,6 +148,13 @@ def test_05_eus_9_repos_check():
     '''
     # RHEL 9.even numbers
     _check_listing(9, 0, MAX_RHEL_9_EUS, 2)
+
+def test_06_eus_10_repos_check():
+    '''
+        check if all supported RHEL 10 EUS versions are available
+    '''
+    # Only one version now
+    _check_listing(10, 0, MAX_RHEL_10_EUS)
 
 def teardown():
     '''
