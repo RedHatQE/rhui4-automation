@@ -33,6 +33,7 @@ RHUA = ConMgr.connect()
 CLI = ConMgr.connect(getenv("RHUICLI", ConMgr.get_cli_hostnames()[0]))
 
 CONF_RPM_NAME = "eus-rhui"
+TMPDIR = "/tmp/" + CONF_RPM_NAME
 
 class TestEUSCLI():
     '''
@@ -144,18 +145,19 @@ class TestEUSCLI():
         '''
         Util.check_package_url(CLI, self.test_package, self.repo_path)
 
-    def test_12_install_test_rpm(self):
+    def test_12_download_test_rpm(self):
         '''
-        install the test package (from the test repo)
+        download the test package (from the test repo)
         '''
-        Yummy.install(CLI, [self.test_package])
+        Yummy.download(CLI, [self.test_package], TMPDIR)
         # check it
-        Expect.expect_retval(CLI, "rpm -q " + self.test_package)
+        Expect.expect_retval(CLI, f"ls {TMPDIR}/{self.test_package}*")
 
     def test_99_cleanup(self):
         '''clean up'''
         Expect.expect_retval(CLI, "rhui-set-release --unset")
-        Util.remove_rpm(CLI, [self.test_package, CONF_RPM_NAME])
+        Util.remove_rpm(CLI, [CONF_RPM_NAME])
+        Expect.expect_retval(CLI, f"rm -rf {TMPDIR}")
         RHUIManagerCLI.repo_delete(RHUA, self.repo_id)
         Expect.expect_retval(RHUA, f"rm -rf /tmp/{CONF_RPM_NAME}*")
         if not getenv("RHUISKIPSETUP"):

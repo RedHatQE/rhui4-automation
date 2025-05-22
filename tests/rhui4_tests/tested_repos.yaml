@@ -144,6 +144,17 @@ EUS_repos:
             label: "rhel-9-for-aarch64-supplementary-eus-rhui-rpms"
             path: "content/eus/rhel9/rhui/9.2/aarch64/supplementary/os"
             test_package: "zhongyi-song-fonts"
+    10:
+        x86_64:
+            id: "rhel-10-for-x86_64-sap-solutions-e4s-rhui-rpms-10.0"
+            label: "rhel-10-for-x86_64-sap-solutions-e4s-rhui-rpms"
+            path: "content/e4s/rhel10/rhui/10.0/x86_64/sap-solutions/os"
+            test_package: "vm-dump-metrics"
+        aarch64:
+            id: "rhel-10-for-aarch64-supplementary-eus-rhui-rpms-10.0"
+            label: "rhel-10-for-aarch64-supplementary-eus-rhui-rpms"
+            path: "content/eus/rhel10/rhui/10.0/aarch64/supplementary/os"
+            test_package: "java-21-ibm-semeru-certified-jdk-devel"
 updateinfo:
     0:
         all:
