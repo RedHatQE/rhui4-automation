@@ -40,6 +40,26 @@
   when: rhel9_beta_baseurl is defined and "'BaseOS' in rhel9_beta_baseurl" and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 9
   tags: rhel9_beta
 
+- name: create a yum repo file for an unreleased RHEL 10 compose - BaseOS
+  yum_repository:
+    file: rhel10_beta
+    name: rhel10_beta_baseos
+    description: Unreleased RHEL 10 Compose - BaseOS
+    baseurl: "{{ rhel10_beta_baseurl }}"
+    gpgcheck: no
+  when: rhel10_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 10
+  tags: rhel10_beta
+
+- name: create a yum repo file for an unreleased RHEL 10 compose - AppStream
+  yum_repository:
+    file: rhel10_beta
+    name: rhel10_beta_appstream
+    description: Unreleased RHEL 10 Compose - AppStream
+    baseurl: "{{ rhel10_beta_baseurl | replace('BaseOS', 'AppStream')}}"
+    gpgcheck: no
+  when: rhel10_beta_baseurl is defined and "'BaseOS' in rhel10_beta_baseurl" and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 10
+  tags: rhel10_beta
+
 - name: update packages
   package:
     name: '*'
@@ -48,8 +68,9 @@
     update_only: yes
   when: (upgrade_all_pkg | default(False) | bool) or
         (rhel8_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 8) or
-        (rhel9_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 9)
-  tags: upgrade_all_pkg,rhel8_beta,rhel9_beta
+        (rhel9_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 9) or
+        (rhel10_beta_baseurl is defined and ansible_os_family == "RedHat" and ansible_distribution_major_version|int == 10)
+  tags: upgrade_all_pkg,rhel8_beta,rhel9_beta,rhel10_beta
 
 - name: check if rebooting is needed
   command: needs-restarting -r

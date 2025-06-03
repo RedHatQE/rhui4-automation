@@ -78,6 +78,9 @@ PRS.add_argument("--rhel8b",
 PRS.add_argument("--rhel9b",
                  help="RHEL 9 Beta baseurl or compose",
                  metavar="URL/compose")
+PRS.add_argument("--rhel10b",
+                 help="RHEL 10 Beta baseurl or compose",
+                 metavar="URL/compose")
 PRS.add_argument("--dns",
                  help="configure the DNS server. Warning: do not use if you have a RHEL 10 client.",
                  action="store_true")
@@ -209,6 +212,16 @@ if ARGS.rhel9b:
                   "It must contain '%s' in one place.")
             sys.exit(1)
     EVARS += " rhel9_beta_baseurl=" + ARGS.rhel9b
+
+if ARGS.rhel10b:
+    if ":/" not in ARGS.rhel10b and R4A_CFG.has_option("beta", "rhel10_template"):
+        try:
+            ARGS.rhel10b = R4A_CFG.get("beta", "rhel10_template") % ARGS.rhel10b
+        except TypeError:
+            print(f"The RHEL 10 Beta URL template is written incorrectly in {CFG_FILE}. " +
+                  "It must contain '%s' in one place.")
+            sys.exit(1)
+    EVARS += " rhel10_beta_baseurl=" + ARGS.rhel10b
 
 if ARGS.tests:
     EVARS += " tests=" + ARGS.tests
