@@ -349,7 +349,7 @@ for i in (6, 7, 8, 9, 10):
                                    u'SecurityGroups': [{u'Ref': u'RHUIsecuritygroup'}],
                                    u'Tags': [{u'Key': u'Name', u'Value': concat_name(u'cli%i_%i' % (i, j))},
                                              {u'Key': u'Role', u'Value': u'CLI'},
-                                             {u'Key': u'OS', u'Value': u'%s' % os[:5]}]},
+                                             {u'Key': u'OS', u'Value': u'%s' % os}]},
                    u'Type': u'AWS::EC2::Instance'}
                    
 # nfs
