@@ -43,10 +43,6 @@ class TestSubscription():
         """attach the RHUI subscription"""
         RHSMRHUI.attach_subscription(RHUA, self.subscriptions["RHUI"])
 
-    def test_03_attach_atomic_sub(self):
-        """attach the Atomic subscription"""
-        RHSMRHUI.attach_subscription(RHUA, self.subscriptions["Atomic"])
-
     @staticmethod
     def test_04_check_entitlements():
         """check entitlements"""

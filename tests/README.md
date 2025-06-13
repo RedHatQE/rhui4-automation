@@ -68,7 +68,7 @@ repo_files/no_repo_ids.yaml
 repo_files/wrong_repo_id.yaml
 ```
 
-The main and Atomic certificates must not be expired. Expiration is first checked for the "empty",
+The main certificate must not be expired. Expiration is first checked for the "empty",
 "incompatible", and "partially invalid" certificates, and the tests that use them are skipped if
 the given certificate has already expired.
 

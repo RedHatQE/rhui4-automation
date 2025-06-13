@@ -105,7 +105,6 @@ status_repos:
     bad: "rhel-server-rhscl-6-rhui-source-rpms-6Server-i386"
 subscriptions:
     RHUI: "Red Hat Update Infrastructure and RHEL Add-Ons for Providers"
-    Atomic: "Red Hat Enterprise Linux Atomic Host for Certified Cloud and Service Providers (via Red Hat Update Infrastructure)"
 SCA:
     name: "Content Access"
     id: "SCA"
