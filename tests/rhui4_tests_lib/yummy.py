@@ -113,7 +113,7 @@ class Yummy():
 
     @staticmethod
     def install(connection, packages, gpgcheck=True, timeout=20, expect_trouble=False):
-        """return a list of yum repositories, only enabled by default"""
+        """install packages"""
         cmd = "yum -y install "
         cmd += " ".join(packages)
         if not gpgcheck:
@@ -122,7 +122,7 @@ class Yummy():
 
     @staticmethod
     def downgrade(connection, packages, gpgcheck=True, timeout=20, expect_trouble=False):
-        """return a list of yum repositories, only enabled by default"""
+        """downgrade packages"""
         cmd = "yum -y downgrade "
         cmd += " ".join(packages)
         if not gpgcheck:
