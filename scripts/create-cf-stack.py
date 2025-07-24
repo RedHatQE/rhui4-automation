@@ -40,6 +40,8 @@ argparser.add_argument('--dns', help='DNS', action='store_const', const=True, de
 argparser.add_argument('--nfs', help='NFS', action='store_const', const=True, default=False)
 argparser.add_argument('--haproxy', help='number of HAProxies', type=int, default=1)
 argparser.add_argument('--test', help='test machine with RHEL 8', action='store_const', const=True, default=False)
+argparser.add_argument('--rhui5launchpad', help='add a launchpad for a future migration to RHUI 5', action='store_const', const=True, default=False)
+argparser.add_argument('--rhui5rhua', help='add a RHUA for a future (non-in-place) migration to RHUI 5', action='store_const', const=True, default=False)
 argparser.add_argument('--input-conf', default="/etc/rhui_ec2.yaml", help='use supplied yaml config file')
 argparser.add_argument('--output-conf', help='output file')
 argparser.add_argument('--region', default="eu-west-1", help='use specified region')
@@ -161,6 +163,10 @@ if args.dns:
     json_dict['Description'] += ", DNS"
 if args.nfs:
     json_dict['Description'] += ", NFS"
+if args.rhui5launchpad:
+    json_dict['Description'] += ", RHUI 5 launchpad"
+if args.rhui5rhua:
+    json_dict['Description'] += ", RHUI 5 RHUA"
 
 
 fs_type_f = fs_type
@@ -406,6 +412,32 @@ for i in range(1, args.haproxy + 1):
                                          {u'Key': u'Role', u'Value': u'HAProxy'},
                                          ]},
                    u'Type': u'AWS::EC2::Instance'}
+# RHUI 5 launchpad
+if args.rhui5launchpad:
+    os = "RHEL9"
+    json_dict['Resources']["launchpad"] = \
+     {u'Properties': {u'ImageId': {u'Fn::FindInMap': [os, {u'Ref': u'AWS::Region'}, u'AMI']},
+                               u'InstanceType': instance_types["x86_64"],
+                               u'KeyName': {u'Ref': u'KeyName'},
+                               u'SecurityGroups': [{u'Ref': u'RHUIsecuritygroup'}],
+                               u'Tags': [{u'Key': u'Name', u'Value': concat_name(u'launchpad')},
+                                         {u'Key': u'Role', u'Value': u'LAUNCHPAD'},
+                                         ]},
+               u'Type': u'AWS::EC2::Instance'}
+
+# RHUI 5 RHUA
+if args.rhui5rhua:
+    os = "RHEL9"
+    json_dict['Resources']["anotherrhua"] = \
+     {u'Properties': {u'ImageId': {u'Fn::FindInMap': [os, {u'Ref': u'AWS::Region'}, u'AMI']},
+                               u'InstanceType': instance_types["x86_64"],
+                               u'KeyName': {u'Ref': u'KeyName'},
+                               u'SecurityGroups': [{u'Ref': u'RHUIsecuritygroup'}],
+                               u'Tags': [{u'Key': u'Name', u'Value': concat_name(u'anotherrhua')},
+                                         {u'Key': u'Role', u'Value': u'ANOTHERRHUA'},
+                                         ]},
+               u'Type': u'AWS::EC2::Instance'}
+
 
 if not args.novpc:
     # Setting VpcId and SubnetId
@@ -588,6 +620,29 @@ try:
                 if args.ansible_ssh_extra_args:
                     f.write(' ansible_ssh_extra_args="%s"' % args.ansible_ssh_extra_args)
                 f.write('\n')
+        # RHUI 5 launchpad
+        if args.rhui5launchpad:
+            f.write('\n[LAUNCHPAD]\n')
+            for role, hostname in hostnames.items():
+                if role == "launchpad":
+                    f.write(hostname)
+                    if ssh_key:
+                        f.write(' ansible_ssh_private_key_file=%s' % ssh_key)
+                    if args.ansible_ssh_extra_args:
+                        f.write(' ansible_ssh_extra_args="%s"' % args.ansible_ssh_extra_args)
+                    f.write('\n')
+
+        # RHUI 5 RHUA
+        if args.rhui5rhua:
+            f.write('\n[ANOTHERRHUA]\n')
+            for role, hostname in hostnames.items():
+                if role == "anotherrhua":
+                    f.write(hostname)
+                    if ssh_key:
+                        f.write(' ansible_ssh_private_key_file=%s' % ssh_key)
+                    if args.ansible_ssh_extra_args:
+                        f.write(' ansible_ssh_extra_args="%s"' % args.ansible_ssh_extra_args)
+                    f.write('\n')
 
 
 except Exception as e:

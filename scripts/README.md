@@ -59,6 +59,8 @@ Default configuration:
   * **--cli-all** - get client machines for all RHEL versions
   * **--cli7/8/9/10-arch [arch]** - CLI machines' architectures (comma-separated list), `default = x86_64 for all of them`, `cli`_N_ set to `-1` will populate the list with all architectures automatically, so this parameter is unnecessary then
   * **--test** - if specified, TEST machine running RHEL 8, `default = 0`
+  * **--rhui5launchpad** - if specified, an extra VM will be launched to allow a future migration to RHUI 5
+  * **--rhui5rhua** - if specified, another VM will be added as a future RHUA to migrate the RHUI 4 RHUA to
   * **--region [name]** - `default = eu-west-1`
   * **--ansible-ssh-extra-args [args]** - optional SSH arguments for Ansible
   * **--novpc** - use EC2 Classic, not VPC; possibly useful if you're short on Elastic IPs
