@@ -236,9 +236,9 @@ comps:
     comps_to_zip:
         id: "CRB"
 remote_content:
-    rpm: "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/python3-requests-2.25.1-5.el9.noarch.rpm"
+    rpm: "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/python3-requests-2.25.1-10.el9.noarch.rpm"
     ftp: "ftp://ftp.fi.muni.cz/pub/linux/redhat/linux/enterprise/2.1AS/en/os/i386/SRPMS/xsnow-1.40-14.src.rpm"
-    html_with_links: "https://repos.fedorapeople.org/pulp/pulp/demo_repos/repo_resync_b/"
+    html_with_links: "https://ftp.fi.muni.cz/pub/linux/redhat/linux/enterprise/7Server/en/Convert2RHEL/SRPMS/"
 package_versions:
     test_package: "tuned-profiles-sap"
 repo_versions:
